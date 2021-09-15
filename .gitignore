@@ -1,0 +1,9 @@
+.idea/
+__pycache__/
+*.py[cod]
+input/
+output/
+fastmot/models/*.onnx
+fastmot/models/*.pb
+fastmot/models/*.trt
+*.mp4
