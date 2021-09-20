@@ -32,6 +32,8 @@ def main():
                           help='path to label names (e.g. coco.names)')
     optional.add_argument('-o', '--output-uri', metavar="URI",
                           help='URI to output video file')
+    optional.add_argument('-f', '--frame-uri', metavar="URI",
+                          help='URI to output frame image folder')
     optional.add_argument('-t', '--txt', metavar="FILE",
                           help='path to output MOT Challenge format results (e.g. MOT20-01.txt)')
     optional.add_argument('-m', '--mot', action='store_true', help='run multiple object tracker')
@@ -67,13 +69,17 @@ def main():
 
     mot = None
     txt = None
+    framecount = None
     if args.mot:
-        draw = args.show or args.output_uri is not None
+        draw = args.show or args.output_uri or args.frame_uri is not None
         mot = fastmot.MOT(config.resize_to, **vars(config.mot_cfg), draw=draw)
         mot.reset(stream.cap_dt)
     if args.txt is not None:
         Path(args.txt).parent.mkdir(parents=True, exist_ok=True)
         txt = open(args.txt, 'w')
+    if args.frame_uri is not None:
+        Path(args.frame_uri).mkdir(parents=True, exist_ok=True)
+        framecount = 0
     if args.show:
         cv2.namedWindow('Video', cv2.WINDOW_AUTOSIZE)
 
@@ -98,11 +104,13 @@ def main():
 
                             # New Text Format 
                             txt.write(f'{mot.frame_count} {track.trk_id} {int(tl[0] + w / 2)} {int((tl[1] + h) - 10)}\n')
-
                 if args.show:
                     cv2.imshow('Video', frame)
                     if cv2.waitKey(1) & 0xFF == 27:
                         break
+                if args.frame_uri is not None:
+                    cv2.imwrite("{}/{}.jpg".format(Path(args.frame_uri), framecount), frame)
+                    framecount += 1
                 if args.output_uri is not None:
                     stream.write(frame)
     finally:
