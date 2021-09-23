@@ -85,16 +85,16 @@ def start(input_path, output_path, map_path):
         # 확장자가 .mp4인 경우
         if ext == ".mp4":
             # Output Folder에 저장된 MOT Result Text 읽기
-            print('read', original_output_path / (name + '.txt'))
 
             ##############변경해야하는 부분#######################
             # 좌표값을 받아야함(하나씩)
             file = open(original_output_path / (name + '.txt'), 'r')
             globals()['frame{}'.format(fileidx)], globals()['point{}'.format(fileidx)] = save_dict(file)
             fileidx += 1
+        else:
+            continue
 
     map = cv2.imread(str(map_path), -1)
-
     for i in range(num):
         globals()['BEV_Point{}'.format(i)] = dict()
 

@@ -13,6 +13,7 @@ import argparse
 import json
 import logging
 import os
+import shutil
 import traceback
 
 import fastmot
@@ -68,11 +69,20 @@ def start():
     with open(args.config) as cfg_file:
         config = json.load(cfg_file, cls=ConfigDecoder, object_hook=lambda d: SimpleNamespace(**d))
 
+    print(Path(args.output_uri))
+    # MOT Skip 아니면 Output 폴더 비우기
+    if not args.skip_mot:
+        if os.path.isdir(Path(args.output_uri)):
+            shutil.rmtree(Path(args.output_uri))
+
     # Input 경로에 있는 모든 파일 읽기
     videolist = os.listdir(args.input_uri)
 
     # Temp 폴더 생성
     Path(Path(__file__).parent / 'temp').mkdir(parents=True, exist_ok=True)
+
+    # Output 폴더 생성
+    Path(args.output_uri).mkdir(parents=True, exist_ok=True)
 
     # 모든 File 읽기 위해 Loop
     for videofile in videolist:
@@ -84,11 +94,10 @@ def start():
             # MOT 작업을 Skip하지 않은 경우
             if not args.skip_mot:
                 # FastMOT 실행
-                stream = fastmot.VideoIO(config.resize_to, args.input_uri + '/' + videofile, args.output_uri, **vars(config.stream_cfg))
+                stream = fastmot.VideoIO(config.resize_to, args.input_uri + videofile, args.output_uri, **vars(config.stream_cfg))
                 mot = fastmot.MOT(config.resize_to, **vars(config.mot_cfg), draw=True)
                 mot.reset(stream.cap_dt)
 
-                Path(args.output_uri).parent.mkdir(parents=True, exist_ok=True)
                 txt = open(args.output_uri + '/' + name + '.txt', 'w')
 
                 Path(args.output_uri + '/frame/' + name + '/').mkdir(parents=True, exist_ok=True)
@@ -114,8 +123,7 @@ def start():
                                 w, h = br - tl + 1
 
                                 # New Text Format
-                                txt.write(
-                                    f'{mot.frame_count} {track.trk_id} {int(tl[0] + w / 2)} {int((tl[1] + h) - 10)}\n')
+                                txt.write(f'{mot.frame_count} {track.trk_id} {int(tl[0] + w / 2)} {int((tl[1] + h) - 10)}\n')
 
                             if args.show:
                                 cv2.imshow('Video', frame)
@@ -155,9 +163,9 @@ def start():
         logger.info('Start BEV...')
         BEV.start(Path(args.input_uri), Path(args.output_uri), Path(args.map_uri).absolute())
 
-        # Output Video Start
-        logger.info('Start Output Video...')
-        output_video.start(Path(args.output_uri))
+        # Write BEV Video
+        logger.info('Write BEV Video...')
+        output_video.start(Path(args.output_uri).absolute())
 
         logger.info('Finished!')
     except:

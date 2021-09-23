@@ -72,6 +72,7 @@ class VideoIO:
         if WITH_GSTREAMER:
             self.source = cv2.VideoCapture(self._gst_cap_pipeline(), cv2.CAP_GSTREAMER)
         else:
+            print(self.input_uri)
             self.source = cv2.VideoCapture(self.input_uri)
 
         self.frame_queue = deque([], maxlen=self.buffer_size)

@@ -41,6 +41,7 @@ def start(tempfile, frame_dir, map_name):
             if k == ord('s'):
                 break
 
+    cv2.destroyAllWindows()
     f.close()
 
 
