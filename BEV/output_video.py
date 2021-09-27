@@ -23,7 +23,7 @@ def start(output_path):
     paths = list(np.sort(store1)) + list(np.sort(store2)) + list(np.sort(store3)) + list(np.sort(store4))
     # len('ims/2/a/2a.2710.png')
 
-    pathOut = str(output_path / 'output.mkv')
+    pathOut = str(output_path / 'output.mp4')
     fps = 25
     frame_array = []
     size = None
@@ -34,26 +34,29 @@ def start(output_path):
         size = (width, height)
         frame_array.append(img)
 
-    writer = cv2.VideoWriter(_gst_write_pipeline(pathOut), cv2.CAP_GSTREAMER, 0, fps, size, True)
-    #fourcc = cv2.VideoWriter_fourcc(*'avc1')
-    #writer = cv2.VideoWriter(pathOut, fourcc, fps, size, True)
+    print(size)
+
+    writer = cv2.VideoWriter(_gst_write_pipeline(pathOut), cv2.CAP_GSTREAMER, fps, (1280, 720))
+
     for i in range(len(frame_array)):
         # writing to a image array
+        frame_array[i] = cv2.resize(frame_array[i], dsize=(1280, 720), interpolation=cv2.INTER_LINEAR)
         writer.write(frame_array[i])
 
     writer.release()
+    cv2.destroyAllWindows()
 
 def _gst_write_pipeline(output_uri):
     gst_elements = str(subprocess.check_output('gst-inspect-1.0'))
     # use hardware encoder if found
     if 'omxh264enc' in gst_elements:
-        h264_encoder = 'omxh264enc preset-level=2'
+        h264_encoder = 'omxh264enc'
     elif 'x264enc' in gst_elements:
-        h264_encoder = 'x264enc pass=4'
+        h264_encoder = 'x264enc'
     else:
         raise RuntimeError('GStreamer H.264 encoder not found')
     pipeline = (
-            'appsrc ! autovideoconvert ! %s ! qtmux ! filesink location=%s '
+            'appsrc ! autovideoconvert ! %s ! mp4mux ! filesink location=%s '
             % (
                 h264_encoder,
                 output_uri

@@ -6,6 +6,7 @@ import shutil
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
+import mimetypes
 
 ##############################################################################
 
@@ -17,6 +18,7 @@ lonloat : 도면 공간
 '''
 
 def start(input_path, output_path, map_path):
+
     heatmap_path = os.path.join(output_path, 'heatmap.png')
     original_output_path = output_path
     output_path = os.path.join(output_path, 'map_frame')
@@ -28,11 +30,7 @@ def start(input_path, output_path, map_path):
         shutil.rmtree(output_path)
         os.makedirs(output_path)
 
-    num = 0
-    for filename in os.listdir(input_path):
-        name, ext = os.path.splitext(filename)
-        if ext == '.mp4':
-            num += 1
+    filelist = list(filter(lambda filename: mimetypes.guess_type(filename)[0] is not None and mimetypes.guess_type(filename)[0].find('video') is not -1, os.listdir(input_path)))
 
     f = open(os.path.join(temp_path, 'points.txt'), 'r')
     data = f.read()
@@ -57,7 +55,7 @@ def start(input_path, output_path, map_path):
 
     quad_coords_list = []
 
-    for i in range(num):
+    for i in range(len(filelist)):
         quad_coords = {
             "pixel": np.array([
                 [frame_point[i*4][1]  ,   frame_point[i*4][2]],  # Third lampost top right
@@ -79,27 +77,20 @@ def start(input_path, output_path, map_path):
 
 
     fileidx = 0
-    for inputfile in os.listdir(input_path):
+    for inputfile in filelist:
         name, ext = os.path.splitext(inputfile)
-
-        # 확장자가 .mp4인 경우
-        if ext == ".mp4":
-            # Output Folder에 저장된 MOT Result Text 읽기
-
-            ##############변경해야하는 부분#######################
-            # 좌표값을 받아야함(하나씩)
-            file = open(original_output_path / (name + '.txt'), 'r')
-            globals()['frame{}'.format(fileidx)], globals()['point{}'.format(fileidx)] = save_dict(file)
-            fileidx += 1
-        else:
-            continue
+        ##############변경해야하는 부분#######################
+        # 좌표값을 받아야함(하나씩)
+        file = open(original_output_path / (name + '.txt'), 'r')
+        globals()['frame{}'.format(fileidx)], globals()['point{}'.format(fileidx)] = save_dict(file)
+        fileidx += 1
 
     map = cv2.imread(str(map_path), -1)
-    for i in range(num):
+    for i in range(len(filelist)):
         globals()['BEV_Point{}'.format(i)] = dict()
 
     for frames in range(1, int(globals()['frame{}'.format(0)])):
-        for i in range(num):
+        for i in range(len(filelist)):
             pm = PixelMapper(quad_coords_list[i]["pixel"], quad_coords_list[i]["lonlat"])
             if globals()['point{}'.format(i)].get(str(frames)) != None:
                 for label in globals()['point{}'.format(i)].get(str(frames)) :
@@ -130,7 +121,7 @@ def start(input_path, output_path, map_path):
 
     for frames in range(1, int(globals()['frame{}'.format(0)])):
 
-        for i in range(num):
+        for i in range(len(filelist)):
 
             if globals()['BEV_Point{}'.format(i)].get(frames) is not None:
 
