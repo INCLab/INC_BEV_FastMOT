@@ -4,8 +4,7 @@ import cv2
 src_x, src_y = -1, -1
 des_x, des_y = -1, -1
 drawing = False
-global f
-
+f = None
 
 def start(tempfile, frame_dir, map_name):
     global f
@@ -20,6 +19,8 @@ def start(tempfile, frame_dir, map_name):
         print(i)
         dir = os.path.join(frame_dir, i)
         print(os.listdir(dir)[0])
+
+        f.write(i + '\n')
 
         frame = cv2.imread(os.path.join(dir, os.listdir(dir)[0]), -1)
         cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
