@@ -97,7 +97,10 @@ def start():
             # MOT 작업을 Skip하지 않은 경우
             if not args.skip_mot:
                 # FastMOT 실행
-                stream = fastmot.VideoIO(config.resize_to, args.input_uri + videofile, args.output_uri + "mot_{}".format(videofile), **vars(config.stream_cfg))
+                stream = fastmot.VideoIO(config.resize_to,
+                                         args.input_uri + videofile,
+                                         args.output_uri + "/mot_{}".format(videofile),
+                                         **vars(config.stream_cfg))
                 mot = fastmot.MOT(config.resize_to, **vars(config.mot_cfg), draw=True)
                 mot.reset(stream.cap_dt)
 

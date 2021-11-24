@@ -42,3 +42,8 @@
 
 # vscode stuff
 .vscode/
+
+# MOT Data (by INC Lab.)
+input/
+output/
+temp/

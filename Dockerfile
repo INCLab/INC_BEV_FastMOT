@@ -16,7 +16,6 @@ ENV NO_AT_BRIDGE=1
 
 # Install OpenCV and FastMOT dependencies
 RUN apt-get -y update && \
-    apt-get install -y python-mysqldb \
     apt-get install -y --no-install-recommends \
     wget unzip tzdata \
     build-essential cmake pkg-config \
