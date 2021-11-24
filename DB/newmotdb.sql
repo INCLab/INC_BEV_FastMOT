@@ -1,4 +1,4 @@
-CREATE DATABASE IF NOT EXISTS `inc_mot`;
+CREATE DATABASE IF NOT EXISTS `inc_mot` default character set utf8mb4;
 use `inc_mot`;
 
 CREATE TABLE IF NOT EXISTS `video` (
