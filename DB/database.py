@@ -1,49 +1,53 @@
 import pymysql
 
 mot_db = pymysql.connect(
-    user='',
-    passwd='',
-    host='localhost',
+    user='inc',
+    passwd='1q2w3e4r!',
+    host='127.0.0.1',
     db='inc_mot',
     charset='utf8mb4'
 )
 
 # Get DB Cursor
 def getCursor():
-    cursor = mot_db.cursor(pymysql.cursors.DictCursor)
+    cursor = mot_db.cursor()
     return cursor
 
-# Insert New Video
-def insertVideoList(videoList):
-    getCursor().executemany("insert into `video`(`video_id`) videoFileName (%s)", videoList)
-    insertVideoGroup(videoList)
+# Create New Video Group
+# Return : New Group ID
+def newVideoGroup():
+    cursor = getCursor()
+    cursor.execute("insert into `videoGroup` VALUES ()")
     mot_db.commit()
+    return cursor.lastrowid
 
-# Insert New Video Group
-def insertVideoGroup(videoList):
-    # First Video First Insert
-    getCursor().execute("insert into `videoGroup`(`video_id`) values (%s)", videoList.pop(0))
+# Add New Video
+# Return : New Video ID
+def addNewVideo(fileName, groupID):
+    data = [fileName, groupID]
+    cursor = getCursor()
 
-    # Get New ID
-    groupId = getCursor().lastrowid
-
-    # Insert Other Video to Same Group
-    getCursor().executemany("insert into `videoGroup`(`id`, `video_id`) values (%s, %s)", groupId, videoList)
+    cursor.execute("insert into `video`(`videoFileName`, `videoGroup_id`) VALUES (%s, %s)", data)
     mot_db.commit()
+    return cursor.lastrowid
 
 # Get Video ID by File Name
 def getVideoId(videoFileName):
-    getCursor().execute("SELECT `id` from `video` where `videoFileName` = (%s)", videoFileName)
-    return getCursor().fetchall()
+    data = [videoFileName]
 
-# Insert Video Frame
-def insertVideoFrame(videoId, frameList):
-    getCursor().executemany("insert into `frameinfo`(`frame_id`, `video_id`) values (%s, %s)", videoId, frameList)
+    cursor = getCursor()
+    cursor.execute("SELECT `id` from `video` where `videoFileName` = %s", data)
+    return cursor.fetchall()
+
+# Insert Video Frames
+def insertVideoFrames(videoId, frameList):
+    getCursor().executemany("insert into `frameinfo`(`frame_id`, `video_id`) VALUES (%s, {})".format(videoId),
+                            frameList)
     mot_db.commit()
 
-# Insert Tracking Info
+# Insert Tracking Infos
 # [[ID, FrameID, VideoID, X, Y], [ID, FrameID, VideoID, X, Y]..]
-def insertTrackingInfo(trackingInfoList):
+def insertTrackingInfos(trackingInfoList):
     getCursor().executemany("insert into `trackinginfo`("
                             "`identifyID`, "
                             "`frameinfo_frame_id`, "

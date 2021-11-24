@@ -17,47 +17,55 @@ CREATE TABLE IF NOT EXISTS `video` (
 );
 
 CREATE TABLE IF NOT EXISTS `frameinfo` (
-	frame_id INT PRIMARY KEY,
-    video_id INT NOT NULL,
+    video_id INT,
+	frame_id INT,
     createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updateAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (video_id, frame_id),
     FOREIGN KEY (video_id) REFERENCES video(id)
 );
 
 CREATE TABLE IF NOT EXISTS `trackinginfo` (
 	identifyID INT NOT NULL,
+	frameinfo_video_id INT NOT NULL,
     frameinfo_frame_id INT NOT NULL,
-    frameinfo_video_id INT NOT NULL,
     x DOUBLE NOT NULL,
     y DOUBLE NOT NULL,
     createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updateAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY(identifyID, frameinfo_frame_id),
-    FOREIGN KEY(frameinfo_frame_id) REFERENCES frameinfo(frame_id),
-    FOREIGN KEY(frameinfo_video_id) REFERENCES frameinfo(video_id)
+    PRIMARY KEY(identifyID, frameinfo_video_id, frameinfo_frame_id),
+    FOREIGN KEY (frameinfo_video_id, frameinfo_frame_id) REFERENCES frameinfo(video_id, frame_id)
 );
 
-CREATE TABLE IF NOT EXISTS `globalmapping` (
-	globalID INT NOT NULL PRIMARY KEY,
-    x DOUBLE NOT NULL,
-    y DOUBLE NOT NULL,
-    frameinfo_frame_id INT NOT NULL,
-    videoGroup_id INT NOT NULL,
-    createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updateAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (frameinfo_frame_id) REFERENCES frameinfo(frame_id),
-	FOREIGN KEY (videoGroup_id) REFERENCES videoGroup(id)
-);
-
-CREATE TABLE IF NOT EXISTS `globalmapping_has_trackinginfo` (
-	globalmapping_globalID INT NOT NULL,
-    trackinginfo_identifyID INT NOT NULL,
-    trackinginfo_frameinfo_frame_id INT NOT NULL,
-    createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updateAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (globalmapping_globalID, trackinginfo_identifyID, trackinginfo_frameinfo_frame_id),
-    FOREIGN KEY (globalmapping_globalID) REFERENCES globalmapping(globalID),
-    FOREIGN KEY (trackinginfo_identifyID) REFERENCES trackinginfo(identifyID),
-    FOREIGN KEY (trackinginfo_frameinfo_frame_id) REFERENCES trackinginfo(frameinfo_frame_id)
-);
+-- Working...
+--CREATE TABLE IF NOT EXISTS `globalmapping` (
+--    videoGroup_id INT,
+--    frame_id INT,
+--	globalID INT,
+--    x DOUBLE NOT NULL,
+--    y DOUBLE NOT NULL,
+--    createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--    updateAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+--    PRIMARY KEY(videoGroup_id, frame_id, globalID),
+--    FOREIGN KEY(videoGroup_id) REFERENCES videoGroup(id)
+--    FOREIGN KEY(frame_id) REFERENCES video(id)
+--);
+--
+--CREATE TABLE IF NOT EXISTS `globalmapping_has_trackinginfo` (
+--    globalmapping_videoGroup_id INT NOT NULL,
+--	globalmapping_globalID INT NOT NULL,
+--    trackinginfo_identifyID INT NOT NULL,
+--    trackinginfo_frameinfo_video_id INT NOT NULL,
+--    trackinginfo_frameinfo_frame_id INT NOT NULL,
+--    createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--    updateAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+--
+--    PRIMARY KEY (globalmapping_videoGroup_id, globalmapping_globalID),
+--
+--    FOREIGN KEY (globalmapping_videoGroup_id) REFERENCES globalmapping(videoGroup_id),
+--    FOREIGN KEY (globalmapping_globalID) REFERENCES globalmapping(globalID),
+--    FOREIGN KEY (trackinginfo_identifyID) REFERENCES trackinginfo(identifyID),
+--    FOREIGN KEY (trackinginfo_frameinfo_video_id) REFERENCES trackinginfo(frameinfo_video_id),
+--    FOREIGN KEY (trackinginfo_frameinfo_frame_id) REFERENCES trackinginfo(frameinfo_frame_id)
+--);
 

@@ -27,6 +27,7 @@ from BEV import mouse_point
 from BEV import BEV
 from BEV import output_video
 
+import DB.database as Database
 
 def start():
     #### Arguments Setting ####
@@ -85,6 +86,12 @@ def start():
     # Output 폴더 생성
     Path(args.output_uri).mkdir(parents=True, exist_ok=True)
 
+    # MOT Skip한게 아니라면 SQL에 등록될 Group ID 생성
+    if not args.skip_mot:
+        groupID = Database.newVideoGroup()
+    else:
+        groupID = None
+
     # 모든 File 읽기 위해 Loop
     for videofile in videolist:
         # 이름과 확장자 분리
@@ -96,6 +103,12 @@ def start():
         if filemime is not None and filemime.find('video') is not -1:
             # MOT 작업을 Skip하지 않은 경우
             if not args.skip_mot:
+                # Insert Video with Group ID
+                if groupID:
+                    videoID = Database.addNewVideo(videofile, groupID)
+                else:
+                    videoID = None
+
                 # FastMOT 실행
                 stream = fastmot.VideoIO(config.resize_to,
                                          args.input_uri + videofile,
@@ -114,6 +127,14 @@ def start():
 
                 logger.info('Starting video capture... ({})'.format(videofile))
                 stream.start_capture()
+
+                # Frame Number List
+                frameList = []
+
+                # Each Frame Tracking Data
+                # [[ID, FrameID, VideoID, X, Y], [ID, FrameID, VideoID, X, Y]..]
+                trackingList = []
+
                 try:
                     with Profiler('app') as prof:
                         while not args.show or cv2.getWindowProperty('Video', 0) >= 0:
@@ -123,13 +144,26 @@ def start():
 
                             mot.step(frame)
 
+                            # New Frame Info
+                            frameList.append([mot.frame_count])
+
                             for track in mot.visible_tracks():
                                 tl = track.tlbr[:2] / config.resize_to * stream.resolution
                                 br = track.tlbr[2:] / config.resize_to * stream.resolution
                                 w, h = br - tl + 1
 
                                 # New Text Format
-                                txt.write(f'{mot.frame_count} {track.trk_id} {int(tl[0] + w / 2)} {int((tl[1] + h) - 10)}\n')
+                                #txt.write(f'{mot.frame_count} {track.trk_id} {int(tl[0] + w / 2)} {int((tl[1] + h) - 10)}\n')
+
+
+                                # New Tracking Info
+                                trackingList.append([
+                                    track.trk_id,
+                                    mot.frame_count,
+                                    videoID,
+                                    int(tl[0] + w / 2),
+                                    int((tl[1] + h) - 10)
+                                ])
 
                             if args.show:
                                 cv2.imshow('Video', frame)
@@ -140,11 +174,24 @@ def start():
                             framecount += 1
                             stream.write(frame)
                 finally:
-                    # clean up resources
-                    if txt is not None:
-                        txt.close()
+                    # # clean up resources
+                    # if txt is not None:
+                    #     txt.close()
+
                     stream.release()
                     cv2.destroyAllWindows()
+
+                    try:
+                        # Add Frame List
+                        if len(frameList) > 0:
+                            Database.insertVideoFrames(videoID, frameList)
+
+                        # Add Tracking Info
+                        if len(trackingList) > 0:
+                            Database.insertTrackingInfos(trackingList)
+                    except Exception as e:
+                        logger.error(e)
+                        exit()
 
                     avg_fps = round(mot.frame_count / prof.duration)
                     logger.info('Average FPS: %d', avg_fps)
