@@ -37,35 +37,25 @@ CREATE TABLE IF NOT EXISTS `trackinginfo` (
     FOREIGN KEY (frameinfo_video_id, frameinfo_frame_id) REFERENCES frameinfo(video_id, frame_id)
 );
 
--- Working...
---CREATE TABLE IF NOT EXISTS `globalmapping` (
---    videoGroup_id INT,
---    frame_id INT,
---	globalID INT,
---    x DOUBLE NOT NULL,
---    y DOUBLE NOT NULL,
---    createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
---    updateAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
---    PRIMARY KEY(videoGroup_id, frame_id, globalID),
---    FOREIGN KEY(videoGroup_id) REFERENCES videoGroup(id)
---    FOREIGN KEY(frame_id) REFERENCES video(id)
---);
---
---CREATE TABLE IF NOT EXISTS `globalmapping_has_trackinginfo` (
---    globalmapping_videoGroup_id INT NOT NULL,
---	globalmapping_globalID INT NOT NULL,
---    trackinginfo_identifyID INT NOT NULL,
---    trackinginfo_frameinfo_video_id INT NOT NULL,
---    trackinginfo_frameinfo_frame_id INT NOT NULL,
---    createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
---    updateAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
---
---    PRIMARY KEY (globalmapping_videoGroup_id, globalmapping_globalID),
---
---    FOREIGN KEY (globalmapping_videoGroup_id) REFERENCES globalmapping(videoGroup_id),
---    FOREIGN KEY (globalmapping_globalID) REFERENCES globalmapping(globalID),
---    FOREIGN KEY (trackinginfo_identifyID) REFERENCES trackinginfo(identifyID),
---    FOREIGN KEY (trackinginfo_frameinfo_video_id) REFERENCES trackinginfo(frameinfo_video_id),
---    FOREIGN KEY (trackinginfo_frameinfo_frame_id) REFERENCES trackinginfo(frameinfo_frame_id)
---);
+CREATE TABLE IF NOT EXISTS `globaltrackinginfo` (
+    globalID INT NOT NULL,
+    videoGroup_id INT NOT NULL,
+    x DOUBLE NOT NULL,
+    y DOUBLE NOT NULL,
+    createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updateAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (globalID, videoGroup_id),
+    FOREIGN KEY (videoGroup_id) REFERENCES videoGroup(id)
+);
+
+CREATE TABLE IF NOT EXISTS `trackinginfo_has_globaltrackinginfo` (
+    videoGroup_id INT NOT NULL,
+    globalID INT NOT NULL,
+    video_id INT NOT NULL,
+    frame_id INT NOT NULL,
+    video_identifyID INT NOT NULL,
+    PRIMARY KEY (videoGroup_id, globalID, video_id, frame_id, video_identifyID),
+    FOREIGN KEY (videoGroup_id, globalID) REFERENCES globaltrackinginfo(videoGroup_id, globalID),
+    FOREIGN KEY (video_id, frame_id, video_identifyID) REFERENCES trackinginfo(frameinfo_video_id, frameinfo_frame_id, identifyID)
+);
 
