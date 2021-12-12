@@ -52,6 +52,6 @@ def insertTrackingInfos(trackingInfoList):
                             "`identifyID`, "
                             "`frameinfo_frame_id`, "
                             "`frameinfo_video_id`, "
-                            "`x`, `y`) "
-                            "values (%s, %s, %s, %s, %s)", trackingInfoList)
+                            "`position`) "
+                            "values (%s, %s, %s, POINT(%s, %s))", trackingInfoList)
     mot_db.commit()
