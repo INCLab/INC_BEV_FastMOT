@@ -57,3 +57,9 @@ CREATE TABLE IF NOT EXISTS `trackinginfo_has_globaltrackinginfo` (
     FOREIGN KEY (video_id, frame_id, video_identifyID) REFERENCES trackinginfo(frameinfo_video_id, frameinfo_frame_id, identifyID)
 );
 
+CREATE TABLE IF NOT EXISTS `spaceinfo` (
+    id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    space POLYGON NOT NULL,
+    createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updateAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);

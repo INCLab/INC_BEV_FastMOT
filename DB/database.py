@@ -55,3 +55,39 @@ def insertTrackingInfos(trackingInfoList):
                             "`position`) "
                             "values (%s, %s, %s, POINT(%s, %s))", trackingInfoList)
     mot_db.commit()
+
+# Insert New Space Info
+# [[0, 0], [1, 1], [2, 2]...]
+def insertNewSpace(pointList):
+    cursor = getCursor()
+    pointCvt = []
+
+    for pIdx in range(len(pointList)):
+        print(pIdx, len(pointList) - 1)
+        if pIdx != len(pointList) - 1:
+            pointCvt.append("{} {},".format(pointList[pIdx][0], pointList[pIdx][1]))
+        else:
+            pointCvt.append("{} {},{} {}".format(pointList[pIdx][0], pointList[pIdx][1], pointList[0][0], pointList[0][1]))
+
+    cursor.execute("insert into `spaceinfo`(`space`) "
+                   "values (ST_GeomFromText('POLYGON(({}))'))".format(''.join(pointCvt)))
+    mot_db.commit()
+    return cursor.lastrowid
+
+# Get Single Video MOT Data (From All Frame)
+# Return ID & Frame ID & Position
+def getMOTDatas(videoId):
+    cursor = getCursor()
+    cursor.execute("SELECT identifyID, frameinfo_frame_id, ST_AsText(position) "
+                   "from `trackinginfo` "
+                   "where `frameinfo_video_id` = {}".format(videoId))
+    return cursor.fetchall()
+
+# Get Single Video MOT Data (From Specific Frame)
+# Return ID & Position
+def getMOTDatabyFrame(videoId, frameId):
+    cursor = getCursor()
+    cursor.execute("SELECT identifyID, ST_AsText(position) "
+                   "from `trackinginfo` "
+                   "where `frameinfo_video_id` = {} and `frameinfo_frame_id` = {}".format(videoId, frameId))
+    return cursor.fetchall()
