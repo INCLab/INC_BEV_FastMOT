@@ -81,7 +81,15 @@ def getMOTDatas(videoId):
     cursor.execute("SELECT identifyID, frameinfo_frame_id, ST_AsText(position) "
                    "from `trackinginfo` "
                    "where `frameinfo_video_id` = {}".format(videoId))
-    return cursor.fetchall()
+
+    datas = list(cursor.fetchall())
+    for dataIdx in range(len(datas)):
+        data = list(datas[dataIdx])
+        data[2] = list(map(int, data[2].replace('POINT(', '').replace(')', '').split(' ')))
+        datas[dataIdx] = data
+
+    return datas
+
 
 # Get Single Video MOT Data (From Specific Frame)
 # Return ID & Position
@@ -90,4 +98,11 @@ def getMOTDatabyFrame(videoId, frameId):
     cursor.execute("SELECT identifyID, ST_AsText(position) "
                    "from `trackinginfo` "
                    "where `frameinfo_video_id` = {} and `frameinfo_frame_id` = {}".format(videoId, frameId))
-    return cursor.fetchall()
+
+    datas = list(cursor.fetchall())
+    for dataIdx in range(len(datas)):
+        data = list(datas[dataIdx])
+        data[1] = list(map(int, data[1].replace('POINT(', '').replace(')', '').split(' ')))
+        datas[dataIdx] = data
+
+    return datas
