@@ -75,10 +75,10 @@ def insertNewSpace(pointList):
     return cursor.lastrowid
 
 # Get Single Video MOT Data (From All Frame)
-# Return ID & Frame ID & Position
+# Return [[FrameID, ID, [X, Y], ...]
 def getMOTDatas(videoId):
     cursor = getCursor()
-    cursor.execute("SELECT identifyID, frameinfo_frame_id, ST_AsText(position) "
+    cursor.execute("SELECT frameinfo_frame_id, identifyID, ST_AsText(position) "
                    "from `trackinginfo` "
                    "where `frameinfo_video_id` = {}".format(videoId))
 
