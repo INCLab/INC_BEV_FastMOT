@@ -36,6 +36,17 @@ CREATE TABLE IF NOT EXISTS `trackinginfo` (
     FOREIGN KEY (frameinfo_video_id, frameinfo_frame_id) REFERENCES frameinfo(video_id, frame_id)
 );
 
+CREATE TABLE IF NOT EXISTS `trackinginfo_correction` (
+	identifyID INT NOT NULL,
+	frameinfo_video_id INT NOT NULL,
+    frameinfo_frame_id INT NOT NULL,
+    position POINT NOT NULL,
+    createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updateAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY(identifyID, frameinfo_video_id, frameinfo_frame_id),
+    FOREIGN KEY (frameinfo_video_id, frameinfo_frame_id) REFERENCES frameinfo(video_id, frame_id)
+);
+
 CREATE TABLE IF NOT EXISTS `globaltrackinginfo` (
     globalID INT NOT NULL,
     videoGroup_id INT NOT NULL,

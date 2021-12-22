@@ -132,7 +132,7 @@ def start():
                 frameList = []
 
                 # Each Frame Tracking Data
-                # [[ID, FrameID, VideoID, X, Y], [ID, FrameID, VideoID, X, Y]..]
+                # [[VideoID, FrameID, ID, X, Y], [VideoID, FrameID, ID, X, Y]..]
                 trackingList = []
 
                 try:
@@ -158,9 +158,9 @@ def start():
 
                                 # New Tracking Info
                                 trackingList.append([
-                                    track.trk_id,
-                                    mot.frame_count,
                                     videoID,
+                                    mot.frame_count,
+                                    track.trk_id,
                                     int(tl[0] + w / 2),
                                     int((tl[1] + h) - 10)
                                 ])

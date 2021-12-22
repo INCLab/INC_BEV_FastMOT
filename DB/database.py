@@ -41,17 +41,28 @@ def getVideoId(videoFileName):
 
 # Insert Video Frames
 def insertVideoFrames(videoId, frameList):
-    getCursor().executemany("insert into `frameinfo`(`frame_id`, `video_id`) VALUES (%s, {})".format(videoId),
+    getCursor().executemany("insert into `frameinfo`(`video_id`, `frame_id`)  VALUES ({}, %s)".format(videoId),
                             frameList)
     mot_db.commit()
 
 # Insert Tracking Infos
-# [[ID, FrameID, VideoID, X, Y], [ID, FrameID, VideoID, X, Y]..]
+# [[VideoID, FrameID, ID, X, Y], [VideoID, FrameID, ID, X, Y]..]
 def insertTrackingInfos(trackingInfoList):
     getCursor().executemany("insert into `trackinginfo`("
-                            "`identifyID`, "
-                            "`frameinfo_frame_id`, "
                             "`frameinfo_video_id`, "
+                            "`frameinfo_frame_id`, "
+                            "`identifyID`, "
+                            "`position`) "
+                            "values (%s, %s, %s, POINT(%s, %s))", trackingInfoList)
+    mot_db.commit()
+
+# Insert Correction Tracking Infos
+# [[VideoID, FrameID, ID, X, Y], [VideoID, FrameID, ID, X, Y]..]
+def insertCorrectionTrackingInfos(trackingInfoList):
+    getCursor().executemany("insert into `trackinginfo_correction`("
+                            "`frameinfo_video_id`, "
+                            "`frameinfo_frame_id`, "
+                            "`identifyID`, "
                             "`position`) "
                             "values (%s, %s, %s, POINT(%s, %s))", trackingInfoList)
     mot_db.commit()
