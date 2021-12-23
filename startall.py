@@ -16,6 +16,7 @@ import os
 import shutil
 import traceback
 import mimetypes
+import pymysql
 
 import fastmot
 import cv2
@@ -105,7 +106,12 @@ def start():
             if not args.skip_mot:
                 # Insert Video with Group ID
                 if groupID:
-                    videoID = Database.addNewVideo(videofile, groupID)
+                    try:
+                        videoID = Database.addNewVideo(videofile, groupID)
+                    except pymysql.err.IntegrityError as e:
+                        logger.error(e)
+                        exit()
+
                 else:
                     videoID = None
 
