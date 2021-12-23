@@ -158,7 +158,6 @@ def start():
 
                                 # New Tracking Info
                                 trackingList.append([
-                                    videoID,
                                     mot.frame_count,
                                     track.trk_id,
                                     int(tl[0] + w / 2),
@@ -188,7 +187,7 @@ def start():
 
                         # Add Tracking Info
                         if len(trackingList) > 0:
-                            Database.insertTrackingInfos(trackingList)
+                            Database.insertTrackingInfos(videoID, trackingList)
                     except Exception as e:
                         logger.error(e)
                         exit()
