@@ -2,6 +2,7 @@ import math
 import numpy as np
 import dtw
 import pandas as pd
+import DB.database as Database
 
 from sklearn.preprocessing import MinMaxScaler
 
@@ -15,10 +16,10 @@ FRAME_THRESHOLD = 20
  <Input param>
  e.g., id_list = [[id1, id2],[id4, id5, id9],...] 
 '''
-def id_correction(id_list, local_init_id, mot_df, video_num):
+def id_correction(id_list, local_init_id, mot_df, video_id):
 
     if len(id_list) > 0:
-        local_id = local_init_id * video_num
+        local_id = local_init_id * video_id
         id_idx = 0
 
         for id_group in id_list:
@@ -30,16 +31,43 @@ def id_correction(id_list, local_init_id, mot_df, video_num):
     else:
         return mot_df
 
+
+'''
+    Drop the incorrectly detected targets (e.g., Not a person)
+'''
+def id_drop(drop_list, mot_df):
+    if len(drop_list) > 0:
+        for id in drop_list:
+            mot_df.drop(mot_df[mot_df['id'] == id].index, inplace=True)
+        return mot_df
+    else:
+        return mot_df
+
+
+def create_corrected_table(crt_df, video_id):
+    crt_list = []
+
+    for i in range(0, len(crt_df)):
+        crt_info = [video_id] + crt_df.iloc[i].tolist()
+        crt_list.append(crt_info)
+
+    Database.insertCorrectionTrackingInfos(crt_list)
+
+
 '''
     Read MOT data in DB table then, create mot result dataframe.
     Input parameter == list of whole mot results
     (e.g., [[localID, frame1, x1, y1], [localID, frame2, x2, y2], ...])
 '''
-def make_df_list(mot_list, id_list, local_init_id, video_num):
+def make_df_list(mot_list, id_list, drop_list, local_init_id, video_id):
     df_columns = ['frame', 'id', 'x', 'y']
     result = pd.DataFrame(mot_list, columns=df_columns)
 
-    result = id_correction(id_list, local_init_id, result, video_num)
+    result = id_correction(id_list, local_init_id, result, video_id)
+    result = id_drop(drop_list, result)
+
+    # Insert collection tracking information in DB table
+    create_corrected_table(result, video_id)
 
     id_df = result.drop_duplicates(['id'])
     id_list = id_df['id'].tolist()

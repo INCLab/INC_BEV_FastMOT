@@ -2,9 +2,6 @@ import pandas as pd
 import dtwfunction_DB_ver as dfunc
 import DB.database as Database
 
-result_save_dir = '../tmp/'
-txt_name = ['BEV_result0', 'BEV_result1', 'BEV_result2']
-
 LOCAL_INIT_ID = 1000
 GLOBAL_INIT_ID = 10000
 
@@ -12,20 +9,30 @@ GLOBAL_INIT_ID = 10000
 # 정익:6 / 13 / 21 민재:3 / 15 / 22 찬영:7 / 18 / 23
 
 # DB에서 데이터 MOT데이터 읽어오기
-mot_list = []
+video_names = ['name1', 'name2', 'name3']
+
+video_id_list = []
+for name in video_names:
+    video_id_list.append(Database.getVideoId(name))
+
+# Todo: 읽어온 MOT data에서 좌표값을 2중리스트가 아닌 바깥 리스트로 꺼내오기
 total_mot_list = []
+for video_id in video_id_list:
+    total_mot_list.append(Database.getMOTDatas(video_id))
 
 video_num = len(total_mot_list)
 
 # ID correction을 위한 id grouping
+# Todo: frame display를 통해 보여줄지, 직접확인하고 입력값만 받을지
 local_id_group_list = []
+drop_list = []
 
 
 # Create Dataframes by id
 result_df_list = []
 total_id_list = []
 for i in range(0, video_num):
-    df_list, id_list = dfunc.make_df_list(total_mot_list[i], local_id_group_list[i], LOCAL_INIT_ID, i+1)
+    df_list, id_list = dfunc.make_df_list(total_mot_list[i], local_id_group_list[i], drop_list[i], LOCAL_INIT_ID, video_id_list[i])
     result_df_list.append(df_list)
     total_id_list.append(id_list)
 
@@ -37,7 +44,7 @@ result_info_list = []
 dfunc.select_feature(result_df_list, result_info_list, feature='vector')
 
 # Create high similarity ID list
-# ToDo: 현재는 result0를 기준으로 result1,2를 비교한 결과만 사용, 후에 result1을 기준으로 구한 값도 고려해야함
+# ToDo: 현재는 result0를 기준으로 result1,2를 비교한 결과만 사용, overlap MTMCT task이므로 비디오 중 가장 많은 target이
 id_map_list = [[], []]
 for i in range(0, len(result_info_list)-1):
     result_dist_list = dfunc.check_similarity(result_info_list[i], result_info_list[i+1:])
