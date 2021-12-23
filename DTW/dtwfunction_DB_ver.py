@@ -5,56 +5,41 @@ import pandas as pd
 
 from sklearn.preprocessing import MinMaxScaler
 
-LOCAL_INIT_ID = 1000
 
+FRAME_THRESHOLD = 20
 
 # ########### Preprocessing: ID Correction
 '''
  If user choose IDs in single camera,
  those IDs are assigned to new same local ID(Start at 1000)
+ <Input param>
+ e.g., id_list = [[id1, id2],[id4, id5, id9],...] 
 '''
-def id_correction(id_list, local_init_id, mot_df):
-    ##### 임시로 수동 전처리 ##############
-    '''
-        result0.txt
-        1. id 5를 7으로 변경
-        2. id 2 제거
+def id_correction(id_list, local_init_id, mot_df, video_num):
 
-        result1.txt
-        1. id 1을 8로변경
-        4. id 9제거
+    if len(id_list) > 0:
+        local_id = local_init_id * video_num
+        id_idx = 0
 
-        result2.txt
-        1. id 4 제거
-    '''
+        for id_group in id_list:
+            for id in id_group:
+                mot_df['id'][(mot_df['id'] == id)] = local_id + id_idx
+            id_idx += 1
 
-    if filename == 'BEV_result0':
-        result['id'][(result['id'] == 5)] = 7
-        result.drop(result[result['id'] == 2].index, inplace=True)
-        result.drop(result[result['id'] == 1].index, inplace=True)
-    elif filename == 'BEV_result1':
-        result['id'][(result['id'] == 1)] = 8
-        result.drop(result[result['id'] == 9].index, inplace=True)
-
-        result['id'][(result['id'] == 3)] = 13
-        result['id'][(result['id'] == 5)] = 15
-        result['id'][(result['id'] == 8)] = 18
-    elif filename == 'BEV_result2':
-        result['id'][(result['id'] == 1)] = 21
-        result['id'][(result['id'] == 2)] = 22
-        result['id'][(result['id'] == 3)] = 23
-        result.drop(result[result['id'] == 4].index, inplace=True)
-
-    return
+        return mot_df
+    else:
+        return mot_df
 
 '''
     Read MOT data in DB table then, create mot result dataframe.
     Input parameter == list of whole mot results
     (e.g., [[localID, frame1, x1, y1], [localID, frame2, x2, y2], ...])
 '''
-def make_df_list(mot_list):
+def make_df_list(mot_list, id_list, local_init_id, video_num):
     df_columns = ['frame', 'id', 'x', 'y']
     result = pd.DataFrame(mot_list, columns=df_columns)
+
+    result = id_correction(id_list, local_init_id, result, video_num)
 
     id_df = result.drop_duplicates(['id'])
     id_list = id_df['id'].tolist()

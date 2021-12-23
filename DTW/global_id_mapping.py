@@ -1,20 +1,31 @@
 import pandas as pd
-from DTW import dtwfunction_DB_ver as dfunc
+import dtwfunction_DB_ver as dfunc
+import DB.database as Database
 
 result_save_dir = '../tmp/'
 txt_name = ['BEV_result0', 'BEV_result1', 'BEV_result2']
 
-GLOBAL_INIT_ID= 10000
+LOCAL_INIT_ID = 1000
+GLOBAL_INIT_ID = 10000
 
 
 # 정익:6 / 13 / 21 민재:3 / 15 / 22 찬영:7 / 18 / 23
+
+# DB에서 데이터 MOT데이터 읽어오기
+mot_list = []
+total_mot_list = []
+
+video_num = len(total_mot_list)
+
+# ID correction을 위한 id grouping
+local_id_group_list = []
 
 
 # Create Dataframes by id
 result_df_list = []
 total_id_list = []
-for name in txt_name:
-    df_list, id_list = dfunc.make_df_list(name)
+for i in range(0, video_num):
+    df_list, id_list = dfunc.make_df_list(total_mot_list[i], local_id_group_list[i], LOCAL_INIT_ID, i+1)
     result_df_list.append(df_list)
     total_id_list.append(id_list)
 
