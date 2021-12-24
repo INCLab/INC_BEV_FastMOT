@@ -124,14 +124,22 @@ def getMOTDatabyFrame(videoId, frameId):
 
 # Insert Global Tracking Info
 # groupID (Int) : Video Group ID
+# mappingInfo (List) : [[FrameID, GlobalID, TrackingID], [FrameID, GlobalID, TrackingID], ...]
 # trackingInfo (List) : [[FrameID, Global ID, X, Y], [FrameID, Global ID, X, Y]..]
-def insertGlobalTrackingInfo(groupID, trackingInfo):
+def insertGlobalTrackingInfo(groupID, mappingInfo, trackingInfo):
     getCursor().executemany("insert into `globaltrackinginfo`("
                             "`videoGroup_id`, "
                             "`frame_id`, "
                             "`globalID`, "
                             "`position`) "
                             "values ({}, %s, %s, POINT(%s, %s))".format(groupID), trackingInfo)
+
+    getCursor().executemany("insert into `trackinginfo_has_globaltrackinginfo`("
+                            "`videoGroup_id`, "
+                            "`frame_id`, "
+                            "`globalID`, "
+                            "`trackingID`) "
+                            "values ({}, %s, %s, %s)".format(groupID), trackingInfo)
     mot_db.commit()
 
 # Get Global Tracking Data (From All Frame)
@@ -172,14 +180,22 @@ def getGlobalTrackingDatabyFrame(groupID, frameId):
 
 # Insert New BEV Data
 # groupID (Int) : Video Group ID
+# mappingInfo (List) : [[FrameID, GlobalID, BEV ID], [FrameID, GlobalID, BEV ID], ...]
 # bevInfo (List) : [[FrameID, BEV ID, X, Y], [FrameID, BEV ID, X, Y]]
-def insertBEVData(groupID, bevInfo):
+def insertBEVData(groupID, mappingInfo, bevInfo):
     getCursor().executemany("insert into `BEV`("
                             "`videoGroup_id`, "
                             "`frame_id`, "
                             "`bevID`, "
                             "`position`) "
                             "values ({}, %s, %s, POINT(%s, %s))".format(groupID), bevInfo)
+
+    getCursor().executemany("insert into `BEV_has_globaltrackinginfo`("
+                            "`videoGroup_id`, "
+                            "`frame_id`, "
+                            "`globalID`, "
+                            "`bevID`) "
+                            "values ({}, %s, %s, %s)".format(groupID), mappingInfo)
     mot_db.commit()
 
 # Get BEV Data by Group ID
