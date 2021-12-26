@@ -48,10 +48,10 @@ def create_corrected_table(crt_df, video_id):
     crt_list = []
 
     for i in range(0, len(crt_df)):
-        crt_info = [video_id] + crt_df.iloc[i].tolist()
+        crt_info = crt_df.iloc[i].tolist()
         crt_list.append(crt_info)
 
-    Database.insertCorrectionTrackingInfos(crt_list)
+    Database.insertCorrectionTrackingInfos(video_id, crt_list)
 
 
 '''
