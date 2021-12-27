@@ -3,6 +3,7 @@ import numpy as np
 import dtw
 import pandas as pd
 import DB.database as Database
+import copy
 
 from sklearn.preprocessing import MinMaxScaler
 
@@ -66,6 +67,7 @@ def make_df_list(mot_list, id_list, drop_list, local_init_id, video_id):
     result = id_correction(id_list, local_init_id, result, video_id)
     result = id_drop(drop_list, result)
 
+
     # Insert collection tracking information in DB table
     create_corrected_table(result, video_id)
 
@@ -78,7 +80,18 @@ def make_df_list(mot_list, id_list, drop_list, local_init_id, video_id):
         df = result[result['id'] == id]
         df_list.append(df)
 
-    return df_list, id_list
+    # ============ for global ID mapping, add 'video id' column ====
+    add_id_result = copy.deepcopy(result)
+    add_id_result.insert(0, 'video_id', video_id)
+
+    v_df_list = []
+
+    for id in id_list:
+        v_df = add_id_result[add_id_result['id'] == id]
+        v_df_list.append(v_df)
+    # ==============================================================
+
+    return df_list, id_list, v_df_list
 
 
 # ########## Create Feature for DTW #################
@@ -416,3 +429,36 @@ def generate_global_info(total_info):
                 I_G.append(total_info[i])
 
     return I_G
+
+
+def generate_mapping_df(v_T_set, id_set, gid_set):
+    mappingInfo = []
+
+    for T in v_T_set:
+        for id_info in T:
+            for i in range(0, len(id_set)):
+                if id_info['id'][0] in id_set[i]:
+                    id_info.insert(2, 'global_id', gid_set[i])
+                    id_info.drop(['x', 'y'], axis=1, inplace=True)
+                    mappingInfo.append(id_info)
+                    break
+    return mappingInfo
+
+
+# id_df -> column: [Video ID, FrameID, GlobalID, TrackingID], row: number of total frame
+def generate_mappingInfo(id_df_list):
+    total_list = []
+    for id_df in id_df_list:
+        id_info_list = []
+        for i in range(0, len(id_df)):
+            id_info = id_df.iloc[i].tolist()
+            id_info_list.append(id_info)
+        total_list += id_info_list
+
+    total_list.sort(key=lambda x: (x[1], x[2]))  # x[1]: Frame, x[2]: GlobalID
+
+    return total_list
+
+
+def create_global_table(group_id, mapping_info_list, global_info_list):
+    insertGlobalTrackingInfo(group_id, mapping_info_list, global_info_list)

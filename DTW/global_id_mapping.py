@@ -30,11 +30,13 @@ drop_list = []
 
 # Create Dataframes by id
 result_df_list = []
+v_result_df_list = []  # Add 'video_id' column in front of result_df_list
 total_id_list = []
 for i in range(0, video_num):
-    df_list, id_list = dfunc.make_df_list(total_mot_list[i], local_id_group_list[i], drop_list[i], LOCAL_INIT_ID, video_id_list[i])
+    df_list, id_list, v_df_list = dfunc.make_df_list(total_mot_list[i], local_id_group_list[i], drop_list[i], LOCAL_INIT_ID, video_id_list[i])
     result_df_list.append(df_list)
     total_id_list.append(id_list)
+    v_result_df_list.append(v_df_list)
 
 # Create id info list
 result_info_list = []
@@ -68,13 +70,25 @@ for T in result_df_list:
 total_list.sort()
 
 global_I = dfunc.generate_global_info(total_list)
-global_df = pd.DataFrame(global_I)
-global_df.columns = ['frame', 'id', 'x', 'y']
 
-print(global_df)
+# return 값이 빈 리스트일 경우 고려해야됨
+mappingInfo_df_list = dfunc.generate_mapping_df(v_result_df_list, id_map_list[0], global_id_set)
 
-# Create Global information txt file
-global_df.to_csv('global_result.txt', sep=' ', header=None, index=None)
+if mappingInfo_df_list:
+    mappingInfo = dfunc.generate_mappingInfo(mappingInfo_df_list)
+    Database.insertGlobalTrackingInfo(,mappingInfo,global_I)
+else:
+    print("Warning: Global mapping info is not exist.\n")
+
+
+
+# global_df = pd.DataFrame(global_I)
+# global_df.columns = ['frame', 'id', 'x', 'y']
+#
+# print(global_df)
+#
+# # Create Global information txt file
+# global_df.to_csv('global_result.txt', sep=' ', header=None, index=None)
 
 
 
