@@ -80,12 +80,13 @@ CREATE TABLE IF NOT EXISTS `spaceinfo` (
 -- TrackingInfo - GlobalTrackingInfo Mapping
 CREATE TABLE IF NOT EXISTS `trackinginfo_has_globaltrackinginfo` (
     videoGroup_id INT NOT NULL,
+    localVideo_id INT NOT NULL,
     frame_id INT NOT NULL,
     globalID INT NOT NULL,
 	trackingID INT NOT NULL,
-    PRIMARY KEY (videoGroup_id, frame_id, globalID, trackingID),
+    PRIMARY KEY (videoGroup_id, localVideo_id, frame_id, globalID, trackingID),
     FOREIGN KEY (videoGroup_id, frame_id, globalID) REFERENCES globaltrackinginfo(videoGroup_id, frame_id, globalID),
-    FOREIGN KEY (videoGroup_id, frame_id, trackingID) REFERENCES trackinginfo_correction(frameinfo_video_id, frameinfo_frame_id, identifyID)
+    FOREIGN KEY (localVideo_id, frame_id, trackingID) REFERENCES trackinginfo_correction(frameinfo_video_id, frameinfo_frame_id, identifyID)
 );
 
 -- BEV - GlobalTrackingInfo Mapping
