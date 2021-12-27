@@ -123,10 +123,11 @@ def getMOTDatabyFrame(videoId, frameId):
     return datas
 
 # Insert Global Tracking Info
-# groupID (Int) : Video Group ID
+# groupID (Int) : Video Group ID (globaltrackinginfo's videoGroup_id)
+# localVideoID (Int) : Local Video ID (trackinginfo's frameinfo_video_id)
 # mappingInfo (List) : [[FrameID, GlobalID, TrackingID], [FrameID, GlobalID, TrackingID], ...]
 # trackingInfo (List) : [[FrameID, Global ID, X, Y], [FrameID, Global ID, X, Y]..]
-def insertGlobalTrackingInfo(groupID, mappingInfo, trackingInfo):
+def insertGlobalTrackingInfo(groupID, localVideoID, mappingInfo, trackingInfo):
     getCursor().executemany("insert into `globaltrackinginfo`("
                             "`videoGroup_id`, "
                             "`frame_id`, "
@@ -136,10 +137,11 @@ def insertGlobalTrackingInfo(groupID, mappingInfo, trackingInfo):
 
     getCursor().executemany("insert into `trackinginfo_has_globaltrackinginfo`("
                             "`videoGroup_id`, "
+                            "`localVideo_id`, "
                             "`frame_id`, "
                             "`globalID`, "
                             "`trackingID`) "
-                            "values ({}, %s, %s, %s)".format(groupID), trackingInfo)
+                            "values ({}, {}, %s, %s, %s)".format(groupID, localVideoID), mappingInfo)
     mot_db.commit()
 
 # Get Global Tracking Data (From All Frame)
