@@ -1,5 +1,6 @@
 import os
 import cv2
+import DB.database as Database
 
 src_x, src_y = -1, -1
 des_x, des_y = -1, -1
@@ -52,7 +53,7 @@ def select_points_src(event, x, y, flags, param):
         drawing = True
         src_x, src_y = x, y
         print("frame coordinate:", src_x, src_y)
-        f.write('frame ' + str(src_x) + ' ' + str(src_y) + '\n')
+        #f.write('frame ' + str(src_x) + ' ' + str(src_y) + '\n')
         cv2.circle(param, (x, y), 5, (0, 0, 255), -1)
     elif event == cv2.EVENT_LBUTTONUP:
         drawing = False
