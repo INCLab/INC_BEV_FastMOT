@@ -214,3 +214,10 @@ def getBEVData(groupID):
         datas[dataIdx] = data
 
     return datas
+
+# Get Video Group ID by Video ID
+# videoID : Single Video ID
+def getGroupIDbyVideoID(videoID):
+    cursor = getCursor()
+    cursor.execute("SELECT videoGroup_id from video where id = %s", videoID)
+    return cursor.fetchall()[0]
