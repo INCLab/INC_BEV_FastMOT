@@ -219,7 +219,8 @@ def start():
 
         # BEV Start
         logger.info('Start BEV...')
-        BEV.start(Path(args.input_uri), Path(args.output_uri), Path(args.map_uri).absolute())
+        if len(trackingList) > 0:
+            BEV.start(Path(args.input_uri), Path(args.output_uri), Path(args.map_uri).absolute(), trackingList)
 
         # Write BEV Video
         logger.info('Write BEV Video...')

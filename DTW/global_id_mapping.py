@@ -23,7 +23,7 @@ print("========= Get MOT data =========\n")
 # Todo: 읽어온 MOT data에서 좌표값을 2중리스트가 아닌 바깥 리스트로 꺼내오기
 total_mot_list = []
 for video_id in video_id_list:
-    mot_list = Database.getMOTDatas(video_id)
+    mot_list = Database.getBEVDatabyVideoId(video_id)
     total_mot_list.append(mot_list)
 
 video_num = len(total_mot_list)

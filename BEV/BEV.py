@@ -17,7 +17,7 @@ lonloat : 도면 공간
 오른쪽 위, 왼쪽 위, 왼쪽 아래, 오른쪽 아래 순서
 '''
 
-def start(input_path, output_path, map_path):
+def start(input_path, output_path, map_path, tracking_list):
 
     heatmap_path = os.path.join(output_path, 'heatmap.png')
     original_output_path = output_path
@@ -117,7 +117,7 @@ def start(input_path, output_path, map_path):
             src = os.path.join(output_path, str(frames) + '.jpg')
             cv2.imwrite(src, map)
 
-    # ### Create BEV_Result txt files ###
+    # Todo: change this code
     total_txt_num = 3  # Number of total result file
 
     for i in range(total_txt_num):
@@ -246,27 +246,18 @@ def save_lonlat_frame(point, pm,frame_num ,input_dir, output_dir):
         src = os.path.join(output_dir, str(frames)+'.jpg')
         cv2.imwrite(src, map)
 
-def save_dict(file):
-    ##################################################
+
+def save_dict(tracking_list):
     frame = 0
     point = dict()
-    while True:
-        line = file.readline()
 
-        if not line:
-            break
+    for tracking_info in tracking_list:
+        frame = tracking_info[0]
 
-        info = line[:-1].split(" ")
-
-        frame = info[0]
-
-        if info[0] in point:
-            line = point.get(info[0])
-            line.append(list(map(int, info[1:])))
+        if frame in point:
+            line = point.get(frame)
+            line.append(list(map(int, tracking_info[1:])))
         else:
-            point[info[0]] = [list(map(int, info[1:]))]
-
-    file.close()
+            point[frame] = [list(map(int, tracking_info[1:]))]
 
     return frame, point
-    ###########################################################################
