@@ -98,9 +98,9 @@ def getMOTDatas(videoId):
     datas = list(cursor.fetchall())
     for dataIdx in range(len(datas)):
         data = list(datas[dataIdx])
-        data[2] = list(map(int, data[2].replace('POINT(', '').replace(')', '').split(' ')))
-        datas[dataIdx] = data[2][0]
-        datas.append(data[2][1])
+        positionData = list(map(int, data[2].replace('POINT(', '').replace(')', '').split(' ')))
+        data[2] = positionData[0]
+        data.append(positionData[1])
 
     return datas
 
