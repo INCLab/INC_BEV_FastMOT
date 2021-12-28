@@ -94,10 +94,10 @@ def start(videoIdList, input_path, output_path, map_path):
     #     globals()['frame{}'.format(idx)], globals()['point{}'.format(idx)] = save_dict(file)
     #     idx += 1
 
-    videoMOTData = Database.getMOTDatas(videoId)
-
-    for data in videoMOTData:
-        globals()['frame{}'.format(videoId)], globals()['point{}'.format(videoId)] = data[0], "{} {} {}".format(data[1], data[2], data[3])
+    for videoId in videoIdList:
+        videoMOTData = Database.getMOTDatas(videoId)
+        for data in videoMOTData:
+            globals()['frame{}'.format(videoId)], globals()['point{}'.format(videoId)] = data[0], "{} {} {}".format(data[1], data[2], data[3])
 
     map = cv2.imread(str(map_path), -1)
     for i in videoIdList:
