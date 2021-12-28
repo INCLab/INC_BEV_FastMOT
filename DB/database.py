@@ -102,6 +102,8 @@ def getMOTDatas(videoId):
         data[2] = positionData[0]
         data.append(positionData[1])
 
+        datas[dataIdx] = data
+
     return datas
 
 
