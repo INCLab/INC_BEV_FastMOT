@@ -96,12 +96,13 @@ def getMOTDatas(videoId):
                    "where `frameinfo_video_id` = {}".format(videoId))
 
     datas = list(cursor.fetchall())
-
     for dataIdx in range(len(datas)):
         data = list(datas[dataIdx])
-        data[2] = list(map(int, data[2].replace('POINT(', '').replace(')', '').split(' ')))
-        data[dataIdx] = data[2][0]
-        data.append(data[2][1])
+        positionData = list(map(int, data[2].replace('POINT(', '').replace(')', '').split(' ')))
+        data[2] = positionData[0]
+        data.append(positionData[1])
+
+        datas[dataIdx] = data
 
     return datas
 
