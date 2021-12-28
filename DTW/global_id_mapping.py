@@ -28,7 +28,6 @@ for video_id in video_id_list:
 
 video_num = len(total_mot_list)
 
-print(total_mot_list[0])
 print("OK\n")
 
 # ID correction을 위한 id grouping

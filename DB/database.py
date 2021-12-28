@@ -3,7 +3,7 @@ import pymysql
 mot_db = pymysql.connect(
     user='inc',
     passwd='1q2w3e4r!',
-    host='127.0.0.1',
+    host='192.9.85.204',
     db='inc_mot',
     charset='utf8mb4'
 )
@@ -96,11 +96,12 @@ def getMOTDatas(videoId):
                    "where `frameinfo_video_id` = {}".format(videoId))
 
     datas = list(cursor.fetchall())
+
     for dataIdx in range(len(datas)):
         data = list(datas[dataIdx])
         data[2] = list(map(int, data[2].replace('POINT(', '').replace(')', '').split(' ')))
-        datas[dataIdx] = data[2][0]
-        datas.append(data[2][1])
+        data[dataIdx] = data[2][0]
+        data.append(data[2][1])
 
     return datas
 
