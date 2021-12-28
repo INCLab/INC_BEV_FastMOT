@@ -110,7 +110,7 @@ def getMOTDatas(videoId):
 # Get Single Video MOT Data (From Specific Frame)
 # videoID : Single Video ID
 # frameID : Single Video Frame ID
-# Return [[ID, [X, Y]], [ID, [X, Y]]]
+# Return [[ID, X, Y], [ID, X, Y]]
 def getMOTDatabyFrame(videoId, frameId):
     cursor = getCursor()
     cursor.execute("SELECT identifyID, ST_AsText(position) "
@@ -120,14 +120,80 @@ def getMOTDatabyFrame(videoId, frameId):
     datas = list(cursor.fetchall())
     for dataIdx in range(len(datas)):
         data = list(datas[dataIdx])
-        data[1] = list(map(int, data[1].replace('POINT(', '').replace(')', '').split(' ')))
+        positionData = list(map(int, data[1].replace('POINT(', '').replace(')', '').split(' ')))
+        data[1] = positionData[0]
+        data.append(positionData[1])
+
+        datas[dataIdx] = data
+
+    return datas
+
+# Insert New BEV Data
+# groupID (Int) : Video Group ID
+# mappingInfo (List) : [[Video ID, Frame ID, BEV ID, Local ID], ...]
+# bevInfo (List) : [[Video ID, Frame ID, BEV ID, X, Y], ...]
+def insertBEVData(groupID, mappingInfo, bevInfo):
+    getCursor().executemany("insert into `BEV`("
+                            "`videoGroup_id`, "
+                            "`video_id`, "
+                            "`frame_id`, "
+                            "`bevID`, "
+                            "`position`) "
+                            "values ({}, %s, %s, %s, POINT(%s, %s))".format(groupID), bevInfo)
+
+    getCursor().executemany("insert into `trackinginfo_has_BEV`("
+                            "`videoGroup_id`, "
+                            "`localVideo_id`, "
+                            "`frame_id`, "
+                            "`bevID`, "
+                            "`trackingID`) "
+                            "values ({}, %s, %s, %s)".format(groupID), mappingInfo)
+    mot_db.commit()
+
+
+# Get BEV Data by Video ID
+# videoId (Int) : Video Group ID
+# return [[FrameID, BEV ID, X, Y], ...]
+def getBEVDatabyVideoId(videoId):
+    cursor = getCursor()
+    cursor.execute("SELECT frame_id, bevID, ST_AsText(position) "
+                   "from `BEV` "
+                   "where `video_id` = {}".format(videoId))
+
+    datas = list(cursor.fetchall())
+    for dataIdx in range(len(datas)):
+        data = list(datas[dataIdx])
+        positionData = list(map(int, data[1].replace('POINT(', '').replace(')', '').split(' ')))
+        data[1] = positionData[0]
+        data.append(positionData[1])
+
+        datas[dataIdx] = data
+
+    return datas
+
+# Get BEV Data by Group ID
+# groupID (Int) : Video Group ID
+# return [[VideoID, FrameID, BEV ID, X, Y], ...]
+def getBEVDatabyGroupId(groupID):
+    cursor = getCursor()
+    cursor.execute("SELECT video_id, frame_id, bevID, ST_AsText(position) "
+                   "from `BEV` "
+                   "where `videoGroup_id` = {}".format(groupID))
+
+    datas = list(cursor.fetchall())
+    for dataIdx in range(len(datas)):
+        data = list(datas[dataIdx])
+        positionData = list(map(int, data[1].replace('POINT(', '').replace(')', '').split(' ')))
+        data[1] = positionData[0]
+        data.append(positionData[1])
+
         datas[dataIdx] = data
 
     return datas
 
 # Insert Global Tracking Info
 # groupID (Int) : Video Group ID (globaltrackinginfo's videoGroup_id)
-# mappingInfo (List) : [[Video ID, FrameID, GlobalID, TrackingID], [Video ID, FrameID, GlobalID, TrackingID], ...]
+# mappingInfo (List) : [[Video ID, FrameID, GlobalID, BEV ID], [Video ID, FrameID, GlobalID, BEV ID], ...]
 # trackingInfo (List) : [[FrameID, Global ID, X, Y], [FrameID, Global ID, X, Y]..]
 def insertGlobalTrackingInfo(groupID, mappingInfo, trackingInfo):
     getCursor().executemany("insert into `globaltrackinginfo`("
@@ -137,18 +203,18 @@ def insertGlobalTrackingInfo(groupID, mappingInfo, trackingInfo):
                             "`position`) "
                             "values ({}, %s, %s, POINT(%s, %s))".format(groupID), trackingInfo)
 
-    getCursor().executemany("insert into `trackinginfo_has_globaltrackinginfo`("
+    getCursor().executemany("insert into `BEV_has_globaltrackinginfo`("
                             "`videoGroup_id`, "
-                            "`localVideo_id`, "
                             "`frame_id`, "
                             "`globalID`, "
-                            "`trackingID`) "
+                            "`bevID`) "
                             "values ({}, %s, %s, %s, %s)".format(groupID), mappingInfo)
     mot_db.commit()
 
+
 # Get Global Tracking Data (From All Frame)
 # groupID (Int) : Video Group ID
-# Return [[FrameID, ID, [X, Y]], ...]
+# Return [[FrameID, ID, X, Y], ...]
 def getGlobalTrackingDatas(groupID):
     cursor = getCursor()
     cursor.execute("SELECT frame_id, globalID, ST_AsText(position) "
@@ -158,7 +224,10 @@ def getGlobalTrackingDatas(groupID):
     datas = list(cursor.fetchall())
     for dataIdx in range(len(datas)):
         data = list(datas[dataIdx])
-        data[2] = list(map(int, data[2].replace('POINT(', '').replace(')', '').split(' ')))
+        positionData = list(map(int, data[2].replace('POINT(', '').replace(')', '').split(' ')))
+        data[2] = positionData[0]
+        data.append(positionData[1])
+
         datas[dataIdx] = data
 
     return datas
@@ -167,7 +236,7 @@ def getGlobalTrackingDatas(groupID):
 # Get Global Tracking Data (From Specific Frame)
 # groupID : Video Group ID
 # frameID : Video Frame ID
-# Return [[ID, [X, Y]], [ID, [X, Y]]]
+# Return [[ID, X, Y], [ID, X, Y]]
 def getGlobalTrackingDatabyFrame(groupID, frameId):
     cursor = getCursor()
     cursor.execute("SELECT globalID, ST_AsText(position) "
@@ -177,43 +246,10 @@ def getGlobalTrackingDatabyFrame(groupID, frameId):
     datas = list(cursor.fetchall())
     for dataIdx in range(len(datas)):
         data = list(datas[dataIdx])
-        data[1] = list(map(int, data[1].replace('POINT(', '').replace(')', '').split(' ')))
-        datas[dataIdx] = data
+        positionData = list(map(int, data[1].replace('POINT(', '').replace(')', '').split(' ')))
+        data[2] = positionData[0]
+        data.append(positionData[1])
 
-    return datas
-
-# Insert New BEV Data
-# groupID (Int) : Video Group ID
-# mappingInfo (List) : [[FrameID, GlobalID, BEV ID], [FrameID, GlobalID, BEV ID], ...]
-# bevInfo (List) : [[FrameID, BEV ID, X, Y], [FrameID, BEV ID, X, Y]]
-def insertBEVData(groupID, mappingInfo, bevInfo):
-    getCursor().executemany("insert into `BEV`("
-                            "`videoGroup_id`, "
-                            "`frame_id`, "
-                            "`bevID`, "
-                            "`position`) "
-                            "values ({}, %s, %s, POINT(%s, %s))".format(groupID), bevInfo)
-
-    getCursor().executemany("insert into `BEV_has_globaltrackinginfo`("
-                            "`videoGroup_id`, "
-                            "`frame_id`, "
-                            "`globalID`, "
-                            "`bevID`) "
-                            "values ({}, %s, %s, %s)".format(groupID), mappingInfo)
-    mot_db.commit()
-
-# Get BEV Data by Group ID
-# groupID (Int) : Video Group ID
-def getBEVData(groupID):
-    cursor = getCursor()
-    cursor.execute("SELECT frame_id, bevID, ST_AsText(position) "
-                   "from `BEV` "
-                   "where `videoGroup_id` = {}".format(groupID))
-
-    datas = list(cursor.fetchall())
-    for dataIdx in range(len(datas)):
-        data = list(datas[dataIdx])
-        data[2] = list(map(int, data[1].replace('POINT(', '').replace(')', '').split(' ')))
         datas[dataIdx] = data
 
     return datas

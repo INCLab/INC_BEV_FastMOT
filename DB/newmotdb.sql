@@ -48,6 +48,19 @@ CREATE TABLE IF NOT EXISTS `trackinginfo_correction` (
     FOREIGN KEY (frameinfo_video_id, frameinfo_frame_id) REFERENCES frameinfo(video_id, frame_id)
 );
 
+CREATE TABLE IF NOT EXISTS `BEV` (
+    videoGroup_id INT NOT NULL,
+    video_id INT NOT NULL,
+    frame_id INT NOT NULL,
+    bevID INT NOT NULL,
+    position POINT NOT NULL,
+    createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updateAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (videoGroup_id, video_id, frame_id, bevID),
+    FOREIGN KEY (videoGroup_id) REFERENCES videoGroup(id),
+    FOREIGN KEY (video_id) REFERENCES video(id)
+);
+
 CREATE TABLE IF NOT EXISTS `globaltrackinginfo` (
     videoGroup_id INT NOT NULL,
     frame_id INT NOT NULL,
@@ -59,16 +72,6 @@ CREATE TABLE IF NOT EXISTS `globaltrackinginfo` (
     FOREIGN KEY (videoGroup_id) REFERENCES videoGroup(id)
 );
 
-CREATE TABLE IF NOT EXISTS `BEV` (
-    videoGroup_id INT NOT NULL,
-    frame_id INT NOT NULL,
-    bevID INT NOT NULL,
-    position POINT NOT NULL,
-    createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updateAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (videoGroup_id, frame_id, bevID),
-    FOREIGN KEY (videoGroup_id) REFERENCES videoGroup(id)
-);
 
 CREATE TABLE IF NOT EXISTS `spaceinfo` (
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
@@ -77,25 +80,26 @@ CREATE TABLE IF NOT EXISTS `spaceinfo` (
     updateAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- TrackingInfo - GlobalTrackingInfo Mapping
-CREATE TABLE IF NOT EXISTS `trackinginfo_has_globaltrackinginfo` (
+-- TrackingInfo - BEV Mapping
+CREATE TABLE IF NOT EXISTS `trackinginfo_has_BEV` (
     videoGroup_id INT NOT NULL,
     localVideo_id INT NOT NULL,
     frame_id INT NOT NULL,
-    globalID INT NOT NULL,
+    bevID INT NOT NULL,
 	trackingID INT NOT NULL,
-    PRIMARY KEY (videoGroup_id, localVideo_id, frame_id, globalID, trackingID),
-    FOREIGN KEY (videoGroup_id, frame_id, globalID) REFERENCES globaltrackinginfo(videoGroup_id, frame_id, globalID),
-    FOREIGN KEY (localVideo_id, frame_id, trackingID) REFERENCES trackinginfo_correction(frameinfo_video_id, frameinfo_frame_id, identifyID)
+    PRIMARY KEY (videoGroup_id, localVideo_id, frame_id, bevID, trackingID),
+    FOREIGN KEY (localVideo_id, frame_id, trackingID) REFERENCES trackinginfo_correction(frameinfo_video_id, frameinfo_frame_id, identifyID),
+    FOREIGN KEY (videoGroup_id, localVideo_id, frame_id, bevID) REFERENCES BEV(videoGroup_id, video_id, frame_id, bevID)
 );
 
 -- BEV - GlobalTrackingInfo Mapping
 CREATE TABLE IF NOT EXISTS `BEV_has_globaltrackinginfo` (
     videoGroup_id INT NOT NULL,
+    localVideo_id INT NOT NULL,
     frame_id INT NOT NULL,
 	globalID INT NOT NULL,
     bevID INT NOT NULL,
     PRIMARY KEY (videoGroup_id, frame_id, globalID, bevID),
 	FOREIGN KEY (videoGroup_id, frame_id, globalID) REFERENCES globaltrackinginfo(videoGroup_id, frame_id, globalID),
-    FOREIGN KEY (videoGroup_id, frame_id, bevID) REFERENCES BEV(videoGroup_id, frame_id, bevID)
+    FOREIGN KEY (videoGroup_id, localVideo_id, frame_id, bevID) REFERENCES BEV(videoGroup_id, video_id, frame_id, bevID)
 );
