@@ -2,8 +2,12 @@ import math
 import numpy as np
 import dtw
 import pandas as pd
-import DB.database as Database
 import copy
+
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+import DB.database as Database
 
 from sklearn.preprocessing import MinMaxScaler
 
@@ -458,7 +462,3 @@ def generate_mappingInfo(id_df_list):
     total_list.sort(key=lambda x: (x[1], x[2]))  # x[1]: Frame, x[2]: GlobalID
 
     return total_list
-
-
-def create_global_table(group_id, mapping_info_list, global_info_list):
-    insertGlobalTrackingInfo(group_id, mapping_info_list, global_info_list)
