@@ -93,6 +93,8 @@ def start():
     else:
         groupID = None
 
+    videoIDList = []
+
     # 모든 File 읽기 위해 Loop
     for videofile in videolist:
         # 이름과 확장자 분리
@@ -108,6 +110,7 @@ def start():
                 if groupID:
                     try:
                         videoID = Database.addNewVideo(videofile, groupID)
+                        videoIDList.append(videoID)
                     except pymysql.err.IntegrityError as e:
                         logger.error(e)
                         exit()
@@ -219,7 +222,7 @@ def start():
 
         # BEV Start
         logger.info('Start BEV...')
-        BEV.start(Path(args.input_uri), Path(args.output_uri), Path(args.map_uri).absolute())
+        BEV.start(videoIDList, Path(args.input_uri), Path(args.output_uri), Path(args.map_uri).absolute())
 
         # Write BEV Video
         logger.info('Write BEV Video...')
