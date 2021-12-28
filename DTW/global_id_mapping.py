@@ -32,8 +32,8 @@ print("OK\n")
 
 # ID correction을 위한 id grouping
 # Todo: frame display를 통해 보여줄지, 직접확인하고 입력값만 받을지
-local_id_group_list = []
-drop_list = []
+local_id_group_list = [[[5, 7]], [[1, 8]], [[]]]
+drop_list = [[2], [9], [4]]
 
 print("========= Create DF list =========\n")
 
@@ -55,6 +55,7 @@ result_info_list = []
 # Select feature 1.unit(unit vector) 2.scalar(normalized scalar) 3.vector  (default: unit)
 # and generate result_info_list
 dfunc.select_feature(result_df_list, result_info_list, feature='vector')
+
 
 # Create high similarity ID list
 # ToDo: 현재는 result0를 기준으로 result1,2를 비교한 결과만 사용, overlap MTMCT task이므로 비디오 중 가장 많은 target이

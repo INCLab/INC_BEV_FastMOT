@@ -22,8 +22,7 @@ FRAME_THRESHOLD = 20
  e.g., id_list = [[id1, id2],[id4, id5, id9],...] 
 '''
 def id_correction(id_list, local_init_id, mot_df, video_id):
-
-    if len(id_list) > 0:
+    if id_list:
         local_id = local_init_id * video_id
         id_idx = 0
 
@@ -41,12 +40,13 @@ def id_correction(id_list, local_init_id, mot_df, video_id):
     Drop the incorrectly detected targets (e.g., Not a person)
 '''
 def id_drop(drop_list, mot_df):
-    if len(drop_list) > 0:
+    if drop_list:
         for id in drop_list:
             mot_df.drop(mot_df[mot_df['id'] == id].index, inplace=True)
         return mot_df
     else:
-        return mot_df
+        drop_list
+
 
 
 def create_corrected_table(crt_df, video_id):
@@ -64,19 +64,23 @@ def create_corrected_table(crt_df, video_id):
     Input parameter == list of whole mot results
     (e.g., [[localID, frame1, x1, y1], [localID, frame2, x2, y2], ...])
 '''
-def make_df_list(mot_list, id_list, drop_list, local_init_id, video_id):
+def make_df_list(mot_list, cor_id_list, drop_list, local_init_id, video_id):
     df_columns = ['frame', 'id', 'x', 'y']
     result = pd.DataFrame(mot_list, columns=df_columns)
 
-    result = id_correction(id_list, local_init_id, result, video_id)
-    result = id_drop(drop_list, result)
+    if cor_id_list:
+        result = id_correction(cor_id_list, local_init_id, result, video_id)
+    if drop_list:
+        result = id_drop(drop_list, result)
 
 
     # Insert collection tracking information in DB table
-    create_corrected_table(result, video_id)
+    # create_corrected_table(result, video_id)
 
     id_df = result.drop_duplicates(['id'])
     id_list = id_df['id'].tolist()
+
+    print(id_list)
 
     df_list = []
 
@@ -292,6 +296,7 @@ def dtw_overlap_frames(x_id_info, y_id_info, case):
                 if abs(x_frame_list[i] - y_frame_list[-1]) < min:
                     min = abs(x_frame_list[i] - y_frame_list[-1])
                     end_idx = i
+
         dist = dtw.dtw(x_vec_list[start_idx:end_idx + 1], y_vec_list, keep_internals=True).distance
 
     elif case == 2:

@@ -66,7 +66,7 @@ def insertCorrectionTrackingInfos(videoID, trackingInfoList):
                             "`frameinfo_frame_id`, "
                             "`identifyID`, "
                             "`position`) "
-                            "values ({}, %s, %s, POINT(%s, %s))", videoID, trackingInfoList)
+                            "values ({}, %s, %s, POINT(%s, %s))".format(videoID), trackingInfoList)
     mot_db.commit()
 
 # Insert New Space Info
