@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import mimetypes
 
+import DB.database as Database
+
 ##############################################################################
 
 '''
@@ -17,7 +19,7 @@ lonloat : 도면 공간
 오른쪽 위, 왼쪽 위, 왼쪽 아래, 오른쪽 아래 순서
 '''
 
-def start(input_path, output_path, map_path):
+def start(videoIdList, input_path, output_path, map_path):
 
     heatmap_path = os.path.join(output_path, 'heatmap.png')
     original_output_path = output_path
@@ -82,20 +84,24 @@ def start(input_path, output_path, map_path):
     #PixelMapper로 값 전달
 
 
-    idxforfile = {}
-    idx = 0
-    for inputfile in list(map_point.keys()):
-        ##############변경해야하는 부분#######################
-        # 좌표값을 받아야함(하나씩)
-        file = open(original_output_path / (inputfile + '.txt'), 'r')
-        idxforfile[inputfile] = idx
-        globals()['frame{}'.format(idx)], globals()['point{}'.format(idx)] = save_dict(file)
-        idx += 1
+    # idxforfile = {}
+    # idx = 0
+    # for inputfile in list(map_point.keys()):
+    #     ##############변경해야하는 부분#######################
+    #     # 좌표값을 받아야함(하나씩)
+    #     file = open(original_output_path / (inputfile + '.txt'), 'r')
+    #     idxforfile[inputfile] = idx
+    #     globals()['frame{}'.format(idx)], globals()['point{}'.format(idx)] = save_dict(file)
+    #     idx += 1
 
+    videoMOTData = Database.getMOTDatas(videoId)
+
+    for data in videoMOTData:
+        globals()['frame{}'.format(videoId)], globals()['point{}'.format(videoId)] = data[0], "{} {} {}".format(data[1], data[2], data[3])
 
     map = cv2.imread(str(map_path), -1)
-    for i in list(map_point.keys()):
-        globals()['BEV_Point{}'.format(idxforfile[i])] = dict()
+    for i in videoIdList:
+        globals()['BEV_Point{}'.format(i)] = dict()
 
     for frames in range(1, int(globals()['frame{}'.format(0)])):
         for i in list(map_point.keys()):
