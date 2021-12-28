@@ -64,6 +64,7 @@ for i in range(0, len(result_info_list)-1):
     result_dist_list = dfunc.check_similarity(result_info_list[i], result_info_list[i+1:])
     dfunc.id_mapping(result_dist_list, id_map_list[i])  # id_mapping에서 todo 처리
 
+print("====== Global mapping result ======\n")
 print(id_map_list[0])
 
 # Assign global id

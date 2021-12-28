@@ -205,6 +205,7 @@ def insertGlobalTrackingInfo(groupID, mappingInfo, trackingInfo):
 
     getCursor().executemany("insert into `BEV_has_globaltrackinginfo`("
                             "`videoGroup_id`, "
+                            "`localVideo_id`, "
                             "`frame_id`, "
                             "`globalID`, "
                             "`bevID`) "

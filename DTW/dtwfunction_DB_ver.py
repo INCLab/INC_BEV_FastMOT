@@ -45,7 +45,7 @@ def id_drop(drop_list, mot_df):
             mot_df.drop(mot_df[mot_df['id'] == id].index, inplace=True)
         return mot_df
     else:
-        drop_list
+        return mot_df
 
 
 
@@ -75,7 +75,7 @@ def make_df_list(mot_list, cor_id_list, drop_list, local_init_id, video_id):
 
 
     # Insert collection tracking information in DB table
-    # create_corrected_table(result, video_id)
+    create_corrected_table(result, video_id)
 
     id_df = result.drop_duplicates(['id'])
     id_list = id_df['id'].tolist()
@@ -233,29 +233,35 @@ def check_similarity(info_list, compare_list):
                 # case 1
                 elif info[0][0] <= k[0][0] and info[0][-1] >= k[0][-1]:
                     dist = dtw_overlap_frames(info, k, 1)
-                    result_list[i].append([info[1], k[1], dist])  # [compare_id, compared_id, DTW_dist]
+                    if dist != -1:
+                        result_list[i].append([info[1], k[1], dist])  # [compare_id, compared_id, DTW_dist]
                 # case 2
                 elif info[0][0] >= k[0][0] and info[0][-1] <= k[0][-1]:
                     dist = dtw_overlap_frames(info, k, 2)
-                    result_list[i].append([info[1], k[1], dist])  # [compare_id, compared_id, DTW_dist]
+                    if dist != -1:
+                        result_list[i].append([info[1], k[1], dist])  # [compare_id, compared_id, DTW_dist]
 
                 # *** 절반이상 겹치는 경우 : DTW로 유사도 측정
                 # case 3
                 elif info[0][0] >= k[0][0] and info[0][int(len(info[0]) / 2)] <= k[0][-1] <= info[0][-1]:
                     dist = dtw_overlap_frames(info, k, 3)
-                    result_list[i].append([info[1], k[1], dist])  # [compare_id, compared_id, DTW_dist]
+                    if dist != -1:
+                        result_list[i].append([info[1], k[1], dist])  # [compare_id, compared_id, DTW_dist]
                 # case 4
                 elif info[0][0] <= k[0][0] and k[0][int(len(k[0]) / 2)] <= info[0][-1] <= k[0][-1]:
                     dist = dtw_overlap_frames(info, k, 4)
-                    result_list[i].append([info[1], k[1], dist])  # [compare_id, compared_id, DTW_dist]
+                    if dist != -1:
+                        result_list[i].append([info[1], k[1], dist])  # [compare_id, compared_id, DTW_dist]
 
                 # *** 절반이하로 겹치는 경우: 제외?(포함하려면 위 코드와 합치기)
                 elif k[0][0] <= info[0][0] < k[0][-1] < info[0][int(len(info[0]) / 2)]:
                     dist = dtw_overlap_frames(info, k, 3)
-                    result_list[i].append([info[1], k[1], dist])  # [compare_id, compared_id, DTW_dist]
+                    if dist != -1:
+                        result_list[i].append([info[1], k[1], dist])  # [compare_id, compared_id, DTW_dist]
                 elif info[0][0] <= k[0][0] < info[0][-1] < k[0][int(len(k[0]) / 2)]:
                     dist = dtw_overlap_frames(info, k, 4)
-                    result_list[i].append([info[1], k[1], dist])  # [compare_id, compared_id, DTW_dist]
+                    if dist != -1:
+                        result_list[i].append([info[1], k[1], dist])  # [compare_id, compared_id, DTW_dist]
                 else:
                     print('Not matching case!!!!')
 
@@ -297,7 +303,11 @@ def dtw_overlap_frames(x_id_info, y_id_info, case):
                     min = abs(x_frame_list[i] - y_frame_list[-1])
                     end_idx = i
 
-        dist = dtw.dtw(x_vec_list[start_idx:end_idx + 1], y_vec_list, keep_internals=True).distance
+        # If vector length == 1, it accur dimension mismatch error
+        try:
+            dist = dtw.dtw(x_vec_list[start_idx:end_idx + 1], y_vec_list, keep_internals=True).distance
+        except:
+            dist = -1
 
     elif case == 2:
         try:
@@ -316,7 +326,13 @@ def dtw_overlap_frames(x_id_info, y_id_info, case):
                 if abs(y_frame_list[i] - x_frame_list[-1]) < min:
                     min = abs(y_frame_list[i] - x_frame_list[-1])
                     end_idx = i
-        dist = dtw.dtw(x_vec_list, y_vec_list[start_idx:end_idx + 1], keep_internals=True).distance
+
+        # If vector length == 1, it accur dimension mismatch error
+        try:
+            dist = dtw.dtw(x_vec_list[start_idx:end_idx + 1], y_vec_list, keep_internals=True).distance
+        except:
+            dist = -1
+
     # Case 3,4: 겹치는 경우
     elif case == 3:
         try:
@@ -335,7 +351,12 @@ def dtw_overlap_frames(x_id_info, y_id_info, case):
                 if abs(x_frame_list[i] - y_frame_list[-1]) < min:
                     min = abs(x_frame_list[i] - y_frame_list[-1])
                     end_idx = i
-        dist = dtw.dtw(x_vec_list[:end_idx], y_vec_list[start_idx:], keep_internals=True).distance
+
+        # If vector length == 1, it accur dimension mismatch error
+        try:
+            dist = dtw.dtw(x_vec_list[start_idx:end_idx + 1], y_vec_list, keep_internals=True).distance
+        except:
+            dist = -1
 
     elif case == 4:
         try:
@@ -354,7 +375,12 @@ def dtw_overlap_frames(x_id_info, y_id_info, case):
                 if abs(y_frame_list[i] - x_frame_list[-1]) < min:
                     min = abs(y_frame_list[i] - x_frame_list[-1])
                     end_idx = i
-        dist = dtw.dtw(x_vec_list[start_idx:], y_vec_list[:end_idx], keep_internals=True).distance
+
+        # If vector length == 1, it accur dimension mismatch error
+        try:
+            dist = dtw.dtw(x_vec_list[start_idx:end_idx + 1], y_vec_list, keep_internals=True).distance
+        except:
+            dist = -1
 
     return dist
 
@@ -397,7 +423,7 @@ def change_to_global(T_set, id_set, gid_set):
     for T in T_set:
         for id_info in T:
             for i in range(0, len(id_set)):
-                if id_info['id'][0] in id_set[i]:
+                if id_info['id'].iloc[0] in id_set[i]:
                     id_info['id'] = gid_set[i]
                     break
     return
@@ -446,7 +472,7 @@ def generate_mapping_df(v_T_set, id_set, gid_set):
     for T in v_T_set:
         for id_info in T:
             for i in range(0, len(id_set)):
-                if id_info['id'][0] in id_set[i]:
+                if id_info['id'].iloc[0] in id_set[i]:
                     id_info.insert(2, 'global_id', gid_set[i])
                     id_info.drop(['x', 'y'], axis=1, inplace=True)
                     mappingInfo.append(id_info)
