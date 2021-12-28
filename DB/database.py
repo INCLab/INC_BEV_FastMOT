@@ -37,7 +37,7 @@ def getVideoId(videoFileName):
 
     cursor = getCursor()
     cursor.execute("SELECT `id` from `video` where `videoFileName` = %s", data)
-    return cursor.fetchall()
+    return cursor.fetchall()[0][0]
 
 # Insert Video Frames
 def insertVideoFrames(videoId, frameList):
@@ -224,4 +224,4 @@ def getBEVData(groupID):
 def getGroupIDbyVideoID(videoID):
     cursor = getCursor()
     cursor.execute("SELECT videoGroup_id from video where id = %s", videoID)
-    return cursor.fetchall()[0]
+    return cursor.fetchall()[0][0]
