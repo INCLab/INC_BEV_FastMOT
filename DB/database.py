@@ -3,7 +3,7 @@ import pymysql
 mot_db = pymysql.connect(
     user='inc',
     passwd='1q2w3e4r!',
-    host='192.9.85.204',
+    host='127.0.0.1',
     db='inc_mot',
     charset='utf8mb4'
 )
@@ -91,9 +91,6 @@ def insertNewSpace(pointList):
 # Return [[FrameID, ID, [X, Y]], ...]
 def getMOTDatas(videoId):
     cursor = getCursor()
-    print("SELECT frameinfo_frame_id, identifyID, ST_AsText(position) "
-                   "from `trackinginfo` "
-                   "where `frameinfo_video_id` = {}".format(videoId))
     cursor.execute("SELECT frameinfo_frame_id, identifyID, ST_AsText(position) "
                    "from `trackinginfo` "
                    "where `frameinfo_video_id` = {}".format(videoId))
@@ -102,8 +99,7 @@ def getMOTDatas(videoId):
     for dataIdx in range(len(datas)):
         data = list(datas[dataIdx])
         data[2] = list(map(int, data[2].replace('POINT(', '').replace(')', '').split(' ')))
-        datas[dataIdx] = data[0]
-        datas.append(data[1])
+        datas[dataIdx] = data
 
     return datas
 

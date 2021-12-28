@@ -24,10 +24,11 @@ print("========= Get MOT data =========\n")
 total_mot_list = []
 for video_id in video_id_list:
     mot_list = Database.getMOTDatas(video_id)
-    total_mot_list.append()
+    total_mot_list.append(mot_list)
 
 video_num = len(total_mot_list)
 
+print(total_mot_list[0])
 print("OK\n")
 
 # ID correction을 위한 id grouping
