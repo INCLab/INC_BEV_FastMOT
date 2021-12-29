@@ -85,24 +85,39 @@ def start(input_path, output_path, map_path, tracking_info):
     idxforfile = {}
     idx = 0
 
-    # info: [VideoID, tracking_list]
+    # info: [VideoName, VideoID, tracking_list]
     for i in list(map_point.keys()):
         idxforfile[i] = idx
-        globals()['frame{}'.format(idx)], globals()['point{}'.format(idx)] = save_dict(tracking_info[idx][1])
+        tracking_list = []
+        for info in tracking_info:
+            if info[0] == i:
+                tracking_list = info[2]
+                break
+        if not tracking_list:
+            print('Tracking_list is empty!')
+
+
+        globals()['frame{}'.format(idxforfile[i])], globals()['point{}'.format(idxforfile[i])] = save_dict(tracking_list)
         idx += 1
 
     map = cv2.imread(str(map_path), -1)
     for i in list(map_point.keys()):
         globals()['BEV_Point{}'.format(idxforfile[i])] = dict()
 
-    for frames in range(1, int(globals()['frame{}'.format(0)])):
+    max_frame = 0
+    for i in list(map_point.keys()):
+        if int(globals()['frame{}'.format(idxforfile[i])]) > max_frame:
+            max_frame = int(globals()['frame{}'.format(idxforfile[i])])
+
+
+    for frames in range(1, max_frame + 1):
         for i in list(map_point.keys()):
             pm = PixelMapper(quad_coords_list[i]["pixel"], quad_coords_list[i]["lonlat"])
-            if globals()['point{}'.format(idxforfile[i])].get(str(frames)) is not None:
-                for label in globals()['point{}'.format(idxforfile[i])].get(str(frames)):
+            if globals()['point{}'.format(idxforfile[i])].get(frames) is not None:
+                for label in globals()['point{}'.format(idxforfile[i])].get(frames):
                     uv = (label[1], label[2])
                     lonlat = list(pm.pixel_to_lonlat(uv))
-                    li = [label[0], int(lonlat[0][0]), int(lonlat[0][1])]
+                    li = [frames, label[0], int(lonlat[0][0]), int(lonlat[0][1])]
                     if frames in globals()['BEV_Point{}'.format(idxforfile[i])]:
                         line = globals()['BEV_Point{}'.format(idxforfile[i])].get(frames)
                         line.append(li)
@@ -117,15 +132,18 @@ def start(input_path, output_path, map_path, tracking_info):
 
     print('Insert BEV tracking info...')
     # Insert BEV tracking info in table
-    group_id = Database.getGroupIDbyVideoID(tracking_info[0][0])
-    for i in range(len(tracking_info)):
+    group_id = Database.getGroupIDbyVideoID(tracking_info[0][1])
+    for i in list(map_point.keys()):
         bev_trackingList = []
         mappingList = []
-        for key in globals()['BEV_Point{}'.format(i)]:
-            for info in globals()['BEV_Point{}'.format(i)][key]:
-                video_id = list(tracking_info[i][0])
-                bev_trackingList.append(video_id + info)
-                mappingList.append(video_id + info[1:3] + [info[2]])
+        for key in globals()['BEV_Point{}'.format(idxforfile[i])]:
+            for info in globals()['BEV_Point{}'.format(idxforfile[i])][key]:
+                for t in tracking_info:
+                    if t[0] == i:
+                        video_id = [t[1]]
+                        bev_trackingList.append(video_id + info)
+                        mappingList.append(video_id + info[1:3] + [info[2]])
+                        break
         Database.insertBEVData(group_id, mappingList, bev_trackingList)
     print('Done')
 
