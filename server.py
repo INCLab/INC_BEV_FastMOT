@@ -7,8 +7,11 @@ from server_config import *
 #import DB.database as Database
 
 app = Flask(__name__)
-app.config['JSON_AS_ASCII'] = False
+app.config['JSON_AS_ASCII'] = False # Jsonify 한글 정상 출력되도록 처리
+app.config['MAX_CONTENT_LENGTH'] = 5000 * 1024 * 1024 # 5000MB (5GB)까지 업로드 가능하도록 처리
 
+# 비디오 파일 업로드
+# Todo : 비디오 업로드 시 DB에 등록 과정 추가 (개별 비디오 및 Group)
 @app.route('/upload_videos', methods=['POST'])
 def upload_videos():
     if request.method == 'POST':
@@ -48,7 +51,8 @@ def upload_videos():
             # 파일 저장
             video.save(os.path.join(uploadFolder, fname))
 
-
+# 지도 업로드
+# Todo : 지도 정보 Database에 업로드 가능하도록 하기
 @app.route('/upload_map', methods=['POST'])
 def upload_map():
     if request.method == 'POST':
@@ -62,14 +66,14 @@ def upload_map():
                 msg='Please Upload Files'
             )
 
-        # 업로드된 파일 목록 가져옴
+        # 업로드된 파일 가져옴
         map = request.files['mapFile']
 
         # 업로드 폴더 생성
         uploadFolder = MAP_LOCATION + '/' + datetime.today().strftime("%Y%m%d%H%M%S") + '/'
         os.mkdir(uploadFolder)
 
-        # Mimetype에 Video가 없으면
+        # Mimetype에 image가 없으면
         if "image" not in map.mimetype:
             # 생성한 폴더 지움
             os.remove(uploadFolder)
@@ -86,7 +90,6 @@ def upload_map():
 
         # 파일 저장
         map.save(os.path.join(uploadFolder, fname))
-
 
 
 if __name__ == "__main__":
