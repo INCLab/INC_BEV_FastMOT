@@ -23,7 +23,8 @@ print("========= Get MOT data =========\n")
 # Todo: 읽어온 MOT data에서 좌표값을 2중리스트가 아닌 바깥 리스트로 꺼내오기
 total_mot_list = []
 for video_id in video_id_list:
-    mot_list = Database.getMOTDatas(video_id)
+    mot_list = Database.getBEVDatabyVideoId(video_id)
+    print(mot_list)
     total_mot_list.append(mot_list)
 
 video_num = len(total_mot_list)
@@ -32,8 +33,8 @@ print("OK\n")
 
 # ID correction을 위한 id grouping
 # Todo: frame display를 통해 보여줄지, 직접확인하고 입력값만 받을지
-local_id_group_list = []
-drop_list = []
+local_id_group_list = [[[5, 7]], [[1, 8]], [[]]]
+drop_list = [[2], [9], [4]]
 
 print("========= Create DF list =========\n")
 
@@ -56,6 +57,7 @@ result_info_list = []
 # and generate result_info_list
 dfunc.select_feature(result_df_list, result_info_list, feature='vector')
 
+
 # Create high similarity ID list
 # ToDo: 현재는 result0를 기준으로 result1,2를 비교한 결과만 사용, overlap MTMCT task이므로 비디오 중 가장 많은 target이
 id_map_list = [[], []]
@@ -63,6 +65,7 @@ for i in range(0, len(result_info_list)-1):
     result_dist_list = dfunc.check_similarity(result_info_list[i], result_info_list[i+1:])
     dfunc.id_mapping(result_dist_list, id_map_list[i])  # id_mapping에서 todo 처리
 
+print("====== Global mapping result ======\n")
 print(id_map_list[0])
 
 # Assign global id

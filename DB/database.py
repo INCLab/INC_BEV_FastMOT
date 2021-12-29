@@ -66,7 +66,7 @@ def insertCorrectionTrackingInfos(videoID, trackingInfoList):
                             "`frameinfo_frame_id`, "
                             "`identifyID`, "
                             "`position`) "
-                            "values ({}, %s, %s, POINT(%s, %s))", videoID, trackingInfoList)
+                            "values ({}, %s, %s, POINT(%s, %s))".format(videoID), trackingInfoList)
     mot_db.commit()
 
 # Insert New Space Info
@@ -205,6 +205,7 @@ def insertGlobalTrackingInfo(groupID, mappingInfo, trackingInfo):
 
     getCursor().executemany("insert into `BEV_has_globaltrackinginfo`("
                             "`videoGroup_id`, "
+                            "`localVideo_id`, "
                             "`frame_id`, "
                             "`globalID`, "
                             "`bevID`) "

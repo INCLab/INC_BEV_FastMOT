@@ -93,7 +93,9 @@ def start():
     else:
         groupID = None
 
-    videoIDList = []
+    # For BEV param
+    # tracking_info: [[VideoID_1, tracking_list_1],[VideoID_2, tracking_list_2], ...]
+    tracking_info = []
 
     # 모든 File 읽기 위해 Loop
     for videofile in videolist:
@@ -110,7 +112,6 @@ def start():
                 if groupID:
                     try:
                         videoID = Database.addNewVideo(videofile, groupID)
-                        videoIDList.append(videoID)
                     except pymysql.err.IntegrityError as e:
                         logger.error(e)
                         exit()
@@ -197,6 +198,9 @@ def start():
                         # Add Tracking Info
                         if len(trackingList) > 0:
                             Database.insertTrackingInfos(videoID, trackingList)
+
+                            # For BEV param
+                            tracking_info.append([videoID, trackingList])
                     except Exception as e:
                         logger.error(e)
                         exit()
@@ -222,7 +226,10 @@ def start():
 
         # BEV Start
         logger.info('Start BEV...')
-        BEV.start(videoIDList, Path(args.input_uri), Path(args.output_uri), Path(args.map_uri).absolute())
+        if len(tracking_info) > 0:
+            BEV.start(Path(args.input_uri), Path(args.output_uri), Path(args.map_uri).absolute(), tracking_info)
+        else:
+            print('Tracking_info is empty!')
 
         # Write BEV Video
         logger.info('Write BEV Video...')
