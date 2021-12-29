@@ -94,7 +94,7 @@ def start():
         groupID = None
 
     # For BEV param
-    # tracking_info: [[VideoID_1, tracking_list_1],[VideoID_2, tracking_list_2], ...]
+    # tracking_info: [[VideoName1, VideoID_1, tracking_list_1],[VideoName2, VideoID_2, tracking_list_2], ...]
     tracking_info = []
 
     # 모든 File 읽기 위해 Loop
@@ -200,7 +200,7 @@ def start():
                             Database.insertTrackingInfos(videoID, trackingList)
 
                             # For BEV param
-                            tracking_info.append([videoID, trackingList])
+                            tracking_info.append([name, videoID, trackingList])
                     except Exception as e:
                         logger.error(e)
                         exit()
