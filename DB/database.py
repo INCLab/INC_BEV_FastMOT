@@ -305,6 +305,7 @@ def getFrameMousePoint(videoID):
                    "from `mousepoint_frame` "
                    "where `video_id".format(videoID))
 
+    data = list(cursor.fetchall())
     positionData1 = list(map(int, data[0].replace('POINT(', '').replace(')', '').split(' ')))
     positionData2 = list(map(int, data[1].replace('POINT(', '').replace(')', '').split(' ')))
 
@@ -320,6 +321,7 @@ def getMapMousePoint(videoID, mapName):
                    "from `mousepoint_map` "
                    "where `video_id` = {} and `map_name` = {}".format(videoID, mapName))
 
+    data = list(cursor.fetchall())
     positionData1 = list(map(int, data[0].replace('POINT(', '').replace(')', '').split(' ')))
     positionData2 = list(map(int, data[1].replace('POINT(', '').replace(')', '').split(' ')))
 
