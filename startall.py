@@ -229,7 +229,7 @@ def start():
         if len(tracking_info) > 0:
             BEV.start(Path(args.input_uri), Path(args.output_uri), Path(args.map_uri).absolute(), tracking_info)
         else:
-            print('Tracking_info is empty!')
+            logger.info('Tracking_info is empty!')
 
         # Write BEV Video
         logger.info('Write BEV Video...')

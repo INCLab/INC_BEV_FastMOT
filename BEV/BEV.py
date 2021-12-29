@@ -157,8 +157,6 @@ def start(input_path, output_path, map_path, tracking_info):
                     y = round(int(label[1]) / map.shape[1] * 12)
                     df[x][y] += 1
 
-    print(df)
-
     sns.heatmap(df, linewidths=0.1, linecolor="black")
 
     plt.savefig(heatmap_path)
