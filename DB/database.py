@@ -278,6 +278,14 @@ def insertFrameMousePoint(videoID, pointList):
                         "values ({}, {})".format(videoID, pointCvt))
     mot_db.commit()
 
+# Get Group Folder Name by Group ID
+# groupID : Group ID
+# ex. 20211229222632
+def getGroupFolderName(groupID):
+    cursor = getCursor()
+    cursor.execute("SELECT folderName from videoGroup where id = %s", groupID)
+    return cursor.fetchall()[0][0]
+
 # Insert New Map Mouse Point
 # videoID : Video ID
 # mapName : Map File Name
