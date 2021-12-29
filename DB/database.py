@@ -164,8 +164,8 @@ def getBEVDatabyVideoId(videoId):
     datas = list(cursor.fetchall())
     for dataIdx in range(len(datas)):
         data = list(datas[dataIdx])
-        positionData = list(map(int, data[1].replace('POINT(', '').replace(')', '').split(' ')))
-        data[1] = positionData[0]
+        positionData = list(map(int, data[2].replace('POINT(', '').replace(')', '').split(' ')))
+        data[2] = positionData[0]
         data.append(positionData[1])
 
         datas[dataIdx] = data
@@ -184,14 +184,15 @@ def getBEVDatabyGroupId(groupID):
     datas = list(cursor.fetchall())
     for dataIdx in range(len(datas)):
         data = list(datas[dataIdx])
-        positionData = list(map(int, data[1].replace('POINT(', '').replace(')', '').split(' ')))
-        data[1] = positionData[0]
+        positionData = list(map(int, data[2].replace('POINT(', '').replace(')', '').split(' ')))
+        data[2] = positionData[0]
         data.append(positionData[1])
 
         datas[dataIdx] = data
 
     return datas
 
+# Todo: mapping info에서 integrity error
 # Insert Global Tracking Info
 # groupID (Int) : Video Group ID (globaltrackinginfo's videoGroup_id)
 # mappingInfo (List) : [[Video ID, FrameID, GlobalID, BEV ID], [Video ID, FrameID, GlobalID, BEV ID], ...]
@@ -204,13 +205,13 @@ def insertGlobalTrackingInfo(groupID, mappingInfo, trackingInfo):
                             "`position`) "
                             "values ({}, %s, %s, POINT(%s, %s))".format(groupID), trackingInfo)
 
-    getCursor().executemany("insert into `BEV_has_globaltrackinginfo`("
-                            "`videoGroup_id`, "
-                            "`localVideo_id`, "
-                            "`frame_id`, "
-                            "`globalID`, "
-                            "`bevID`) "
-                            "values ({}, %s, %s, %s, %s)".format(groupID), mappingInfo)
+    # getCursor().executemany("insert into `BEV_has_globaltrackinginfo`("
+    #                         "`videoGroup_id`, "
+    #                         "`localVideo_id`, "
+    #                         "`frame_id`, "
+    #                         "`globalID`, "
+    #                         "`bevID`) "
+    #                         "values ({}, %s, %s, %s, %s)".format(groupID), mappingInfo)
     mot_db.commit()
 
 
