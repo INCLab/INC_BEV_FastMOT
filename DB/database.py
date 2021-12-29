@@ -192,6 +192,7 @@ def getBEVDatabyGroupId(groupID):
 
     return datas
 
+# Todo: mapping info에서 integrity error
 # Insert Global Tracking Info
 # groupID (Int) : Video Group ID (globaltrackinginfo's videoGroup_id)
 # mappingInfo (List) : [[Video ID, FrameID, GlobalID, BEV ID], [Video ID, FrameID, GlobalID, BEV ID], ...]
@@ -204,13 +205,13 @@ def insertGlobalTrackingInfo(groupID, mappingInfo, trackingInfo):
                             "`position`) "
                             "values ({}, %s, %s, POINT(%s, %s))".format(groupID), trackingInfo)
 
-    getCursor().executemany("insert into `BEV_has_globaltrackinginfo`("
-                            "`videoGroup_id`, "
-                            "`localVideo_id`, "
-                            "`frame_id`, "
-                            "`globalID`, "
-                            "`bevID`) "
-                            "values ({}, %s, %s, %s, %s)".format(groupID), mappingInfo)
+    # getCursor().executemany("insert into `BEV_has_globaltrackinginfo`("
+    #                         "`videoGroup_id`, "
+    #                         "`localVideo_id`, "
+    #                         "`frame_id`, "
+    #                         "`globalID`, "
+    #                         "`bevID`) "
+    #                         "values ({}, %s, %s, %s, %s)".format(groupID), mappingInfo)
     mot_db.commit()
 
 
