@@ -2,6 +2,11 @@ import math
 import numpy as np
 import dtw
 import pandas as pd
+import copy
+
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 import DB.database as Database
 
 from sklearn.preprocessing import MinMaxScaler
@@ -17,8 +22,7 @@ FRAME_THRESHOLD = 20
  e.g., id_list = [[id1, id2],[id4, id5, id9],...] 
 '''
 def id_correction(id_list, local_init_id, mot_df, video_id):
-
-    if len(id_list) > 0:
+    if id_list:
         local_id = local_init_id * video_id
         id_idx = 0
 
@@ -36,12 +40,13 @@ def id_correction(id_list, local_init_id, mot_df, video_id):
     Drop the incorrectly detected targets (e.g., Not a person)
 '''
 def id_drop(drop_list, mot_df):
-    if len(drop_list) > 0:
+    if drop_list:
         for id in drop_list:
             mot_df.drop(mot_df[mot_df['id'] == id].index, inplace=True)
         return mot_df
     else:
         return mot_df
+
 
 
 def create_corrected_table(crt_df, video_id):
@@ -59,12 +64,15 @@ def create_corrected_table(crt_df, video_id):
     Input parameter == list of whole mot results
     (e.g., [[localID, frame1, x1, y1], [localID, frame2, x2, y2], ...])
 '''
-def make_df_list(mot_list, id_list, drop_list, local_init_id, video_id):
+def make_df_list(mot_list, cor_id_list, drop_list, local_init_id, video_id):
     df_columns = ['frame', 'id', 'x', 'y']
     result = pd.DataFrame(mot_list, columns=df_columns)
 
-    result = id_correction(id_list, local_init_id, result, video_id)
-    result = id_drop(drop_list, result)
+    if cor_id_list:
+        result = id_correction(cor_id_list, local_init_id, result, video_id)
+    if drop_list:
+        result = id_drop(drop_list, result)
+
 
     # Insert collection tracking information in DB table
     create_corrected_table(result, video_id)
@@ -72,13 +80,26 @@ def make_df_list(mot_list, id_list, drop_list, local_init_id, video_id):
     id_df = result.drop_duplicates(['id'])
     id_list = id_df['id'].tolist()
 
+    print(id_list)
+
     df_list = []
 
     for id in id_list:
         df = result[result['id'] == id]
         df_list.append(df)
 
-    return df_list, id_list
+    # ============ for global ID mapping, add 'video id' column ====
+    add_id_result = copy.deepcopy(result)
+    add_id_result.insert(0, 'video_id', video_id)
+
+    v_df_list = []
+
+    for id in id_list:
+        v_df = add_id_result[add_id_result['id'] == id]
+        v_df_list.append(v_df)
+    # ==============================================================
+
+    return df_list, id_list, v_df_list
 
 
 # ########## Create Feature for DTW #################
@@ -212,29 +233,35 @@ def check_similarity(info_list, compare_list):
                 # case 1
                 elif info[0][0] <= k[0][0] and info[0][-1] >= k[0][-1]:
                     dist = dtw_overlap_frames(info, k, 1)
-                    result_list[i].append([info[1], k[1], dist])  # [compare_id, compared_id, DTW_dist]
+                    if dist != -1:
+                        result_list[i].append([info[1], k[1], dist])  # [compare_id, compared_id, DTW_dist]
                 # case 2
                 elif info[0][0] >= k[0][0] and info[0][-1] <= k[0][-1]:
                     dist = dtw_overlap_frames(info, k, 2)
-                    result_list[i].append([info[1], k[1], dist])  # [compare_id, compared_id, DTW_dist]
+                    if dist != -1:
+                        result_list[i].append([info[1], k[1], dist])  # [compare_id, compared_id, DTW_dist]
 
                 # *** 절반이상 겹치는 경우 : DTW로 유사도 측정
                 # case 3
                 elif info[0][0] >= k[0][0] and info[0][int(len(info[0]) / 2)] <= k[0][-1] <= info[0][-1]:
                     dist = dtw_overlap_frames(info, k, 3)
-                    result_list[i].append([info[1], k[1], dist])  # [compare_id, compared_id, DTW_dist]
+                    if dist != -1:
+                        result_list[i].append([info[1], k[1], dist])  # [compare_id, compared_id, DTW_dist]
                 # case 4
                 elif info[0][0] <= k[0][0] and k[0][int(len(k[0]) / 2)] <= info[0][-1] <= k[0][-1]:
                     dist = dtw_overlap_frames(info, k, 4)
-                    result_list[i].append([info[1], k[1], dist])  # [compare_id, compared_id, DTW_dist]
+                    if dist != -1:
+                        result_list[i].append([info[1], k[1], dist])  # [compare_id, compared_id, DTW_dist]
 
                 # *** 절반이하로 겹치는 경우: 제외?(포함하려면 위 코드와 합치기)
                 elif k[0][0] <= info[0][0] < k[0][-1] < info[0][int(len(info[0]) / 2)]:
                     dist = dtw_overlap_frames(info, k, 3)
-                    result_list[i].append([info[1], k[1], dist])  # [compare_id, compared_id, DTW_dist]
+                    if dist != -1:
+                        result_list[i].append([info[1], k[1], dist])  # [compare_id, compared_id, DTW_dist]
                 elif info[0][0] <= k[0][0] < info[0][-1] < k[0][int(len(k[0]) / 2)]:
                     dist = dtw_overlap_frames(info, k, 4)
-                    result_list[i].append([info[1], k[1], dist])  # [compare_id, compared_id, DTW_dist]
+                    if dist != -1:
+                        result_list[i].append([info[1], k[1], dist])  # [compare_id, compared_id, DTW_dist]
                 else:
                     print('Not matching case!!!!')
 
@@ -275,7 +302,12 @@ def dtw_overlap_frames(x_id_info, y_id_info, case):
                 if abs(x_frame_list[i] - y_frame_list[-1]) < min:
                     min = abs(x_frame_list[i] - y_frame_list[-1])
                     end_idx = i
-        dist = dtw.dtw(x_vec_list[start_idx:end_idx + 1], y_vec_list, keep_internals=True).distance
+
+        # If vector length == 1, it accur dimension mismatch error
+        try:
+            dist = dtw.dtw(x_vec_list[start_idx:end_idx + 1], y_vec_list, keep_internals=True).distance
+        except:
+            dist = -1
 
     elif case == 2:
         try:
@@ -294,7 +326,13 @@ def dtw_overlap_frames(x_id_info, y_id_info, case):
                 if abs(y_frame_list[i] - x_frame_list[-1]) < min:
                     min = abs(y_frame_list[i] - x_frame_list[-1])
                     end_idx = i
-        dist = dtw.dtw(x_vec_list, y_vec_list[start_idx:end_idx + 1], keep_internals=True).distance
+
+        # If vector length == 1, it accur dimension mismatch error
+        try:
+            dist = dtw.dtw(x_vec_list[start_idx:end_idx + 1], y_vec_list, keep_internals=True).distance
+        except:
+            dist = -1
+
     # Case 3,4: 겹치는 경우
     elif case == 3:
         try:
@@ -313,7 +351,12 @@ def dtw_overlap_frames(x_id_info, y_id_info, case):
                 if abs(x_frame_list[i] - y_frame_list[-1]) < min:
                     min = abs(x_frame_list[i] - y_frame_list[-1])
                     end_idx = i
-        dist = dtw.dtw(x_vec_list[:end_idx], y_vec_list[start_idx:], keep_internals=True).distance
+
+        # If vector length == 1, it accur dimension mismatch error
+        try:
+            dist = dtw.dtw(x_vec_list[start_idx:end_idx + 1], y_vec_list, keep_internals=True).distance
+        except:
+            dist = -1
 
     elif case == 4:
         try:
@@ -332,7 +375,12 @@ def dtw_overlap_frames(x_id_info, y_id_info, case):
                 if abs(y_frame_list[i] - x_frame_list[-1]) < min:
                     min = abs(y_frame_list[i] - x_frame_list[-1])
                     end_idx = i
-        dist = dtw.dtw(x_vec_list[start_idx:], y_vec_list[:end_idx], keep_internals=True).distance
+
+        # If vector length == 1, it accur dimension mismatch error
+        try:
+            dist = dtw.dtw(x_vec_list[start_idx:end_idx + 1], y_vec_list, keep_internals=True).distance
+        except:
+            dist = -1
 
     return dist
 
@@ -375,7 +423,7 @@ def change_to_global(T_set, id_set, gid_set):
     for T in T_set:
         for id_info in T:
             for i in range(0, len(id_set)):
-                if id_info['id'][0] in id_set[i]:
+                if id_info['id'].iloc[0] in id_set[i]:
                     id_info['id'] = gid_set[i]
                     break
     return
@@ -416,3 +464,32 @@ def generate_global_info(total_info):
                 I_G.append(total_info[i])
 
     return I_G
+
+
+def generate_mapping_df(v_T_set, id_set, gid_set):
+    mappingInfo = []
+
+    for T in v_T_set:
+        for id_info in T:
+            for i in range(0, len(id_set)):
+                if id_info['id'].iloc[0] in id_set[i]:
+                    id_info.insert(2, 'global_id', gid_set[i])
+                    id_info.drop(['x', 'y'], axis=1, inplace=True)
+                    mappingInfo.append(id_info)
+                    break
+    return mappingInfo
+
+
+# id_df -> column: [Video ID, FrameID, GlobalID, TrackingID], row: number of total frame
+def generate_mappingInfo(id_df_list):
+    total_list = []
+    for id_df in id_df_list:
+        id_info_list = []
+        for i in range(0, len(id_df)):
+            id_info = id_df.iloc[i].tolist()
+            id_info_list.append(id_info)
+        total_list += id_info_list
+
+    total_list.sort(key=lambda x: (x[1], x[2]))  # x[1]: Frame, x[2]: GlobalID
+
+    return total_list
