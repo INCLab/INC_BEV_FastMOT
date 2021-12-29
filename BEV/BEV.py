@@ -8,6 +8,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import mimetypes
 
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+import DB.database as Database
+
 ##############################################################################
 
 '''
@@ -17,7 +22,7 @@ lonloat : 도면 공간
 오른쪽 위, 왼쪽 위, 왼쪽 아래, 오른쪽 아래 순서
 '''
 
-def start(input_path, output_path, map_path, tracking_list):
+def start(input_path, output_path, map_path, tracking_info):
 
     heatmap_path = os.path.join(output_path, 'heatmap.png')
     original_output_path = output_path
@@ -84,12 +89,11 @@ def start(input_path, output_path, map_path, tracking_list):
 
     idxforfile = {}
     idx = 0
-    for inputfile in list(map_point.keys()):
-        ##############변경해야하는 부분#######################
-        # 좌표값을 받아야함(하나씩)
-        file = open(original_output_path / (inputfile + '.txt'), 'r')
-        idxforfile[inputfile] = idx
-        globals()['frame{}'.format(idx)], globals()['point{}'.format(idx)] = save_dict(file)
+
+    # info: [VideoID, tracking_list]
+    for i in list(map_point.keys()):
+        idxforfile[i] = idx
+        globals()['frame{}'.format(idx)], globals()['point{}'.format(idx)] = save_dict(tracking_info[idx][1])
         idx += 1
 
 
@@ -117,18 +121,20 @@ def start(input_path, output_path, map_path, tracking_list):
             src = os.path.join(output_path, str(frames) + '.jpg')
             cv2.imwrite(src, map)
 
-    # Todo: change this code
-    total_txt_num = 3  # Number of total result file
+    print('Insert BEV tracking info...')
+    # Insert BEV tracking info in table
+    group_id = Database.getGroupIDbyVideoID(tracking_info[0][0])
+    for i in range(len(tracking_info)):
+        bev_trackingList = []
+        mappingList = []
+        for key in globals()['BEV_Point{}'.format(i)]:
+            for info in globals()['BEV_Point{}'.format(i)][key]:
+                video_id = list(tracking_info[i][0])
+                bev_trackingList.append(video_id + info)
+                mappingList.append(video_id + info[1:3] + [info[2]])
+        Database.insertBEVData(group_id, mappingList, bev_trackingList)
+    print('Done')
 
-    for i in range(total_txt_num):
-        with open('BEV_result{}.txt'.format(i), 'w') as f:
-            for key in globals()['BEV_Point{}'.format(i)]:
-                for info in globals()['BEV_Point{}'.format(i)][key]:
-                    temp = ''
-                    for e in info:
-                        temp += str(e) + ' '
-                    temp.rstrip()
-                    f.write(str(key) + ' ' + temp.rstrip() + '\n')
 
     ## HeatMap ##
 

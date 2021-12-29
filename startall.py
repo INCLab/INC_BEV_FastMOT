@@ -93,6 +93,10 @@ def start():
     else:
         groupID = None
 
+    # For BEV param
+    # tracking_info: [[VideoID_1, tracking_list_1],[VideoID_2, tracking_list_2], ...]
+    tracking_info = []
+
     # 모든 File 읽기 위해 Loop
     for videofile in videolist:
         # 이름과 확장자 분리
@@ -194,6 +198,9 @@ def start():
                         # Add Tracking Info
                         if len(trackingList) > 0:
                             Database.insertTrackingInfos(videoID, trackingList)
+
+                            # For BEV param
+                            tracking_info.append([videoID, trackingList])
                     except Exception as e:
                         logger.error(e)
                         exit()
@@ -219,8 +226,10 @@ def start():
 
         # BEV Start
         logger.info('Start BEV...')
-        if len(trackingList) > 0:
-            BEV.start(Path(args.input_uri), Path(args.output_uri), Path(args.map_uri).absolute(), trackingList)
+        if len(tracking_info) > 0:
+            BEV.start(Path(args.input_uri), Path(args.output_uri), Path(args.map_uri).absolute(), tracking_info)
+        else:
+            print('Tracking_info is empty!')
 
         # Write BEV Video
         logger.info('Write BEV Video...')
