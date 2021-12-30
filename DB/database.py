@@ -347,3 +347,25 @@ def getMapMousePoint(videoID, mapName):
     positionData2 = list(map(int, data[1].replace('POINT(', '').replace(')', '').split(' ')))
 
     return [positionData1, positionData2]
+
+# Get Nearby ID with Base ID in Specific Frame
+# groupId : Video Group ID
+# baseId : Base Identify ID
+# distance : Distance (Radius of Circle)
+# minFrame : Minimum Frame for Search
+# maxFrame : Maximum Fraem for Search
+def getNearbyIdinSpecificFrame(groupId, baseId, distance, minFrame, maxFrame):
+    cursor = getCursor()
+    cursor.execute("select distinct b.identifyID"
+                   "from globaltrackinginfo a, globaltrackinginfo b"
+                   "where (a.videoGroup_id = {} and b.videoGroup_id = {}) "
+                   "and (a.frame_id = b.frame_id) "
+                   "and ({} <= a.frameinfo_frame_id <= {} and {} <= b.frameinfo_frame_id <= {}) "
+                   "and (a.globalID = {} and b.globalID != {}) "
+                   "and ST_Contains(ST_Buffer(a.position, {}), b.position) = 1; "
+                   .format(groupId, groupId,
+                           minFrame, maxFrame,
+                           minFrame, maxFrame,
+                           baseId, baseId,
+                           distance))
+    return cursor.fetchall()
