@@ -18,7 +18,6 @@ app.config['MAX_CONTENT_LENGTH'] = 5000 * 1024 * 1024 # 5000MB (5GB)까지 업�
 @app.route('/upload/videos', methods=['POST'])
 def upload_videos():
     if request.method == 'POST':
-
         # 업로드된 파일이 없을 경우
         if 'videoFiles' not in request.files:
             # 에러 반환
@@ -55,7 +54,6 @@ def upload_videos():
             video.save(os.path.join(uploadFolder, fname))
 
 # 지도 업로드
-# Todo : 지도 정보 Database에 업로드 가능하도록 하기
 @app.route('/upload/map', methods=['POST'])
 def upload_map():
     if request.method == 'POST':
@@ -69,8 +67,19 @@ def upload_map():
                 msg='Please Upload Files'
             )
 
+        if 'mapName' not in request.form:
+            # 에러 반환
+            return jsonify(
+                code=500,
+                success=False,
+                msg='Please Write Map Name (Alias)'
+            )
+
         # 업로드된 파일 가져옴
         map = request.files['mapFile']
+
+        # 맵 별칭 가져옴
+        mapName = request.form['mapName']
 
         # 업로드 폴더 생성
         uploadFolder = MAP_LOCATION + '/' + datetime.today().strftime("%Y%m%d%H%M%S") + '/'
@@ -93,6 +102,9 @@ def upload_map():
 
         # 파일 저장
         map.save(os.path.join(uploadFolder, fname))
+
+        # DB에 맵 별명 및 경로 저장
+        Database.insertNewMap(mapName, uploadFolder + '/' + fname)
 
 # MOT 결과 비디오 (그룹 전체) 다운로드
 @app.route('/download/mot/group/<int:groupId>', methods=['GET'])

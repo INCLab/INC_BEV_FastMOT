@@ -288,6 +288,17 @@ def getGroupFolderName(groupID):
     cursor.execute("SELECT folderName from videoGroup where id = %s", groupID)
     return cursor.fetchall()[0][0]
 
+# Insert New Map
+# mapName : Map Name (Alias)
+# mapFile : Map Location (Location ex. ./input/20211230151232/maps.png)
+def insertNewMap(mapName, mapFile):
+    getCursor().execute("INSERT INTO `mapinfo`("
+                        "mapName,"
+                        "mapFile) "
+                        "values ({}, {})".format(mapName, mapFile))
+    mot_db.commit()
+
+
 # Insert New Map Mouse Point
 # videoID : Video ID
 # mapName : Map File Name
