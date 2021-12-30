@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import mimetypes
 
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 import DB.database as Database
 
 ##############################################################################
@@ -19,7 +20,7 @@ lonloat : 도면 공간
 오른쪽 위, 왼쪽 위, 왼쪽 아래, 오른쪽 아래 순서
 '''
 
-def start(videoIdList, input_path, output_path, map_path):
+def start(input_path, output_path, map_path, tracking_info):
 
     heatmap_path = os.path.join(output_path, 'heatmap.png')
     original_output_path = output_path
@@ -83,18 +84,24 @@ def start(videoIdList, input_path, output_path, map_path):
 
     #PixelMapper로 값 전달
 
+    idxforfile = {}
+    idx = 0
 
-    # idxforfile = {}
-    # idx = 0
-    # for inputfile in list(map_point.keys()):
-    #     ##############변경해야하는 부분#######################
-    #     # 좌표값을 받아야함(하나씩)
-    #     file = open(original_output_path / (inputfile + '.txt'), 'r')
-    #     idxforfile[inputfile] = idx
-    #     globals()['frame{}'.format(idx)], globals()['point{}'.format(idx)] = save_dict(file)
-    #     idx += 1
+    # info: [VideoName, VideoID, tracking_list]
+    for i in list(map_point.keys()):
+        idxforfile[i] = idx
+        tracking_list = []
+        for info in tracking_info:
+            if info[0] == i:
+                tracking_list = info[2]
+                break
+        if not tracking_list:
+            print('Tracking_list is empty!')
 
-    print(map_point.keys())
+
+        globals()['frame{}'.format(idxforfile[i])], globals()['point{}'.format(idxforfile[i])] = save_dict(tracking_list)
+        idx += 1
+
     idxforfile = {}
     for videoId in videoIdList:
         videoMOTData = Database.getMOTDatas(videoId)
@@ -108,14 +115,20 @@ def start(videoIdList, input_path, output_path, map_path):
     for i in videoIdList:
         globals()['BEV_Point{}'.format(i)] = dict()
 
-    for frames in range(1, int(globals()['frame{}'.format(0)])):
+    max_frame = 0
+    for i in list(map_point.keys()):
+        if int(globals()['frame{}'.format(idxforfile[i])]) > max_frame:
+            max_frame = int(globals()['frame{}'.format(idxforfile[i])])
+
+
+    for frames in range(1, max_frame + 1):
         for i in list(map_point.keys()):
             pm = PixelMapper(quad_coords_list[i]["pixel"], quad_coords_list[i]["lonlat"])
-            if globals()['point{}'.format(idxforfile[i])].get(str(frames)) is not None:
-                for label in globals()['point{}'.format(idxforfile[i])].get(str(frames)):
+            if globals()['point{}'.format(idxforfile[i])].get(frames) is not None:
+                for label in globals()['point{}'.format(idxforfile[i])].get(frames):
                     uv = (label[1], label[2])
                     lonlat = list(pm.pixel_to_lonlat(uv))
-                    li = [label[0], int(lonlat[0][0]), int(lonlat[0][1])]
+                    li = [frames, label[0], int(lonlat[0][0]), int(lonlat[0][1])]
                     if frames in globals()['BEV_Point{}'.format(idxforfile[i])]:
                         line = globals()['BEV_Point{}'.format(idxforfile[i])].get(frames)
                         line.append(li)
@@ -128,18 +141,23 @@ def start(videoIdList, input_path, output_path, map_path):
             src = os.path.join(output_path, str(frames) + '.jpg')
             cv2.imwrite(src, map)
 
-    # ### Create BEV_Result txt files ###
-    total_txt_num = 3  # Number of total result file
+    print('Insert BEV tracking info...')
+    # Insert BEV tracking info in table
+    group_id = Database.getGroupIDbyVideoID(tracking_info[0][1])
+    for i in list(map_point.keys()):
+        bev_trackingList = []
+        mappingList = []
+        for key in globals()['BEV_Point{}'.format(idxforfile[i])]:
+            for info in globals()['BEV_Point{}'.format(idxforfile[i])][key]:
+                for t in tracking_info:
+                    if t[0] == i:
+                        video_id = [t[1]]
+                        bev_trackingList.append(video_id + info)
+                        mappingList.append(video_id + info[1:3] + [info[2]])
+                        break
+        Database.insertBEVData(group_id, mappingList, bev_trackingList)
+    print('Done')
 
-    for i in range(total_txt_num):
-        with open('BEV_result{}.txt'.format(i), 'w') as f:
-            for key in globals()['BEV_Point{}'.format(i)]:
-                for info in globals()['BEV_Point{}'.format(i)][key]:
-                    temp = ''
-                    for e in info:
-                        temp += str(e) + ' '
-                    temp.rstrip()
-                    f.write(str(key) + ' ' + temp.rstrip() + '\n')
 
     ## HeatMap ##
 
@@ -161,8 +179,6 @@ def start(videoIdList, input_path, output_path, map_path):
                     x = round(int(label[2]) / map.shape[0] * 9)
                     y = round(int(label[1]) / map.shape[1] * 12)
                     df[x][y] += 1
-
-    print(df)
 
     sns.heatmap(df, linewidths=0.1, linecolor="black")
 
@@ -257,27 +273,18 @@ def save_lonlat_frame(point, pm,frame_num ,input_dir, output_dir):
         src = os.path.join(output_dir, str(frames)+'.jpg')
         cv2.imwrite(src, map)
 
-def save_dict(file):
-    ##################################################
+
+def save_dict(tracking_list):
     frame = 0
     point = dict()
-    while True:
-        line = file.readline()
 
-        if not line:
-            break
+    for tracking_info in tracking_list:
+        frame = tracking_info[0]
 
-        info = line[:-1].split(" ")
-
-        frame = info[0]
-
-        if info[0] in point:
-            line = point.get(info[0])
-            line.append(list(map(int, info[1:])))
+        if frame in point:
+            line = point.get(frame)
+            line.append(list(map(int, tracking_info[1:])))
         else:
-            point[info[0]] = [list(map(int, info[1:]))]
-
-    file.close()
+            point[frame] = [list(map(int, tracking_info[1:]))]
 
     return frame, point
-    ###########################################################################

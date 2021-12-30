@@ -1,4 +1,5 @@
 import sys
+import DB.database as Database
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
 
@@ -6,7 +7,7 @@ from PyQt5 import uic
 form_class = uic.loadUiType("sample.ui")[0]
 
 
-class WindowClass(QMainWindow, form_class) :
+class WindowClass(QMainWindow, form_class):
     def __init__(self):
         super().__init__()
         self.setupUi(self)

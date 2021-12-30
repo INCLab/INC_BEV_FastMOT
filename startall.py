@@ -28,6 +28,8 @@ from BEV import mouse_point
 from BEV import BEV
 from BEV import output_video
 
+from DTW import global_id_mapping
+
 import DB.database as Database
 
 def start():
@@ -93,7 +95,9 @@ def start():
     else:
         groupID = None
 
-    videoIDList = []
+    # For BEV param
+    # tracking_info: [[VideoName1, VideoID_1, tracking_list_1],[VideoName2, VideoID_2, tracking_list_2], ...]
+    tracking_info = []
 
     # 모든 File 읽기 위해 Loop
     for videofile in videolist:
@@ -197,6 +201,9 @@ def start():
                         # Add Tracking Info
                         if len(trackingList) > 0:
                             Database.insertTrackingInfos(videoID, trackingList)
+
+                            # For BEV param
+                            tracking_info.append([name, videoID, trackingList])
                     except Exception as e:
                         logger.error(e)
                         exit()
@@ -222,13 +229,34 @@ def start():
 
         # BEV Start
         logger.info('Start BEV...')
-        BEV.start(videoIDList, Path(args.input_uri), Path(args.output_uri), Path(args.map_uri).absolute())
+        if len(tracking_info) > 0:
+            BEV.start(Path(args.input_uri), Path(args.output_uri), Path(args.map_uri).absolute(), tracking_info)
+        else:
+            logger.info('Tracking_info is empty! Stop BEV process.')
 
         # Write BEV Video
-        logger.info('Write BEV Video...')
-        output_video.start(Path(args.output_uri).absolute())
+        if len(tracking_info) > 0:
+            logger.info('Write BEV Video...')
+            output_video.start(Path(args.output_uri).absolute())
+        else:
+            logger.info('Stop Write BEV Video process.')
+
+        # Global mapping start
+        is_exist_global_table = False
+        if len(tracking_info) > 0:
+            logger.info('Start global mapping...')
+            is_exist_global_table = global_id_mapping.start(videolist)
+        else:
+            logger.info('Stop global mapping process.')
+
+        # Write Global BEV Video
+        if is_exist_global_table:
+            print("작업중")
+        else:
+            logger.info('Stop Write Global BEV Video process.')
 
         logger.info('Finished!')
+
     except:
         logger.error(traceback.format_exc())
 
