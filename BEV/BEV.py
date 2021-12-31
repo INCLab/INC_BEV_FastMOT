@@ -7,6 +7,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 import mimetypes
+
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 import DB.database as Database
 
 ##############################################################################
@@ -17,6 +19,7 @@ lonloat : 도면 공간
 실제 mapping 되는 곳에 좌표를 입력 @@@.py 사용
 오른쪽 위, 왼쪽 위, 왼쪽 아래, 오른쪽 아래 순서
 '''
+
 
 def start(input_path, output_path, map_path, tracking_info):
     heatmap_path = os.path.join(output_path, 'heatmap.png')
@@ -30,7 +33,9 @@ def start(input_path, output_path, map_path, tracking_info):
         shutil.rmtree(output_path)
         os.makedirs(output_path)
 
-    filelist = list(filter(lambda filename: mimetypes.guess_type(filename)[0] is not None and mimetypes.guess_type(filename)[0].find('video') is not -1, os.listdir(input_path)))
+    filelist = list(filter(
+        lambda filename: mimetypes.guess_type(filename)[0] is not None and mimetypes.guess_type(filename)[0].find(
+            'video') is not -1, os.listdir(input_path)))
 
     f = open(os.path.join(temp_path, 'points.txt'), 'r')
     data = f.read()
@@ -65,22 +70,21 @@ def start(input_path, output_path, map_path, tracking_info):
     for i in list(map_point.keys()):
         quad_coords = {
             "pixel": np.array([
-                [frame_point[i][0][0],   frame_point[i][0][1]],  # Third lampost top right
-                [frame_point[i][1][0],   frame_point[i][1][1]],  # Corner of white rumble strip top left
-                [frame_point[i][2][0],   frame_point[i][2][1]],  # Corner of rectangular road marking bottom left
-                [frame_point[i][3][0],   frame_point[i][3][1]]  # Corner of dashed line bottom right
+                [frame_point[i][0][0], frame_point[i][0][1]],  # Third lampost top right
+                [frame_point[i][1][0], frame_point[i][1][1]],  # Corner of white rumble strip top left
+                [frame_point[i][2][0], frame_point[i][2][1]],  # Corner of rectangular road marking bottom left
+                [frame_point[i][3][0], frame_point[i][3][1]]  # Corner of dashed line bottom right
             ]),
             "lonlat": np.array([
-                [map_point[i][0][0],   map_point[i][0][1]],  # Third lampost top right
-                [map_point[i][1][0],   map_point[i][1][1]],  # Corner of white rumble strip top left
-                [map_point[i][2][0],   map_point[i][2][1]],  # Corner of rectangular road marking bottom left
-                [map_point[i][3][0],   map_point[i][3][1]]  # Corner of dashed line bottom right
+                [map_point[i][0][0], map_point[i][0][1]],  # Third lampost top right
+                [map_point[i][1][0], map_point[i][1][1]],  # Corner of white rumble strip top left
+                [map_point[i][2][0], map_point[i][2][1]],  # Corner of rectangular road marking bottom left
+                [map_point[i][3][0], map_point[i][3][1]]  # Corner of dashed line bottom right
             ])
         }
         quad_coords_list[i] = quad_coords
 
-    #PixelMapper로 값 전달
-
+    # PixelMapper로 값 전달
 
     idxforfile = {}
     idx = 0
@@ -96,19 +100,29 @@ def start(input_path, output_path, map_path, tracking_info):
         if not tracking_list:
             print('Tracking_list is empty!')
 
-
-        globals()['frame{}'.format(idxforfile[i])], globals()['point{}'.format(idxforfile[i])] = save_dict(tracking_list)
+        globals()['frame{}'.format(idxforfile[i])], globals()['point{}'.format(idxforfile[i])] = save_dict(
+            tracking_list)
         idx += 1
 
+    idxforfile = {}
+    for videoId in videoIdList:
+        videoMOTData = Database.getMOTDatas(videoId)
+        idx = 0
+        for data in videoMOTData:
+            globals()['frame{}'.format(idx)], globals()['point{}'.format(idx)] = data[0], "{} {} {}".format(data[1],
+                                                                                                            data[2],
+                                                                                                            data[3])
+            idx += 1
+        idxforfile[videoId] = idx
+
     map = cv2.imread(str(map_path), -1)
-    for i in list(map_point.keys()):
-        globals()['BEV_Point{}'.format(idxforfile[i])] = dict()
+    for i in videoIdList:
+        globals()['BEV_Point{}'.format(i)] = dict()
 
     max_frame = 0
     for i in list(map_point.keys()):
         if int(globals()['frame{}'.format(idxforfile[i])]) > max_frame:
             max_frame = int(globals()['frame{}'.format(idxforfile[i])])
-
 
     for frames in range(1, max_frame + 1):
         for i in list(map_point.keys()):
@@ -147,7 +161,6 @@ def start(input_path, output_path, map_path, tracking_info):
         Database.insertBEVData(group_id, mappingList, bev_trackingList)
     print('Done')
 
-
     ## HeatMap ##
 
     # df = pd.DataFrame(index=range(0, 10), columns=range(0, 13))
@@ -173,16 +186,22 @@ def start(input_path, output_path, map_path, tracking_info):
 
     plt.savefig(heatmap_path)
 
+
 '''
 id 라벨값에 맞춰 색깔을 지정하는 function
 '''
+
+
 def getcolor(idx):
     idx = idx * 3
     return (37 * idx) % 255, (17 * idx) % 255, (29 * idx) % 255
 
+
 '''
 실제공간과 도면을 mapping해주는 class
 '''
+
+
 class PixelMapper(object):
     """
     Create an object for converting pixels to geographic coordinates,
@@ -203,7 +222,7 @@ class PixelMapper(object):
         self.M = cv2.getPerspectiveTransform(np.float32(pixel_array), np.float32(lonlat_array))
         self.invM = cv2.getPerspectiveTransform(np.float32(lonlat_array), np.float32(pixel_array))
 
-    #실제 공간을 도면으로 바꿈
+    # 실제 공간을 도면으로 바꿈
     def pixel_to_lonlat(self, pixel):
         """
         Convert a set of pixel coordinates to lon-lat coordinates
@@ -223,7 +242,8 @@ class PixelMapper(object):
         lonlat = np.dot(self.M, pixel.T)
 
         return (lonlat[:2, :] / lonlat[2, :]).T
-    #도면 공간을 실제 공간으로 바꿈
+
+    # 도면 공간을 실제 공간으로 바꿈
     def lonlat_to_pixel(self, lonlat):
         """
         Convert a set of lon-lat coordinates to pixel coordinates
@@ -244,22 +264,25 @@ class PixelMapper(object):
 
         return (pixel[:2, :] / pixel[2, :]).T
 
+
 """
 lonlat에 frame을 한번에 저장하는 function
 """
-def save_lonlat_frame(point, pm,frame_num ,input_dir, output_dir):
+
+
+def save_lonlat_frame(point, pm, frame_num, input_dir, output_dir):
     map = cv2.imread(input_dir, -1)
 
-    #1541
-    for frames in range(1, frame_num): #object ID마다 색깔바꿔서 점찍기
+    # 1541
+    for frames in range(1, frame_num):  # object ID마다 색깔바꿔서 점찍기
         if point.get(str(frames)) != None:
-            for label in point.get(str(frames)) :
+            for label in point.get(str(frames)):
                 uv = (label[1], label[2])
                 lonlat = list(pm.pixel_to_lonlat(uv))
                 color = getcolor(abs(label[0]))
                 cv2.circle(map, (int(lonlat[0][0]), int(lonlat[0][1])), 3, color, -1)
 
-        src = os.path.join(output_dir, str(frames)+'.jpg')
+        src = os.path.join(output_dir, str(frames) + '.jpg')
         cv2.imwrite(src, map)
 
 
