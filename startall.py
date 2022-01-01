@@ -113,7 +113,8 @@ def start():
                 # Insert Video with Group ID
                 if groupID:
                     try:
-                        videoID = Database.addNewVideo(videofile, groupID)
+                        # TODO : 맵 먼저 넣고 2번째 파라미터에 Map ID 넣기
+                        videoID = Database.addNewVideo(videofile, 1, groupID)
                     except pymysql.err.IntegrityError as e:
                         logger.error(e)
                         exit()

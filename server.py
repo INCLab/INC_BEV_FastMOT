@@ -166,6 +166,13 @@ def upload_map():
                 data=[]
             )
 
+# Frame에 대한 BEV Mousepoint 정보 넣기
+@app.route('/upload/map_point/frame/<int:videoId>')
+def insert_mousepoint_frame(videoId):
+    if request.method == 'POST':
+        Database.insertFrameMousePoint(videoId, )
+
+
 # MOT 결과 비디오 (그룹 전체) 다운로드
 @app.route('/download/mot/group/<int:groupId>', methods=['GET'])
 def download_mot_group(groupId):
@@ -253,13 +260,15 @@ def get_map_list():
                 data=[]
             )
 
-# Base ID와 같이
+# Base ID와 일정 거리 내에 존재하는 사용자 구하기
+# ex. /search/nearby/1/12?minFrame=10&maxFrame=500&distance=10
 @app.route('/search/nearby/<int:groupId>/<int:baseId>', methods=['GET'])
 def get_nearby_list_with_base(groupId, baseId):
     if request.method == 'GET':
         try:
             minFrame = None
             maxFrame = None
+            distance = None
             args = request.args.to_dict()
 
             if 'minFrame' in args.keys():
@@ -268,7 +277,12 @@ def get_nearby_list_with_base(groupId, baseId):
             if 'maxFrame' in args.keys():
                 maxFrame = args['maxFrame']
 
-            nearbyList = Database.getNearbyIdinSpecificFrame(groupId, baseId, minFrame, maxFrame)
+            if 'distance' in args.keys():
+                distance = args['distance']
+            else:
+                distance = 10
+
+            nearbyList = Database.getNearbyIdinSpecificFrame(groupId, baseId, distance, minFrame, maxFrame)
 
             return jsonify(
                 code=200,
