@@ -263,3 +263,108 @@ def getGroupIDbyVideoID(videoID):
     cursor = getCursor()
     cursor.execute("SELECT videoGroup_id from video where id = %s", videoID)
     return cursor.fetchall()[0][0]
+
+# Insert New Frame Mouse Point
+# videoID : Video ID
+# pointList : BEV Point List
+# ex. [(0, 1), (2, 3)]
+def insertFrameMousePoint(videoID, pointList):
+    pointCvt = []
+
+    for pIdx in range(len(pointList)):
+        pointCvt.append("{} {},".format(pointList[pIdx][0], pointList[pIdx][1]))
+    getCursor().execute("INSERT INTO `mousepoint_frame`("
+                        "video_id,"
+                        "p1, "
+                        "p2) "
+                        "values ({}, {})".format(videoID, pointCvt))
+    mot_db.commit()
+
+# Get Group Folder Name by Group ID
+# groupID : Group ID
+# ex. 20211229222632
+def getGroupFolderName(groupID):
+    cursor = getCursor()
+    cursor.execute("SELECT folderName from videoGroup where id = %s", groupID)
+    return cursor.fetchall()[0][0]
+
+# Insert New Map
+# mapName : Map Name (Alias)
+# mapFile : Map Location (Location ex. ./input/20211230151232/maps.png)
+def insertNewMap(mapName, mapFile):
+    getCursor().execute("INSERT INTO `mapinfo`("
+                        "mapName,"
+                        "mapFile) "
+                        "values ({}, {})".format(mapName, mapFile))
+    mot_db.commit()
+
+# Insert New Map Mouse Point
+# videoID : Video ID
+# mapName : Map File Name
+# pointList : BEV Point List
+# ex. [(0, 1), (2, 3)]
+def insertMapMousePoint(videoID, mapName, pointList):
+    pointCvt = []
+
+    for pIdx in range(len(pointList)):
+        pointCvt.append("{} {},".format(pointList[pIdx][0], pointList[pIdx][1]))
+    getCursor().execute("INSERT INTO `mousepoint_map`("
+                        "video_id,"
+                        "mapName, "
+                        "p1, "
+                        "p2) "
+                        "values ({}, {}, {})".format(videoID, mapName, pointCvt))
+    mot_db.commit()
+
+# Get Frame Mouse Point by Video ID
+# videoID : Single Video ID
+# Return : [[x,y], [x,y]]
+def getFrameMousePoint(videoID):
+    cursor = getCursor()
+    cursor.execute("SELECT ST_AsText(p1), ST_AsText(p2)"
+                   "from `mousepoint_frame` "
+                   "where `video_id".format(videoID))
+
+    data = list(cursor.fetchall())
+    positionData1 = list(map(int, data[0].replace('POINT(', '').replace(')', '').split(' ')))
+    positionData2 = list(map(int, data[1].replace('POINT(', '').replace(')', '').split(' ')))
+
+    return [positionData1, positionData2]
+
+# Get Frame Mouse Point by Video ID
+# videoID : Single Video ID
+# mapName : Map File Name
+# Return : [[x,y], [x,y]]
+def getMapMousePoint(videoID, mapName):
+    cursor = getCursor()
+    cursor.execute("SELECT ST_AsText(p1), ST_AsText(p2)"
+                   "from `mousepoint_map` "
+                   "where `video_id` = {} and `map_name` = {}".format(videoID, mapName))
+
+    data = list(cursor.fetchall())
+    positionData1 = list(map(int, data[0].replace('POINT(', '').replace(')', '').split(' ')))
+    positionData2 = list(map(int, data[1].replace('POINT(', '').replace(')', '').split(' ')))
+
+    return [positionData1, positionData2]
+
+# Get Nearby ID with Base ID in Specific Frame
+# groupId : Video Group ID
+# baseId : Base Identify ID
+# distance : Distance (Radius of Circle)
+# minFrame : Minimum Frame for Search
+# maxFrame : Maximum Fraem for Search
+def getNearbyIdinSpecificFrame(groupId, baseId, distance, minFrame, maxFrame):
+    cursor = getCursor()
+    cursor.execute("select distinct b.identifyID"
+                   "from globaltrackinginfo a, globaltrackinginfo b"
+                   "where (a.videoGroup_id = {} and b.videoGroup_id = {}) "
+                   "and (a.frame_id = b.frame_id) "
+                   "and ({} <= a.frameinfo_frame_id <= {} and {} <= b.frameinfo_frame_id <= {}) "
+                   "and (a.globalID = {} and b.globalID != {}) "
+                   "and ST_Contains(ST_Buffer(a.position, {}), b.position) = 1; "
+                   .format(groupId, groupId,
+                           minFrame, maxFrame,
+                           minFrame, maxFrame,
+                           baseId, baseId,
+                           distance))
+    return cursor.fetchall()
