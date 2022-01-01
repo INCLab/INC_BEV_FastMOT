@@ -298,6 +298,12 @@ def insertNewMap(mapName, mapFile):
                         "values ({}, {})".format(mapName, mapFile))
     mot_db.commit()
 
+# Get All Map List
+def getAllMapList():
+    cursor = getCursor()
+    cursor.execute("SELECT id, mapName from mapinfo")
+    return cursor.fetchall()
+
 # Insert New Map Mouse Point
 # videoID : Video ID
 # mapName : Map File Name
@@ -351,20 +357,55 @@ def getMapMousePoint(videoID, mapName):
 # groupId : Video Group ID
 # baseId : Base Identify ID
 # distance : Distance (Radius of Circle)
-# minFrame : Minimum Frame for Search
-# maxFrame : Maximum Fraem for Search
+# minFrame : Minimum Frame for Search (if None, Ignored)
+# maxFrame : Maximum Fraem for Search (if None, Ignored)
 def getNearbyIdinSpecificFrame(groupId, baseId, distance, minFrame, maxFrame):
     cursor = getCursor()
-    cursor.execute("select distinct b.identifyID"
-                   "from globaltrackinginfo a, globaltrackinginfo b"
-                   "where (a.videoGroup_id = {} and b.videoGroup_id = {}) "
-                   "and (a.frame_id = b.frame_id) "
-                   "and ({} <= a.frameinfo_frame_id <= {} and {} <= b.frameinfo_frame_id <= {}) "
-                   "and (a.globalID = {} and b.globalID != {}) "
-                   "and ST_Contains(ST_Buffer(a.position, {}), b.position) = 1; "
-                   .format(groupId, groupId,
-                           minFrame, maxFrame,
-                           minFrame, maxFrame,
-                           baseId, baseId,
-                           distance))
+    if minFrame is None:
+        cursor.execute("select distinct b.identifyID"
+                       "from globaltrackinginfo a, globaltrackinginfo b"
+                       "where (a.videoGroup_id = {} and b.videoGroup_id = {}) "
+                       "and (a.frame_id = b.frame_id) "
+                       "and (a.frameinfo_frame_id <= {} and b.frameinfo_frame_id <= {}) "
+                       "and (a.globalID = {} and b.globalID != {}) "
+                       "and ST_Contains(ST_Buffer(a.position, {}), b.position) = 1; "
+                       .format(groupId, groupId,
+                               maxFrame, maxFrame,
+                               baseId, baseId,
+                               distance))
+    elif maxFrame is None:
+        cursor.execute("select distinct b.identifyID"
+                       "from globaltrackinginfo a, globaltrackinginfo b"
+                       "where (a.videoGroup_id = {} and b.videoGroup_id = {}) "
+                       "and (a.frame_id = b.frame_id) "
+                       "and ({} <= a.frameinfo_frame_id and {} <= b.frameinfo_frame_id) "
+                       "and (a.globalID = {} and b.globalID != {}) "
+                       "and ST_Contains(ST_Buffer(a.position, {}), b.position) = 1; "
+                       .format(groupId, groupId,
+                               minFrame, minFrame,
+                               baseId, baseId,
+                               distance))
+    elif minFrame is None and maxFrame is None:
+        cursor.execute("select distinct b.identifyID"
+                       "from globaltrackinginfo a, globaltrackinginfo b"
+                       "where (a.videoGroup_id = {} and b.videoGroup_id = {}) "
+                       "and (a.frame_id = b.frame_id) "
+                       "and (a.globalID = {} and b.globalID != {}) "
+                       "and ST_Contains(ST_Buffer(a.position, {}), b.position) = 1; "
+                       .format(groupId, groupId,
+                               baseId, baseId,
+                               distance))
+    else:
+        cursor.execute("select distinct b.identifyID"
+                       "from globaltrackinginfo a, globaltrackinginfo b"
+                       "where (a.videoGroup_id = {} and b.videoGroup_id = {}) "
+                       "and (a.frame_id = b.frame_id) "
+                       "and ({} <= a.frameinfo_frame_id <= {} and {} <= b.frameinfo_frame_id <= {}) "
+                       "and (a.globalID = {} and b.globalID != {}) "
+                       "and ST_Contains(ST_Buffer(a.position, {}), b.position) = 1; "
+                       .format(groupId, groupId,
+                               minFrame, maxFrame,
+                               minFrame, maxFrame,
+                               baseId, baseId,
+                               distance))
     return cursor.fetchall()
