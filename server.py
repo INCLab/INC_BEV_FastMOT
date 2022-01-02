@@ -1,8 +1,8 @@
-import datetime
+from datetime import datetime
 import os
 import zipfile
 import tempfile
-
+import hashlib
 import pymysql
 from flask import Flask, jsonify, request, send_file
 import werkzeug.utils
@@ -12,6 +12,56 @@ import DB.database as Database
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False  # Jsonify 한글 정상 출력되도록 처리
 app.config['MAX_CONTENT_LENGTH'] = 5000 * 1024 * 1024  # 5000MB (5GB)까지 업로드 가능하도록 처리
+
+
+# 비디오 파일 업로드
+@app.route('/create/videogroup', methods=['POST'])
+def create_videogroup():
+    if request.method == 'POST':
+        try:
+            # 넘어온 새 Group 이름 정보가 없으면
+            if 'groupName' not in request.form:
+                # 에러 반환
+                return jsonify(
+                    code=500,
+                    success=False,
+                    msg="groupName Required",
+                    data=[]
+                )
+
+            # 업로드 폴더 생성
+            encode = hashlib.sha256(datetime.now().strftime("%Y%m%d%H%M%S").encode()).hexdigest()
+            uploadFolder = VIDEOFILE_LOCATION + '/' + encode + '/'
+            os.mkdir(uploadFolder)
+
+            # DB에 그룹 생성
+            videoGroupId = Database.newVideoGroup(request.form['groupName'], uploadFolder)
+
+            # 새 Video Group ID와 성공 반환
+            return jsonify(
+                code=200,
+                success=True,
+                msg='success',
+                data={'videoGroup': videoGroupId}
+            )
+        # IO Error
+        except IOError as ioe:
+            # 에러 반환
+            return jsonify(
+                code=500,
+                success=False,
+                msg='IOError!\n' + ioe,
+                data=[]
+            )
+        # pymysql Error
+        except pymysql.err.Error as sqle:
+            # 에러 반환
+            return jsonify(
+                code=500,
+                success=False,
+                msg='SQL Error',
+                data={'error': sqle}
+            )
 
 
 # 비디오 파일 업로드
@@ -44,20 +94,13 @@ def upload_videos():
                         data=[]
                     )
 
-            # 업로드 폴더 생성
-            uploadFolder = VIDEOFILE_LOCATION + '/' + datetime.today().strftime("%Y%m%d%H%M%S") + '/'
-            os.mkdir(uploadFolder)
-
-            # 넘어온 Video Group 정보가 없으면
-            if 'videoGroup' not in request.form:
-                # 신규 Video Group 생성
-                videoGroupId = Database.newVideoGroup(uploadFolder)
-            # 있다면
-            else:
-                # Video Group이 존재한다면
+            # 넘어온 Video Group 정보가 있으면
+            if 'videoGroup' in request.form:
+                # 해당 Group이 존재하는 그룹이면
                 if not Database.getGroupFolderName(request.form['videoGroup']) is None:
                     # 해당 Video Group을 정보로 사용
                     videoGroupId = request.form['videoGroup']
+                    uploadFolder = Database.getGroupFolderName(videoGroupId)
                 else:
                     # 에러 반환
                     return jsonify(
@@ -66,6 +109,15 @@ def upload_videos():
                         msg="VideoGroup {} is Not Exist!".format(request.form['videoGroup']),
                         data=[]
                     )
+            # 넘어온 정보가 없으면
+            else:
+                # 에러 반환
+                return jsonify(
+                    code=500,
+                    success=False,
+                    msg="VideoGroup Required",
+                    data=[]
+                )
 
             for video in videoFiles:
                 # Secure FileName 적용
@@ -74,6 +126,7 @@ def upload_videos():
                 # 파일 저장
                 video.save(os.path.join(uploadFolder, fname))
 
+                # DB에 비디오 정보 추가
                 Database.addNewVideo("{}/{}".format(uploadFolder, fname), videoGroupId)
 
             # 성공 반환
@@ -81,7 +134,7 @@ def upload_videos():
                 code=200,
                 success=True,
                 msg='success',
-                data={'videoGroup': videoGroupId}
+                data={}
             )
         # IO Error
         except IOError as ioe:
@@ -102,6 +155,7 @@ def upload_videos():
                 data={'error': sqle}
             )
 
+
 # 지도 업로드
 @app.route('/upload/map', methods=['POST'])
 def upload_map():
@@ -116,7 +170,11 @@ def upload_map():
                     msg='Please Upload Files',
                     data=[]
                 )
+            else:
+                # 있으면 해당 파일을 가져옴
+                map = request.files['mapFile']
 
+            # 맵 이름이 지정되지 않은 경우
             if 'mapName' not in request.form:
                 # 에러 반환
                 return jsonify(
@@ -125,15 +183,13 @@ def upload_map():
                     msg='Please Write Map Name (Alias)',
                     data=[]
                 )
-
-            # 업로드된 파일 가져옴
-            map = request.files['mapFile']
-
-            # 맵 별칭 가져옴
-            mapName = request.form['mapName']
+            else:
+                # 있으면 해당 이름을 가져옴
+                mapName = request.form['mapName']
 
             # 업로드 폴더 생성
-            uploadFolder = MAP_LOCATION + '/' + datetime.today().strftime("%Y%m%d%H%M%S") + '/'
+            encode = hashlib.sha256(datetime.now().strftime("%Y%m%d%H%M%S").encode()).hexdigest()
+            uploadFolder = MAP_LOCATION + '/' + encode + '/'
             os.mkdir(uploadFolder)
 
             # Mimetype에 image가 없으면
@@ -184,6 +240,7 @@ def upload_map():
                 data={'error': sqle}
             )
 
+
 # Frame에 대한 BEV Mousepoint 정보 넣기
 @app.route('/upload/map_point/frame/<int:videoId>')
 def insert_mousepoint_frame(videoId):
@@ -228,13 +285,14 @@ def insert_mousepoint_frame(videoId):
             )
         # pymysql Error
         except pymysql.err.Error as sqle:
-        # 에러 반환
+            # 에러 반환
             return jsonify(
                 code=500,
                 success=False,
                 msg='SQL Error',
                 data={'error': sqle}
             )
+
 
 # Map에 대한 BEV Mousepoint 정보 넣기
 @app.route('/upload/point/map/<int:videoId>/<int:mapId>')
@@ -280,13 +338,14 @@ def insert_mousepoint_map(videoId, mapId):
             )
         # pymysql Error
         except pymysql.err.Error as sqle:
-        # 에러 반환
+            # 에러 반환
             return jsonify(
                 code=500,
                 success=False,
                 msg='SQL Error',
                 data={'error': sqle}
             )
+
 
 # MOT 결과 비디오 (그룹 전체) 다운로드
 @app.route('/download/mot/group/<int:groupId>', methods=['GET'])
@@ -343,6 +402,7 @@ def download_mot_group(groupId):
                 data=[]
             )
 
+
 # 전체 지도 목록 가져오기
 @app.route('/search/map', methods=['GET'])
 def get_map_list():
@@ -374,6 +434,40 @@ def get_map_list():
                 msg='SQL Error!\n' + sqle,
                 data=[]
             )
+
+
+# 전체 Video Group 목록 가져오기
+@app.route('/search/videogroup', methods=['GET'])
+def get_videogroup_list():
+    if request.method == 'GET':
+        try:
+            groupList = Database.getAllVideoGroupList()
+
+            return jsonify(
+                code=200,
+                success=False,
+                msg="success",
+                data=groupList
+            )
+        # IO Error
+        except IOError as ioe:
+            # 에러 반환
+            return jsonify(
+                code=500,
+                success=False,
+                msg='IOError!\n' + ioe,
+                data=[]
+            )
+        # pymysql Error
+        except pymysql.err.Error as sqle:
+            # 에러 반환
+            return jsonify(
+                code=500,
+                success=False,
+                msg='SQL Error!\n' + sqle,
+                data=[]
+            )
+
 
 # Base ID와 일정 거리 내에 존재하는 사용자 구하기
 # ex. /search/nearby/1/12?minFrame=10&maxFrame=500&distance=10

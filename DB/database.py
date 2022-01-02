@@ -22,11 +22,12 @@ def getCursor():
 ############## 영상 관련 ##############
 
 # Create New Video Group
+# groupName : Group Name
 # location : Group Folder Location
 # Return : New Group ID
-def newVideoGroup(location):
+def newVideoGroup(groupName, location):
     cursor = getCursor()
-    cursor.execute("insert into `videoGroup`(`location`) VALUES (%s)", location)
+    cursor.execute("insert into `videoGroup`(`name`, `location`) VALUES (%s, %s)", groupName, location)
     mot_db.commit()
     return cursor.lastrowid
 
@@ -62,7 +63,12 @@ def getVideoId(videoFileName):
 
     cursor = getCursor()
     cursor.execute("SELECT `id` from `video` where `videoFileName` = %s", data)
-    return cursor.fetchall()[0][0]
+
+    result = cursor.fetchall()
+    if len(result) == 0:
+        return None
+    else:
+        return result[0][0]
 
 
 # Insert Video Frames
@@ -77,7 +83,12 @@ def insertVideoFrames(videoId, frameList):
 def getGroupIDbyVideoID(videoID):
     cursor = getCursor()
     cursor.execute("SELECT videoGroup_id from video where id = %s", videoID)
-    return cursor.fetchall()[0][0]
+
+    result = cursor.fetchall()
+    if len(result) == 0:
+        return None
+    else:
+        return result[0][0]
 
 
 # Insert New Frame Mouse Point
@@ -101,6 +112,12 @@ def insertFrameMousePoint(videoId, pointList):
                         "rightbottom) "
                         "values ({}, {})".format(videoId, ''.join(pointCvt)))
     mot_db.commit()
+
+# Get All Video Group List
+def getAllVideoGroupList():
+    cursor = getCursor()
+    cursor.execute("SELECT id, name, location from videoGroup")
+    return cursor.fetchall()
 
 
 ######################################

@@ -91,7 +91,8 @@ def start():
 
     # MOT Skip한게 아니라면 SQL에 등록될 Group ID 생성
     if not args.skip_mot:
-        groupID = Database.newVideoGroup()
+        # 임시 Parameter
+        groupID = Database.newVideoGroup(args.input_uri, args.input_uri)
     else:
         groupID = None
 
