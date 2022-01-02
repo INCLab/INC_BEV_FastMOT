@@ -17,6 +17,7 @@ def getCursor():
     cursor = mot_db.cursor()
     return cursor
 
+
 ######################################
 
 ############## 영상 관련 ##############
@@ -77,6 +78,30 @@ def getGroupIDbyVideoID(videoID):
     cursor.execute("SELECT videoGroup_id from video where id = %s", videoID)
     return cursor.fetchall()[0][0]
 
+
+# Insert New Frame Mouse Point
+# videoId : Video ID
+# pointList : BEV Point List (Left Top, Right Top, Left Bottom, Right Bottom)
+# ex. [(1, 1), (2, 1), (1, 0), (2, 0)]
+def insertFrameMousePoint(videoId, pointList):
+    pointCvt = []
+
+    for pIdx in range(len(pointList)):
+        if pIdx < len(pointList) - 1:
+            pointCvt.append("POINT({}, {}), ".format(pointList[pIdx][0], pointList[pIdx][1]))
+        else:
+            pointCvt.append("POINT({}, {})".format(pointList[pIdx][0], pointList[pIdx][1]))
+
+    getCursor().execute("INSERT INTO `mousepoint_frame`("
+                        "video_id, "
+                        "lefttop, "
+                        "righttop, "
+                        "leftbottom, "
+                        "rightbottom) "
+                        "values ({}, {})".format(videoId, ''.join(pointCvt)))
+    mot_db.commit()
+
+
 ######################################
 
 ############## 지도 관련 ##############
@@ -99,39 +124,28 @@ def getAllMapList():
     return cursor.fetchall()
 
 
-# Insert New Frame Mouse Point
-# videoId : Video ID
-# pointList : BEV Point List
-# ex. [(0, 1), (2, 3)]
-def insertFrameMousePoint(videoId, pointList):
-    pointCvt = []
-
-    for pIdx in range(len(pointList)):
-        pointCvt.append("{} {},".format(pointList[pIdx][0], pointList[pIdx][1]))
-    getCursor().execute("INSERT INTO `mousepoint_frame`("
-                        "video_id,"
-                        "p1, "
-                        "p2) "
-                        "values ({}, {})".format(videoId, pointCvt))
-    mot_db.commit()
-
-
 # Insert New Map Mouse Point
 # videoID : Video ID
 # mapId : Map ID
-# pointList : BEV Point List
-# ex. [(0, 1), (2, 3)]
+# pointList : BEV Point List (Left Top, Right Top, Left Bottom, Right Bottom)
+# ex. [(1, 1), (2, 1), (1, 0), (2, 0)]
 def insertMapMousePoint(videoId, mapId, pointList):
     pointCvt = []
 
     for pIdx in range(len(pointList)):
-        pointCvt.append("{} {},".format(pointList[pIdx][0], pointList[pIdx][1]))
+        if pIdx < len(pointList) - 1:
+            pointCvt.append("POINT({}, {}), ".format(pointList[pIdx][0], pointList[pIdx][1]))
+        else:
+            pointCvt.append("POINT({}, {})".format(pointList[pIdx][0], pointList[pIdx][1]))
+
     getCursor().execute("INSERT INTO `mousepoint_map`("
-                        "video_id,"
+                        "video_id, "
                         "map_id, "
-                        "p1, "
-                        "p2) "
-                        "values ({}, {}, {})".format(videoId, mapId, pointCvt))
+                        "lefttop, "
+                        "righttop, "
+                        "leftbottom, "
+                        "rightbottom) "
+                        "values ({}, {})".format(videoId, mapId, ''.join(pointCvt)))
     mot_db.commit()
 
 
@@ -186,6 +200,7 @@ def insertNewSpace(pointList):
                    "values (ST_GeomFromText('POLYGON(({}))'))".format(''.join(pointCvt)))
     mot_db.commit()
     return cursor.lastrowid
+
 
 ######################################
 
@@ -258,6 +273,7 @@ def getMOTDatabyFrame(videoId, frameId):
 
     return datas
 
+
 ######################################
 
 ############## BEV 결과 관련 ##############
@@ -327,6 +343,7 @@ def getBEVDatabyGroupId(groupID):
 
     return datas
 
+
 ######################################
 
 ############## BEV Global 결과 관련 ##############
@@ -395,6 +412,7 @@ def getGlobalTrackingDatabyFrame(groupID, frameId):
         datas[dataIdx] = data
 
     return datas
+
 
 ######################################
 
