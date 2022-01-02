@@ -15,8 +15,6 @@ app.config['MAX_CONTENT_LENGTH'] = 5000 * 1024 * 1024  # 5000MB (5GB)까지 업�
 
 
 # 비디오 파일 업로드
-# Todo : 비디오 업로드 시 DB에 등록 과정 추가 (개별 비디오 및 Group)
-# Todo : 비디오 업로드 시 DB에 폴더 이름도 함께 올라가도록 수정하기
 @app.route('/upload/videos', methods=['POST'])
 def upload_videos():
     if request.method == 'POST':
@@ -38,8 +36,16 @@ def upload_videos():
             uploadFolder = VIDEOFILE_LOCATION + '/' + datetime.today().strftime("%Y%m%d%H%M%S") + '/'
             os.mkdir(uploadFolder)
 
-            # 신규 Video Group 생성
-            videoGroupId = Database.newVideoGroup(uploadFolder)
+            # 넘어온 Video Group 정보가 없으면
+            if 'videoGroup' not in request.form:
+                # 신규 Video Group 생성
+                videoGroupId = Database.newVideoGroup(uploadFolder)
+            # 있다면
+            else:
+                # Video Group이 존재한다면
+                if not Database.getGroupFolderName(request.form['videoGroup']) is None:
+                    # 해당 Video Group을 정보로 사용
+                    videoGroupId = request.form['videoGroup']
 
             for video in videoFiles:
                 # Mimetype에 Video가 없으면
@@ -61,6 +67,7 @@ def upload_videos():
                 # 파일 저장
                 video.save(os.path.join(uploadFolder, fname))
 
+                Database.addNewVideo("{}/{}".format(uploadFolder, fname), videoGroupId)
 
             # 성공 반환
             return jsonify(

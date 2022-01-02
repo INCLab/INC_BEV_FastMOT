@@ -6,7 +6,7 @@ import pymysql
 mot_db = pymysql.connect(
     user='inc',
     passwd='1q2w3e4r!',
-    host='192.9.85.204',
+    host='127.0.0.1',
     db='inc_mot',
     charset='utf8mb4'
 )
@@ -17,7 +17,6 @@ def getCursor():
     cursor = mot_db.cursor()
     return cursor
 
-
 ######################################
 
 ############## 영상 관련 ##############
@@ -27,7 +26,7 @@ def getCursor():
 # Return : New Group ID
 def newVideoGroup(location):
     cursor = getCursor()
-    cursor.execute("insert into `videoGroup`(`folderName`) VALUES (%s)", location)
+    cursor.execute("insert into `videoGroup`(`location`) VALUES (%s)", location)
     mot_db.commit()
     return cursor.lastrowid
 
@@ -37,23 +36,25 @@ def newVideoGroup(location):
 # ex. 20211229222632
 def getGroupFolderName(groupID):
     cursor = getCursor()
-    cursor.execute("SELECT folderName from videoGroup where id = %s", groupID)
-    return cursor.fetchall()[0][0]
+    cursor.execute("SELECT location from videoGroup where id = %s", groupID)
 
+    result = cursor.fetchall()
+    if len(result) == 0:
+        return None
+    else:
+        return result[0][0]
 
 # Add New Video
 # fileName : File Name with Save Location
-# mapId : BEV Map Name
 # groupId : Video Group ID
 # Return : New Video ID
-def addNewVideo(fileName, mapId, groupID):
-    data = [fileName, mapId, groupID]
+def addNewVideo(fileName, groupID):
+    data = [fileName, groupID]
     cursor = getCursor()
 
-    cursor.execute("insert into `video`(`videoFileName`, `map_id`, `videoGroup_id`) VALUES (%s, %s, %s)", data)
+    cursor.execute("insert into `video`(`videoFileName`, `videoGroup_id`) VALUES (%s, %s)", data)
     mot_db.commit()
     return cursor.lastrowid
-
 
 # Get Video ID by File Name
 def getVideoId(videoFileName):

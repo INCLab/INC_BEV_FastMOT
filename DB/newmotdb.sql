@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS `video` (
 	id INT PRIMARY KEY auto_increment,
     videoFileName varchar(512) not null unique,
     videoGroup_id INT NOT NULL,
-    map_id INT NOT NULL,
+    map_id INT DEFAULT NULL,
     createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updateAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (videoGroup_id) REFERENCES videoGroup(id),
