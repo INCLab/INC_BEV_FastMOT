@@ -236,6 +236,58 @@ def insert_mousepoint_frame(videoId):
                 data={'error': sqle}
             )
 
+# Map에 대한 BEV Mousepoint 정보 넣기
+@app.route('/upload/point/map/<int:videoId>/<int:mapId>')
+def insert_mousepoint_map(videoId, mapId):
+    if request.method == 'POST':
+        try:
+            # Request 데이터가 JSON이 아니면
+            if not request.is_json:
+                # 에러 반환
+                return jsonify(
+                    code=500,
+                    success=False,
+                    msg='Body needs data in the form of JSON',
+                    data=[]
+                )
+
+            # Json 받아오기
+            jsonReq = request.get_json()
+
+            # 포인트 정보가 하나라도 없으면
+            if not 'lefttop' in jsonReq or not 'righttop' in jsonReq or not 'leftbottom' in jsonReq or not 'rightbottom' in jsonReq:
+                # 에러 반환
+                return jsonify(
+                    code=500,
+                    success=False,
+                    msg='Incomplete Point Infomation',
+                    data=[]
+                )
+
+            # 포인트 Tuple 목록 작성해서 DB에 쓰기
+            lefttop = (jsonReq['lefttop']['x'], jsonReq['lefttop']['y'])
+            righttop = (jsonReq['righttop']['x'], jsonReq['righttop']['y'])
+            leftbottom = (jsonReq['leftbottom']['x'], jsonReq['leftbottom']['y'])
+            rightbottom = (jsonReq['rightbottom']['x'], jsonReq['rightbottom']['y'])
+            Database.insertMapMousePoint(videoId, mapId, (lefttop, righttop, leftbottom, rightbottom))
+
+            # 성공 반환
+            return jsonify(
+                code=200,
+                success=True,
+                msg='success',
+                data=[]
+            )
+        # pymysql Error
+        except pymysql.err.Error as sqle:
+        # 에러 반환
+            return jsonify(
+                code=500,
+                success=False,
+                msg='SQL Error',
+                data={'error': sqle}
+            )
+
 # MOT 결과 비디오 (그룹 전체) 다운로드
 @app.route('/download/mot/group/<int:groupId>', methods=['GET'])
 def download_mot_group(groupId):
