@@ -1,5 +1,8 @@
 import pymysql
 
+############## 데이터베이스 관련 ##############
+
+# DB 접속 정보
 mot_db = pymysql.connect(
     user='inc',
     passwd='1q2w3e4r!',
@@ -8,18 +11,75 @@ mot_db = pymysql.connect(
     charset='utf8mb4'
 )
 
+
 # Get DB Cursor
 def getCursor():
     cursor = mot_db.cursor()
     return cursor
 
+######################################
+
+############## 영상 관련 ##############
+
 # Create New Video Group
+# location : Group Folder Location
 # Return : New Group ID
-def newVideoGroup():
+def newVideoGroup(location):
     cursor = getCursor()
-    cursor.execute("insert into `videoGroup` VALUES ()")
+    cursor.execute("insert into `videoGroup`(`folderName`) VALUES (%s)", location)
     mot_db.commit()
     return cursor.lastrowid
+
+
+# Get Group Folder Name by Group ID
+# groupID : Group ID
+# ex. 20211229222632
+def getGroupFolderName(groupID):
+    cursor = getCursor()
+    cursor.execute("SELECT folderName from videoGroup where id = %s", groupID)
+    return cursor.fetchall()[0][0]
+
+
+# Add New Video
+# fileName : File Name with Save Location
+# mapId : BEV Map Name
+# groupId : Video Group ID
+# Return : New Video ID
+def addNewVideo(fileName, mapId, groupID):
+    data = [fileName, mapId, groupID]
+    cursor = getCursor()
+
+    cursor.execute("insert into `video`(`videoFileName`, `map_id`, `videoGroup_id`) VALUES (%s, %s, %s)", data)
+    mot_db.commit()
+    return cursor.lastrowid
+
+
+# Get Video ID by File Name
+def getVideoId(videoFileName):
+    data = [videoFileName]
+
+    cursor = getCursor()
+    cursor.execute("SELECT `id` from `video` where `videoFileName` = %s", data)
+    return cursor.fetchall()[0][0]
+
+
+# Insert Video Frames
+def insertVideoFrames(videoId, frameList):
+    getCursor().executemany("insert into `frameinfo`(`video_id`, `frame_id`)  VALUES ({}, %s)".format(videoId),
+                            frameList)
+    mot_db.commit()
+
+
+# Get Video Group ID by Video ID
+# videoID : Single Video ID
+def getGroupIDbyVideoID(videoID):
+    cursor = getCursor()
+    cursor.execute("SELECT videoGroup_id from video where id = %s", videoID)
+    return cursor.fetchall()[0][0]
+
+######################################
+
+############## 지도 관련 ##############
 
 # Insert New Map
 # mapName : Map Name (Alias)
@@ -31,11 +91,13 @@ def insertNewMap(mapName, mapFile):
                         "values ({}, {})".format(mapName, mapFile))
     mot_db.commit()
 
+
 # Get All Map List
 def getAllMapList():
     cursor = getCursor()
     cursor.execute("SELECT id, mapName from mapinfo")
     return cursor.fetchall()
+
 
 # Insert New Frame Mouse Point
 # videoId : Video ID
@@ -52,6 +114,7 @@ def insertFrameMousePoint(videoId, pointList):
                         "p2) "
                         "values ({}, {})".format(videoId, pointCvt))
     mot_db.commit()
+
 
 # Insert New Map Mouse Point
 # videoID : Video ID
@@ -71,6 +134,7 @@ def insertMapMousePoint(videoId, mapId, pointList):
                         "values ({}, {}, {})".format(videoId, mapId, pointCvt))
     mot_db.commit()
 
+
 # Get Frame Mouse Point by Video ID
 # videoID : Single Video ID
 # Return : [[x,y], [x,y]]
@@ -85,6 +149,7 @@ def getFrameMousePoint(videoID):
     positionData2 = list(map(int, data[1].replace('POINT(', '').replace(')', '').split(' ')))
 
     return [positionData1, positionData2]
+
 
 # Get Frame Mouse Point by Video ID
 # videoID : Single Video ID
@@ -102,32 +167,29 @@ def getMapMousePoint(videoID, mapName):
 
     return [positionData1, positionData2]
 
-# Add New Video
-# fileName : File Name with Save Location
-# mapId : BEV Map Name
-# groupId : Video Group ID
-# Return : New Video ID
-def addNewVideo(fileName, mapId, groupID):
-    data = [fileName, mapId, groupID]
-    cursor = getCursor()
 
-    cursor.execute("insert into `video`(`videoFileName`, `map_id`, `videoGroup_id`) VALUES (%s, %s, %s)", data)
+# Insert New Space Info
+# [[0, 0], [1, 1], [2, 2]...]
+def insertNewSpace(pointList):
+    cursor = getCursor()
+    pointCvt = []
+
+    for pIdx in range(len(pointList)):
+        print(pIdx, len(pointList) - 1)
+        if pIdx != len(pointList) - 1:
+            pointCvt.append("{} {},".format(pointList[pIdx][0], pointList[pIdx][1]))
+        else:
+            pointCvt.append(
+                "{} {},{} {}".format(pointList[pIdx][0], pointList[pIdx][1], pointList[0][0], pointList[0][1]))
+
+    cursor.execute("insert into `spaceinfo`(`space`) "
+                   "values (ST_GeomFromText('POLYGON(({}))'))".format(''.join(pointCvt)))
     mot_db.commit()
     return cursor.lastrowid
 
-# Get Video ID by File Name
-def getVideoId(videoFileName):
-    data = [videoFileName]
+######################################
 
-    cursor = getCursor()
-    cursor.execute("SELECT `id` from `video` where `videoFileName` = %s", data)
-    return cursor.fetchall()[0][0]
-
-# Insert Video Frames
-def insertVideoFrames(videoId, frameList):
-    getCursor().executemany("insert into `frameinfo`(`video_id`, `frame_id`)  VALUES ({}, %s)".format(videoId),
-                            frameList)
-    mot_db.commit()
+############## MOT 결과 관련 ##############
 
 # Insert Tracking Infos
 # videoID (Int) : Single Video ID
@@ -141,6 +203,7 @@ def insertTrackingInfos(videoID, trackingInfoList):
                             "values ({}, %s, %s, POINT(%s, %s))".format(videoID), trackingInfoList)
     mot_db.commit()
 
+
 # Insert Correction Tracking Infos
 # videoID (Int) : Single Video ID
 # trackingInfoList (List) : [[FrameID, ID, X, Y], [FrameID, ID, X, Y]..]
@@ -153,23 +216,6 @@ def insertCorrectionTrackingInfos(videoID, trackingInfoList):
                             "values ({}, %s, %s, POINT(%s, %s))".format(videoID), trackingInfoList)
     mot_db.commit()
 
-# Insert New Space Info
-# [[0, 0], [1, 1], [2, 2]...]
-def insertNewSpace(pointList):
-    cursor = getCursor()
-    pointCvt = []
-
-    for pIdx in range(len(pointList)):
-        print(pIdx, len(pointList) - 1)
-        if pIdx != len(pointList) - 1:
-            pointCvt.append("{} {},".format(pointList[pIdx][0], pointList[pIdx][1]))
-        else:
-            pointCvt.append("{} {},{} {}".format(pointList[pIdx][0], pointList[pIdx][1], pointList[0][0], pointList[0][1]))
-
-    cursor.execute("insert into `spaceinfo`(`space`) "
-                   "values (ST_GeomFromText('POLYGON(({}))'))".format(''.join(pointCvt)))
-    mot_db.commit()
-    return cursor.lastrowid
 
 # Get Single Video MOT Data (From All Frame)
 # Return [[FrameID, ID, [X, Y]], ...]
@@ -211,6 +257,10 @@ def getMOTDatabyFrame(videoId, frameId):
         datas[dataIdx] = data
 
     return datas
+
+######################################
+
+############## BEV 결과 관련 ##############
 
 # Todo: mappingInfo Local ID 제거
 # Insert New BEV Data
@@ -256,6 +306,7 @@ def getBEVDatabyVideoId(videoId):
 
     return datas
 
+
 # Get BEV Data by Group ID
 # groupID (Int) : Video Group ID
 # return [[VideoID, FrameID, BEV ID, X, Y], ...]
@@ -275,6 +326,10 @@ def getBEVDatabyGroupId(groupID):
         datas[dataIdx] = data
 
     return datas
+
+######################################
+
+############## BEV Global 결과 관련 ##############
 
 # Todo: mappingInf에서 Integrity error
 # Insert Global Tracking Info
@@ -341,20 +396,9 @@ def getGlobalTrackingDatabyFrame(groupID, frameId):
 
     return datas
 
-# Get Video Group ID by Video ID
-# videoID : Single Video ID
-def getGroupIDbyVideoID(videoID):
-    cursor = getCursor()
-    cursor.execute("SELECT videoGroup_id from video where id = %s", videoID)
-    return cursor.fetchall()[0][0]
+######################################
 
-# Get Group Folder Name by Group ID
-# groupID : Group ID
-# ex. 20211229222632
-def getGroupFolderName(groupID):
-    cursor = getCursor()
-    cursor.execute("SELECT folderName from videoGroup where id = %s", groupID)
-    return cursor.fetchall()[0][0]
+############## 최종 결과 조회 관련 ##############
 
 # Get Nearby ID with Base ID in Specific Frame
 # groupId : Video Group ID

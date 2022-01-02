@@ -4,7 +4,7 @@ use `inc_mot`;
 
 CREATE TABLE IF NOT EXISTS `videoGroup` (
 	id INT PRIMARY KEY auto_increment,
-	folderName varchar(512) NOT NULL UNIQUE,
+	location varchar(512) NOT NULL UNIQUE,
     createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updateAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );

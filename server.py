@@ -38,6 +38,9 @@ def upload_videos():
             uploadFolder = VIDEOFILE_LOCATION + '/' + datetime.today().strftime("%Y%m%d%H%M%S") + '/'
             os.mkdir(uploadFolder)
 
+            # 신규 Video Group 생성
+            videoGroupId = Database.newVideoGroup(uploadFolder)
+
             for video in videoFiles:
                 # Mimetype에 Video가 없으면
                 if "video" not in video.mimetype:
@@ -57,6 +60,7 @@ def upload_videos():
 
                 # 파일 저장
                 video.save(os.path.join(uploadFolder, fname))
+
 
             # 성공 반환
             return jsonify(
