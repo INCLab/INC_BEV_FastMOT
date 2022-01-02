@@ -32,6 +32,18 @@ def upload_videos():
             # 업로드된 파일 목록 가져옴
             videoFiles = request.files.getlist('videoFiles')
 
+            # 가져온 파일들의 Mimetype 확인
+            for video in videoFiles:
+                # Mimetype에 Video가 없으면
+                if "video" not in video.mimetype:
+                    # 에러 반환
+                    return jsonify(
+                        code=500,
+                        success=False,
+                        msg="File '{}' is not Video File!".format(video.filename),
+                        data=[]
+                    )
+
             # 업로드 폴더 생성
             uploadFolder = VIDEOFILE_LOCATION + '/' + datetime.today().strftime("%Y%m%d%H%M%S") + '/'
             os.mkdir(uploadFolder)
@@ -46,21 +58,16 @@ def upload_videos():
                 if not Database.getGroupFolderName(request.form['videoGroup']) is None:
                     # 해당 Video Group을 정보로 사용
                     videoGroupId = request.form['videoGroup']
-
-            for video in videoFiles:
-                # Mimetype에 Video가 없으면
-                if "video" not in video.mimetype:
-                    # 생성한 폴더 지움
-                    os.remove(uploadFolder)
-
+                else:
                     # 에러 반환
                     return jsonify(
                         code=500,
                         success=False,
-                        msg="File '{}' is not Video File!".format(video.filename),
+                        msg="VideoGroup {} is Not Exist!".format(request.form['videoGroup']),
                         data=[]
                     )
 
+            for video in videoFiles:
                 # Secure FileName 적용
                 fname = werkzeug.utils.secure_filename(video.filename)
 
@@ -74,7 +81,7 @@ def upload_videos():
                 code=200,
                 success=True,
                 msg='success',
-                data=[]
+                data={'videoGroup': videoGroupId}
             )
         # IO Error
         except IOError as ioe:
@@ -91,8 +98,8 @@ def upload_videos():
             return jsonify(
                 code=500,
                 success=False,
-                msg='SQL Error!\n' + sqle,
-                data=[]
+                msg='SQL Error',
+                data={'error': sqle}
             )
 
 # 지도 업로드
@@ -173,16 +180,61 @@ def upload_map():
             return jsonify(
                 code=500,
                 success=False,
-                msg='SQL Error!\n' + sqle,
-                data=[]
+                msg='SQL Error',
+                data={'error': sqle}
             )
 
 # Frame에 대한 BEV Mousepoint 정보 넣기
 @app.route('/upload/map_point/frame/<int:videoId>')
 def insert_mousepoint_frame(videoId):
     if request.method == 'POST':
-        Database.insertFrameMousePoint(videoId, )
+        try:
+            # Request 데이터가 JSON이 아니면
+            if not request.is_json:
+                # 에러 반환
+                return jsonify(
+                    code=500,
+                    success=False,
+                    msg='Body needs data in the form of JSON',
+                    data=[]
+                )
 
+            # Json 받아오기
+            jsonReq = request.get_json()
+
+            # 포인트 정보가 하나라도 없으면
+            if not 'lefttop' in jsonReq or not 'righttop' in jsonReq or not 'leftbottom' in jsonReq or not 'rightbottom' in jsonReq:
+                # 에러 반환
+                return jsonify(
+                    code=500,
+                    success=False,
+                    msg='Incomplete Point Infomation',
+                    data=[]
+                )
+
+            # 포인트 Tuple 목록 작성해서 DB에 쓰기
+            lefttop = (jsonReq['lefttop']['x'], jsonReq['lefttop']['y'])
+            righttop = (jsonReq['righttop']['x'], jsonReq['righttop']['y'])
+            leftbottom = (jsonReq['leftbottom']['x'], jsonReq['leftbottom']['y'])
+            rightbottom = (jsonReq['rightbottom']['x'], jsonReq['rightbottom']['y'])
+            Database.insertFrameMousePoint(videoId, (lefttop, righttop, leftbottom, rightbottom))
+
+            # 성공 반환
+            return jsonify(
+                code=200,
+                success=True,
+                msg='success',
+                data=[]
+            )
+        # pymysql Error
+        except pymysql.err.Error as sqle:
+        # 에러 반환
+            return jsonify(
+                code=500,
+                success=False,
+                msg='SQL Error',
+                data={'error': sqle}
+            )
 
 # MOT 결과 비디오 (그룹 전체) 다운로드
 @app.route('/download/mot/group/<int:groupId>', methods=['GET'])
