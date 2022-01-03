@@ -1,5 +1,5 @@
-import pandas as pd
-import dtwfunction_DB_ver as dfunc
+import DTW.dtwfunction_DB_ver as dfunc
+
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))

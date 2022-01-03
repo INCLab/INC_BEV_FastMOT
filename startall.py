@@ -27,6 +27,8 @@ from types import SimpleNamespace
 from BEV import mouse_point
 from BEV import BEV
 from BEV import output_video
+from BEV import global_BEV
+from BEV import global_output_video
 
 from DTW import global_id_mapping
 
@@ -251,7 +253,11 @@ def start():
 
         # Write Global BEV Video
         if is_exist_global_table:
-            print("작업중")
+            logger.info('Create global mapping frames...')
+            global_BEV.start(Path(args.output_uri), Path(args.map_uri).absolute(), groupID)
+
+            logger.info('Write global BEV Video...')
+            global_output_video.start(Path(args.output_uri))
         else:
             logger.info('Stop Write Global BEV Video process.')
 
