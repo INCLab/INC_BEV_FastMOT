@@ -164,8 +164,8 @@ def getBEVDatabyVideoId(videoId):
     datas = list(cursor.fetchall())
     for dataIdx in range(len(datas)):
         data = list(datas[dataIdx])
-        positionData = list(map(int, data[1].replace('POINT(', '').replace(')', '').split(' ')))
-        data[1] = positionData[0]
+        positionData = list(map(int, data[2].replace('POINT(', '').replace(')', '').split(' ')))
+        data[2] = positionData[0]
         data.append(positionData[1])
 
         datas[dataIdx] = data
@@ -184,8 +184,8 @@ def getBEVDatabyGroupId(groupID):
     datas = list(cursor.fetchall())
     for dataIdx in range(len(datas)):
         data = list(datas[dataIdx])
-        positionData = list(map(int, data[1].replace('POINT(', '').replace(')', '').split(' ')))
-        data[1] = positionData[0]
+        positionData = list(map(int, data[3].replace('POINT(', '').replace(')', '').split(' ')))
+        data[3] = positionData[0]
         data.append(positionData[1])
 
         datas[dataIdx] = data

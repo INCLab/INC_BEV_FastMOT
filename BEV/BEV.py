@@ -8,8 +8,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import mimetypes
 
-import os
-import sys
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 import DB.database as Database
 
@@ -229,6 +227,7 @@ class PixelMapper(object):
         lonlat = np.dot(self.M, pixel.T)
 
         return (lonlat[:2, :] / lonlat[2, :]).T
+
     #도면 공간을 실제 공간으로 바꿈
     def lonlat_to_pixel(self, lonlat):
         """
