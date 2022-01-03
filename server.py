@@ -458,9 +458,9 @@ def run_mot_group(groupId):
             groupFolder = Database.getGroupFolderName(groupId)
 
             # 필요한 폴더 경로 String + 필요한 폴더 생성
-            videoInputFolder = VIDEOFILE_LOCATION + '/' + groupFolder + '/'
-            videoOutputFolder = MOT_VIDEO_LOCATION + '/' + groupFolder + '/'
-            frameOutputFolder = MOT_FRAME_LOCATION + '/' + groupFolder + '/'
+            videoInputFolder = FILE_UPLOAD_LOCATION + '/' + groupFolder + '/video/'
+            videoOutputFolder = RESULT_LOCATION + '/' + groupFolder + '/video/'
+            frameOutputFolder = RESULT_LOCATION + '/' + groupFolder + '/video/frames'
             os.mkdir(videoOutputFolder)
             os.mkdir(frameOutputFolder)
 
