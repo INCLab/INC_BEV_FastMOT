@@ -3,9 +3,18 @@ import os
 import zipfile
 import tempfile
 import hashlib
+
+import cv2
 import pymysql
+import json
+
+import fastmot
+from fastmot.utils import ConfigDecoder, Profiler
+from types import SimpleNamespace
+
 from flask import Flask, jsonify, request, send_file
 import werkzeug.utils
+
 from server_config import *
 import DB.database as Database
 
@@ -31,7 +40,7 @@ def create_videogroup():
 
             # 업로드 폴더 생성
             encode = hashlib.sha256(datetime.now().strftime("%Y%m%d%H%M%S").encode()).hexdigest()
-            uploadFolder = VIDEOFILE_LOCATION + '/' + encode + '/'
+            uploadFolder = encode
             os.mkdir(uploadFolder)
 
             # DB에 그룹 생성
@@ -100,7 +109,7 @@ def upload_videos():
                 if not Database.getGroupFolderName(request.form['videoGroup']) is None:
                     # 해당 Video Group을 정보로 사용
                     videoGroupId = request.form['videoGroup']
-                    uploadFolder = Database.getGroupFolderName(videoGroupId)
+                    uploadFolder = VIDEOFILE_LOCATION + '/' + Database.getGroupFolderName(videoGroupId) + '/'
                 else:
                     # 에러 반환
                     return jsonify(
@@ -403,6 +412,147 @@ def download_mot_group(groupId):
             )
 
 
+# MOT 결과 요청
+@app.route('/mot/<int:groupId>', methods=['GET'])
+def run_mot_group(groupId):
+    if request.method == 'GET':
+        try:
+            # 비디오 정보 목록 가져옴
+            videoList = Database.getGroupVideoList(groupId)
+
+            # 목록이 비었으면
+            if len(videoList) == 0:
+                # 에러 반환
+                return jsonify(
+                    code=500,
+                    success=False,
+                    msg='Empty Group',
+                    data=[]
+                )
+
+            # Group 저장 폴더명 가져오기
+            groupFolder = Database.getGroupFolderName(groupId)
+
+            # 필요한 폴더 경로 String + 필요한 폴더 생성
+            videoInputFolder = VIDEOFILE_LOCATION + '/' + groupFolder + '/'
+            videoOutputFolder = MOT_VIDEO_LOCATION + '/' + groupFolder + '/'
+            frameOutputFolder = MOT_FRAME_LOCATION + '/' + groupFolder + '/'
+            os.mkdir(videoOutputFolder)
+            os.mkdir(frameOutputFolder)
+
+            # load config file
+            with open(FASTMOT_CFG_FILE) as cfg_file:
+                config = json.load(cfg_file, cls=ConfigDecoder, object_hook=lambda d: SimpleNamespace(**d))
+
+            # For BEV param
+            # tracking_info: [[VideoName1, VideoID_1, tracking_list_1],[VideoName2, VideoID_2, tracking_list_2], ...]
+            tracking_info = []
+
+            avg_fps_list = {}
+
+            # 모든 File 읽기 위해 Loop
+            for videoFile in videoList:
+                # 이름과 확장자 분리
+                name, ext = os.path.splitext(videoFile['videoFileName'])
+
+                # FastMOT 실행
+                stream = fastmot.VideoIO(config.resize_to,
+                                         videoInputFolder + videoFile['videoFileName'],
+                                         videoOutputFolder + "/mot_{}".format(videoFile['videoFileName']),
+                                         **vars(config.stream_cfg))
+                mot = fastmot.MOT(config.resize_to, **vars(config.mot_cfg), draw=True)
+                mot.reset(stream.cap_dt)
+
+                # Frame Number List
+                frameList = []
+
+                # Each Frame Tracking Data
+                # [[VideoID, FrameID, ID, X, Y], [VideoID, FrameID, ID, X, Y]..]
+                trackingList = []
+
+                framecount = 0
+
+                try:
+                    with Profiler('app') as prof:
+                        while cv2.getWindowProperty('Video', 0) >= 0:
+                            frame = stream.read()
+                            if frame is None:
+                                break
+
+                            mot.step(frame)
+
+                            # New Frame Info
+                            frameList.append([mot.frame_count])
+
+                            for track in mot.visible_tracks():
+                                tl = track.tlbr[:2] / config.resize_to * stream.resolution
+                                br = track.tlbr[2:] / config.resize_to * stream.resolution
+                                w, h = br - tl + 1
+
+                                # New Tracking Info
+                                trackingList.append([
+                                    mot.frame_count,
+                                    track.trk_id,
+                                    int(tl[0] + w / 2),
+                                    int((tl[1] + h) - 10)
+                                ])
+
+                            cv2.imwrite("{}/{}.jpg".format(frameOutputFolder, framecount), frame)
+                            framecount += 1
+                            stream.write(frame)
+                finally:
+                    stream.release()
+
+                    try:
+                        # Add Frame List
+                        if len(frameList) > 0:
+                            Database.insertVideoFrames(videoFile['id'], frameList)
+
+                        # Add Tracking Info
+                        if len(trackingList) > 0:
+                            Database.insertTrackingInfos(videoFile['id'], trackingList)
+
+                            # For BEV param
+                            tracking_info.append([name, videoFile['id'], trackingList])
+                    except Exception as e:
+                        # 에러 반환
+                        return jsonify(
+                            code=500,
+                            success=False,
+                            msg='MOT Error',
+                            data={'error': e}
+                        )
+
+                    avg_fps = round(mot.frame_count / prof.duration)
+                    avg_fps_list[videoFile['videoFileName']] = avg_fps
+
+            # 완료 반환
+            return jsonify(
+                code=200,
+                success=True,
+                msg='success',
+                data={}
+            )
+        # IO Error
+        except IOError as ioe:
+            # 에러 반환
+            return jsonify(
+                code=500,
+                success=False,
+                msg='IO Error',
+                data={'error': ioe}
+            )
+        # pymysql Error
+        except pymysql.err.Error as sqle:
+            # 에러 반환
+            return jsonify(
+                code=500,
+                success=False,
+                msg='SQL Error',
+                data={'error': sqle}
+            )
+
+
 # 전체 지도 목록 가져오기
 @app.route('/search/map', methods=['GET'])
 def get_map_list():
@@ -422,8 +572,8 @@ def get_map_list():
             return jsonify(
                 code=500,
                 success=False,
-                msg='IOError!\n' + ioe,
-                data=[]
+                msg='IO Error',
+                data={'error': ioe}
             )
         # pymysql Error
         except pymysql.err.Error as sqle:
@@ -431,8 +581,8 @@ def get_map_list():
             return jsonify(
                 code=500,
                 success=False,
-                msg='SQL Error!\n' + sqle,
-                data=[]
+                msg='SQL Error',
+                data={'error': sqle}
             )
 
 
@@ -455,8 +605,8 @@ def get_videogroup_list():
             return jsonify(
                 code=500,
                 success=False,
-                msg='IOError!\n' + ioe,
-                data=[]
+                msg='IO Error',
+                data={'error': ioe}
             )
         # pymysql Error
         except pymysql.err.Error as sqle:
@@ -464,8 +614,8 @@ def get_videogroup_list():
             return jsonify(
                 code=500,
                 success=False,
-                msg='SQL Error!\n' + sqle,
-                data=[]
+                msg='SQL Error',
+                data={'error': sqle}
             )
 
 
@@ -505,8 +655,8 @@ def get_nearby_list_with_base(groupId, baseId):
             return jsonify(
                 code=500,
                 success=False,
-                msg='IOError!\n' + ioe,
-                data=[]
+                msg='IO Error',
+                data={'error': ioe}
             )
         # pymysql Error
         except pymysql.err.Error as sqle:
@@ -514,8 +664,8 @@ def get_nearby_list_with_base(groupId, baseId):
             return jsonify(
                 code=500,
                 success=False,
-                msg='SQL Error!\n' + sqle,
-                data=[]
+                msg='SQL Error',
+                data={'error': sqle}
             )
 
 

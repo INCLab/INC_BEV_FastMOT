@@ -1,4 +1,5 @@
 import pymysql
+import pymysql.cursors
 
 ############## 데이터베이스 관련 ##############
 
@@ -119,6 +120,13 @@ def getAllVideoGroupList():
     cursor.execute("SELECT id, name, location from videoGroup")
     return cursor.fetchall()
 
+# Get Video List in Specific Group
+# groupId : Video Group ID
+# Return ID, Video FileName, Map ID (Tuple)
+def getGroupVideoList(groupId):
+    cursor = mot_db.cursor(pymysql.cursors.DictCursor)
+    cursor.execute("SELECT id, videoFileName, map_id from video where videoGroup_id = %s", groupId)
+    return cursor.fetchall()
 
 ######################################
 
