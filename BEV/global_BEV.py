@@ -11,23 +11,21 @@ sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 import DB.database as Database
 ##############################################################################
 
-# Todo: 아직 수정 중
 
-global_output_path = os.path.join(output_path, 'global_map_frame')
-map_path = sys.argv[3]
-temp_path = "./temp"
+def start(output_path, map_path, group_id):
 
-if not os.path.exists(global_output_path):
-    os.makedirs(global_output_path)
-else:
-    shutil.rmtree(global_output_path)
-    os.makedirs(global_output_path)
+    global_output_path = os.path.join(output_path, 'global_map_frame')
 
-# ==============  Global ID BEV result  ===================
-def start(input_path, output_path, map_path, group_id):
+    if not os.path.exists(global_output_path):
+        os.makedirs(global_output_path)
+    else:
+        shutil.rmtree(global_output_path)
+        os.makedirs(global_output_path)
+
+    # ==============  Global ID BEV result  ===================
     # Get Global info in DB table
-    global_info_list = getGlobalTrackingDatas(group_id)
-    globals()['g_frame'], globals()['g_point'] = save_dict(file)
+    global_info_list = Database.getGlobalTrackingDatas(group_id)
+    globals()['g_frame'], globals()['g_point'] = save_dict(global_info_list)
 
     map = cv2.imread(map_path, -1)
 
