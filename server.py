@@ -28,8 +28,23 @@ app.config['MAX_CONTENT_LENGTH'] = 5000 * 1024 * 1024  # 5000MB (5GB)까지 업�
 def create_videogroup():
     if request.method == 'POST':
         try:
+            # Request 데이터가 JSON이 아니면
+            if not request.is_json:
+                # 에러 반환
+                return jsonify(
+                    code=500,
+                    success=False,
+                    msg='Body needs data in the form of JSON',
+                    data=[]
+                )
+
+            # Json 받아오기
+            jsonReq = request.get_json()
+
+            print(jsonReq)
+
             # 넘어온 새 Group 이름 정보가 없으면
-            if 'groupName' not in request.form:
+            if 'groupName' not in jsonReq:
                 # 에러 반환
                 return jsonify(
                     code=500,
@@ -41,10 +56,11 @@ def create_videogroup():
             # 업로드 폴더 생성
             encode = hashlib.sha256(datetime.now().strftime("%Y%m%d%H%M%S").encode()).hexdigest()
             uploadFolder = encode
-            os.mkdir(uploadFolder)
+            os.mkdir(FILE_UPLOAD_LOCATION + '/' + uploadFolder)
+            os.mkdir(RESULT_LOCATION + '/' +  uploadFolder)
 
             # DB에 그룹 생성
-            videoGroupId = Database.newVideoGroup(request.form['groupName'], uploadFolder)
+            videoGroupId = Database.newVideoGroup(jsonReq['groupName'], uploadFolder)
 
             # 새 Video Group ID와 성공 반환
             return jsonify(
@@ -109,7 +125,7 @@ def upload_videos():
                 if not Database.getGroupFolderName(request.form['videoGroup']) is None:
                     # 해당 Video Group을 정보로 사용
                     videoGroupId = request.form['videoGroup']
-                    uploadFolder = VIDEOFILE_LOCATION + '/' + Database.getGroupFolderName(videoGroupId) + '/'
+                    uploadFolder = FILE_UPLOAD_LOCATION + '/video/' + Database.getGroupFolderName(videoGroupId) + '/'
                 else:
                     # 에러 반환
                     return jsonify(
@@ -127,6 +143,11 @@ def upload_videos():
                     msg="VideoGroup Required",
                     data=[]
                 )
+
+            # 폴더 없으면
+            if not os.path.exists(uploadFolder):
+                # 만들기
+                os.makedirs(uploadFolder)
 
             for video in videoFiles:
                 # Secure FileName 적용
@@ -198,8 +219,12 @@ def upload_map():
 
             # 업로드 폴더 생성
             encode = hashlib.sha256(datetime.now().strftime("%Y%m%d%H%M%S").encode()).hexdigest()
-            uploadFolder = MAP_LOCATION + '/' + encode + '/'
-            os.mkdir(uploadFolder)
+            uploadFolder = FILE_UPLOAD_LOCATION + '/map/' + encode + '/'
+
+            # 폴더 없으면
+            if not os.path.exists(uploadFolder):
+                # 만들기
+                os.makedirs(uploadFolder)
 
             # Mimetype에 image가 없으면
             if "image" not in map.mimetype:

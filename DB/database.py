@@ -27,8 +27,9 @@ def getCursor():
 # location : Group Folder Location
 # Return : New Group ID
 def newVideoGroup(groupName, location):
+    insertData = (groupName, location)
     cursor = getCursor()
-    cursor.execute("insert into `videoGroup`(`name`, `location`) VALUES (%s, %s)", groupName, location)
+    cursor.execute("insert into `videoGroup`(`name`, `location`) VALUES (%s, %s)", insertData)
     mot_db.commit()
     return cursor.lastrowid
 
@@ -136,10 +137,11 @@ def getGroupVideoList(groupId):
 # mapName : Map Name (Alias)
 # mapFile : Map Location (Location ex. ./input/20211230151232/maps.png)
 def insertNewMap(mapName, mapFile):
+    insertParam = (mapName, mapFile)
     getCursor().execute("INSERT INTO `mapinfo`("
                         "mapName,"
                         "mapFile) "
-                        "values ({}, {})".format(mapName, mapFile))
+                        "values (%s, %s)", insertParam)
     mot_db.commit()
 
 
