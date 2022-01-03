@@ -59,8 +59,8 @@ def create_videogroup():
             return jsonify(
                 code=500,
                 success=False,
-                msg='IOError!\n' + ioe,
-                data=[]
+                msg='IO Error',
+                data={'error': str(ioe)}
             )
         # pymysql Error
         except pymysql.err.Error as sqle:
@@ -69,7 +69,7 @@ def create_videogroup():
                 code=500,
                 success=False,
                 msg='SQL Error',
-                data={'error': sqle}
+                data={'error': str(sqle)}
             )
 
 
@@ -151,8 +151,8 @@ def upload_videos():
             return jsonify(
                 code=500,
                 success=False,
-                msg='IOError!\n' + ioe,
-                data=[]
+                msg='IO Error',
+                data={'error': str(ioe)}
             )
         # pymysql Error
         except pymysql.err.Error as sqle:
@@ -161,7 +161,7 @@ def upload_videos():
                 code=500,
                 success=False,
                 msg='SQL Error',
-                data={'error': sqle}
+                data={'error': str(sqle)}
             )
 
 
@@ -236,8 +236,8 @@ def upload_map():
             return jsonify(
                 code=500,
                 success=False,
-                msg='IOError!\n' + ioe,
-                data=[]
+                msg='IO Error',
+                data={'error': str(ioe)}
             )
         # pymysql Error
         except pymysql.err.Error as sqle:
@@ -246,7 +246,7 @@ def upload_map():
                 code=500,
                 success=False,
                 msg='SQL Error',
-                data={'error': sqle}
+                data={'error': str(sqle)}
             )
 
 
@@ -299,7 +299,7 @@ def insert_mousepoint_frame(videoId):
                 code=500,
                 success=False,
                 msg='SQL Error',
-                data={'error': sqle}
+                data={'error': str(sqle)}
             )
 
 
@@ -352,9 +352,8 @@ def insert_mousepoint_map(videoId, mapId):
                 code=500,
                 success=False,
                 msg='SQL Error',
-                data={'error': sqle}
+                data={'error': str(sqle)}
             )
-
 
 # MOT 결과 비디오 (그룹 전체) 다운로드
 @app.route('/download/mot/group/<int:groupId>', methods=['GET'])
@@ -398,8 +397,8 @@ def download_mot_group(groupId):
             return jsonify(
                 code=500,
                 success=False,
-                msg='IOError!\n' + ioe,
-                data=[]
+                msg='IO Error',
+                data={'error': str(ioe)}
             )
         # pymysql Error
         except pymysql.err.Error as sqle:
@@ -407,8 +406,8 @@ def download_mot_group(groupId):
             return jsonify(
                 code=500,
                 success=False,
-                msg='SQL Error!\n' + sqle,
-                data=[]
+                msg='SQL Error',
+                data={'error': str(sqle)}
             )
 
 
@@ -540,7 +539,7 @@ def run_mot_group(groupId):
                 code=500,
                 success=False,
                 msg='IO Error',
-                data={'error': ioe}
+                data={'error': str(ioe)}
             )
         # pymysql Error
         except pymysql.err.Error as sqle:
@@ -549,7 +548,7 @@ def run_mot_group(groupId):
                 code=500,
                 success=False,
                 msg='SQL Error',
-                data={'error': sqle}
+                data={'error': str(sqle)}
             )
 
 
@@ -573,7 +572,7 @@ def get_map_list():
                 code=500,
                 success=False,
                 msg='IO Error',
-                data={'error': ioe}
+                data={'error': str(ioe)}
             )
         # pymysql Error
         except pymysql.err.Error as sqle:
@@ -582,7 +581,7 @@ def get_map_list():
                 code=500,
                 success=False,
                 msg='SQL Error',
-                data={'error': sqle}
+                data={'error': str(sqle)}
             )
 
 
@@ -606,7 +605,7 @@ def get_videogroup_list():
                 code=500,
                 success=False,
                 msg='IO Error',
-                data={'error': ioe}
+                data={'error': str(ioe)}
             )
         # pymysql Error
         except pymysql.err.Error as sqle:
@@ -615,7 +614,7 @@ def get_videogroup_list():
                 code=500,
                 success=False,
                 msg='SQL Error',
-                data={'error': sqle}
+                data={'error': str(sqle)}
             )
 
 
@@ -656,7 +655,7 @@ def get_nearby_list_with_base(groupId, baseId):
                 code=500,
                 success=False,
                 msg='IO Error',
-                data={'error': ioe}
+                data={'error': str(ioe)}
             )
         # pymysql Error
         except pymysql.err.Error as sqle:
@@ -665,7 +664,7 @@ def get_nearby_list_with_base(groupId, baseId):
                 code=500,
                 success=False,
                 msg='SQL Error',
-                data={'error': sqle}
+                data={'error': str(sqle)}
             )
 
 
