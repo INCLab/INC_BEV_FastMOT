@@ -400,23 +400,20 @@ def download_mot_group(groupId):
                 )
 
             # 비디오가 있는 폴더 경로
-            filePath = RESULT_LOCATION + '/' + videoFolderName
+            filePath = RESULT_LOCATION + '/' + videoFolderName + '/video'
 
             # 비디오 폴더에 있는 모든 파일 이름 가져오기
             fileList = os.listdir(filePath)
 
-            # 임시 파일 생성
-            with tempfile.TemporaryFile('w+') as tmpfile:
-                # 임시 파일로 zip 파일 생성
-                with zipfile.ZipFile(tmpfile, 'w', zipfile.ZIP_DEFLATED) as zipf:
-                    # 비디오를 압축 파일에 담기
-                    for file in fileList:
-                        zipf.write(filePath + '/' + file)
+            with zipfile.ZipFile('MOTResultVideo_group{}.zip'.format(groupId), 'w', zipfile.ZIP_DEFLATED) as zipf:
+                # 비디오를 압축 파일에 담기
+                for file in fileList:
+                    zipf.write(filePath + '/' + file)
 
-                # Client에 파일 전송
-                return send_file(tmpfile, attachment_filename='MOTResultVideo_group{}.zip'.format(groupId),
-                                 mimetype='application/zip',
-                                 as_attachment=True)
+            # Client에 파일 전송
+            return send_file('MOTResultVideo_group{}.zip'.format(groupId), attachment_filename='MOTResultVideo_group{}.zip'.format(groupId),
+                             mimetype='application/zip',
+                             as_attachment=True)
         # IO Error
         except IOError as ioe:
             # 에러 반환
