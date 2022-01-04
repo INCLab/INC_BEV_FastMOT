@@ -508,8 +508,8 @@ def run_mot_group(groupId):
                         stream.start_capture()
 
                         try:
-                            if not os.path.exists(frameOutputFolder + videoFile['videoFileName']):
-                                os.makedirs(frameOutputFolder + videoFile['videoFileName'])
+                            if not os.path.exists(frameOutputFolder + '/' + videoFile['videoFileName']):
+                                os.makedirs(frameOutputFolder + '/' + videoFile['videoFileName'])
 
                             with Profiler('app') as prof:
                                 while True:
@@ -535,7 +535,7 @@ def run_mot_group(groupId):
                                             int((tl[1] + h) - 10)
                                         ])
 
-                                    cv2.imwrite("{}/{}.jpg".format(frameOutputFolder + videoFile['videoFileName'], framecount), frame)
+                                    cv2.imwrite("{}/{}.jpg".format(frameOutputFolder + '/' + videoFile['videoFileName'], framecount), frame)
                                     framecount += 1
                                     stream.write(frame)
                         finally:
