@@ -611,7 +611,7 @@ def get_map_list():
 
             return jsonify(
                 code=200,
-                success=False,
+                success=True,
                 msg="success",
                 data=mapList
             )
@@ -644,7 +644,7 @@ def get_videogroup_list():
 
             return jsonify(
                 code=200,
-                success=False,
+                success=True,
                 msg="success",
                 data=groupList
             )
@@ -694,7 +694,7 @@ def get_nearby_list_with_base(groupId, baseId):
 
             return jsonify(
                 code=200,
-                success=False,
+                success=True,
                 msg="success",
                 data=nearbyList
             )
