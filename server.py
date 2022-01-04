@@ -126,6 +126,7 @@ def upload_videos():
                     # 해당 Video Group을 정보로 사용
                     videoGroupId = request.form['videoGroup']
                     uploadFolder = FILE_UPLOAD_LOCATION + '/video/' + Database.getGroupFolderName(videoGroupId) + '/'
+                    print(uploadFolder)
                 else:
                     # 에러 반환
                     return jsonify(
@@ -157,7 +158,7 @@ def upload_videos():
                 video.save(os.path.join(uploadFolder, fname))
 
                 # DB에 비디오 정보 추가
-                Database.addNewVideo("{}/{}".format(uploadFolder, fname), videoGroupId)
+                Database.addNewVideo("{}".format(fname), videoGroupId)
 
             # 성공 반환
             return jsonify(
@@ -246,7 +247,7 @@ def upload_map():
             map.save(os.path.join(uploadFolder, fname))
 
             # DB에 맵 별명 및 경로 저장
-            Database.insertNewMap(mapName, uploadFolder + '/' + fname)
+            Database.insertNewMap(mapName, uploadFolder + fname)
 
             # 성공 반환
             return jsonify(
@@ -275,8 +276,8 @@ def upload_map():
             )
 
 
-# Frame에 대한 BEV Mousepoint 정보 넣기
-@app.route('/upload/map_point/frame/<int:videoId>')
+# Video에 대한 BEV Mousepoint 정보 넣기
+@app.route('/upload/point/video/<int:videoId>', methods=['POST'])
 def insert_mousepoint_frame(videoId):
     if request.method == 'POST':
         try:
@@ -329,7 +330,7 @@ def insert_mousepoint_frame(videoId):
 
 
 # Map에 대한 BEV Mousepoint 정보 넣기
-@app.route('/upload/point/map/<int:videoId>/<int:mapId>')
+@app.route('/upload/point/map/<int:videoId>/<int:mapId>', methods=['POST'])
 def insert_mousepoint_map(videoId, mapId):
     if request.method == 'POST':
         try:
@@ -399,7 +400,7 @@ def download_mot_group(groupId):
                 )
 
             # 비디오가 있는 폴더 경로
-            filePath = MOT_VIDEO_LOCATION + '/' + videoFolderName
+            filePath = RESULT_LOCATION + '/' + videoFolderName
 
             # 비디오 폴더에 있는 모든 파일 이름 가져오기
             fileList = os.listdir(filePath)
@@ -458,107 +459,134 @@ def run_mot_group(groupId):
             groupFolder = Database.getGroupFolderName(groupId)
 
             # 필요한 폴더 경로 String + 필요한 폴더 생성
-            videoInputFolder = FILE_UPLOAD_LOCATION + '/' + groupFolder + '/video/'
-            videoOutputFolder = RESULT_LOCATION + '/' + groupFolder + '/video/'
+            videoInputFolder = FILE_UPLOAD_LOCATION + '/video/' + groupFolder + '/'
+            videoOutputFolder = RESULT_LOCATION + '/' + groupFolder + '/video'
             frameOutputFolder = RESULT_LOCATION + '/' + groupFolder + '/video/frames'
-            os.mkdir(videoOutputFolder)
-            os.mkdir(frameOutputFolder)
+
+            # 폴더 없으면 폴더 생성
+            if not os.path.exists(videoOutputFolder):
+                os.makedirs(videoOutputFolder)
+
+            if not os.path.exists(frameOutputFolder):
+                os.makedirs(frameOutputFolder)
 
             # load config file
             with open(FASTMOT_CFG_FILE) as cfg_file:
                 config = json.load(cfg_file, cls=ConfigDecoder, object_hook=lambda d: SimpleNamespace(**d))
 
-            # For BEV param
-            # tracking_info: [[VideoName1, VideoID_1, tracking_list_1],[VideoName2, VideoID_2, tracking_list_2], ...]
-            tracking_info = []
+                # For BEV param
+                # tracking_info: [[VideoName1, VideoID_1, tracking_list_1],[VideoName2, VideoID_2, tracking_list_2], ...]
+                tracking_info = []
 
-            avg_fps_list = {}
+                # 평균 FPS 목록
+                avg_fps_list = {}
 
-            # 모든 File 읽기 위해 Loop
-            for videoFile in videoList:
-                # 이름과 확장자 분리
-                name, ext = os.path.splitext(videoFile['videoFileName'])
+                # Skip된 목록 (이미 MOT 자료 존재)
+                already_list = []
 
-                # FastMOT 실행
-                stream = fastmot.VideoIO(config.resize_to,
-                                         videoInputFolder + videoFile['videoFileName'],
-                                         videoOutputFolder + "/mot_{}".format(videoFile['videoFileName']),
-                                         **vars(config.stream_cfg))
-                mot = fastmot.MOT(config.resize_to, **vars(config.mot_cfg), draw=True)
-                mot.reset(stream.cap_dt)
+                # 모든 File 읽기 위해 Loop
+                for videoFile in videoList:
+                    # 이미 MOT가 돌아간 경우가 아니라면
+                    if not Database.isAlreadyMOT(videoFile['id']):
+                        # 이름과 확장자 분리
+                        name, ext = os.path.splitext(videoFile['videoFileName'])
 
-                # Frame Number List
-                frameList = []
+                        # FastMOT 실행
+                        stream = fastmot.VideoIO(config.resize_to,
+                                                 videoInputFolder + videoFile['videoFileName'],
+                                                 videoOutputFolder + "/mot_{}".format(videoFile['videoFileName']),
+                                                 **vars(config.stream_cfg))
+                        mot = fastmot.MOT(config.resize_to, **vars(config.mot_cfg), draw=True)
+                        mot.reset(stream.cap_dt)
 
-                # Each Frame Tracking Data
-                # [[VideoID, FrameID, ID, X, Y], [VideoID, FrameID, ID, X, Y]..]
-                trackingList = []
+                        # Frame Number List
+                        frameList = []
 
-                framecount = 0
+                        # Each Frame Tracking Data
+                        # [[VideoID, FrameID, ID, X, Y], [VideoID, FrameID, ID, X, Y]..]
+                        trackingList = []
 
-                try:
-                    with Profiler('app') as prof:
-                        while cv2.getWindowProperty('Video', 0) >= 0:
-                            frame = stream.read()
-                            if frame is None:
-                                break
+                        framecount = 0
 
-                            mot.step(frame)
+                        stream.start_capture()
 
-                            # New Frame Info
-                            frameList.append([mot.frame_count])
+                        try:
+                            if not os.path.exists(frameOutputFolder + videoFile['videoFileName']):
+                                os.makedirs(frameOutputFolder + videoFile['videoFileName'])
 
-                            for track in mot.visible_tracks():
-                                tl = track.tlbr[:2] / config.resize_to * stream.resolution
-                                br = track.tlbr[2:] / config.resize_to * stream.resolution
-                                w, h = br - tl + 1
+                            with Profiler('app') as prof:
+                                while True:
+                                    frame = stream.read()
+                                    if frame is None:
+                                        break
 
-                                # New Tracking Info
-                                trackingList.append([
-                                    mot.frame_count,
-                                    track.trk_id,
-                                    int(tl[0] + w / 2),
-                                    int((tl[1] + h) - 10)
-                                ])
+                                    mot.step(frame)
 
-                            cv2.imwrite("{}/{}.jpg".format(frameOutputFolder, framecount), frame)
-                            framecount += 1
-                            stream.write(frame)
-                finally:
-                    stream.release()
+                                    # New Frame Info
+                                    frameList.append([mot.frame_count])
 
-                    try:
-                        # Add Frame List
-                        if len(frameList) > 0:
-                            Database.insertVideoFrames(videoFile['id'], frameList)
+                                    for track in mot.visible_tracks():
+                                        tl = track.tlbr[:2] / config.resize_to * stream.resolution
+                                        br = track.tlbr[2:] / config.resize_to * stream.resolution
+                                        w, h = br - tl + 1
 
-                        # Add Tracking Info
-                        if len(trackingList) > 0:
-                            Database.insertTrackingInfos(videoFile['id'], trackingList)
+                                        # New Tracking Info
+                                        trackingList.append([
+                                            mot.frame_count,
+                                            track.trk_id,
+                                            int(tl[0] + w / 2),
+                                            int((tl[1] + h) - 10)
+                                        ])
 
-                            # For BEV param
-                            tracking_info.append([name, videoFile['id'], trackingList])
-                    except Exception as e:
-                        # 에러 반환
-                        return jsonify(
-                            code=500,
-                            success=False,
-                            msg='MOT Error',
-                            data={'error': e}
-                        )
+                                    cv2.imwrite("{}/{}.jpg".format(frameOutputFolder + videoFile['videoFileName'], framecount), frame)
+                                    framecount += 1
+                                    stream.write(frame)
+                        finally:
+                            try:
+                                stream.release()
+                                # Add Frame List
+                                if len(frameList) > 0:
+                                    Database.insertVideoFrames(videoFile['id'], frameList)
 
-                    avg_fps = round(mot.frame_count / prof.duration)
-                    avg_fps_list[videoFile['videoFileName']] = avg_fps
+                                # Add Tracking Info
+                                if len(trackingList) > 0:
+                                    Database.insertTrackingInfos(videoFile['id'], trackingList)
+
+                                    # For BEV param
+                                    tracking_info.append([name, videoFile['id'], trackingList])
+                            except Exception as e:
+                                # 에러 반환
+                                return jsonify(
+                                    code=500,
+                                    success=False,
+                                    msg='MOT Error',
+                                    data={'error': e}
+                                )
+                            except pymysql.err.Error as sqle:
+                                # 에러 반환
+                                return jsonify(
+                                    code=500,
+                                    success=False,
+                                    msg='SQL Error',
+                                    data={'error': str(sqle)}
+                                )
+
+                            avg_fps = round(mot.frame_count / prof.duration)
+                            avg_fps_list[videoFile['videoFileName']] = avg_fps
+                    else:
+                        already_list.append(videoFile['id'])
 
             # 완료 반환
             return jsonify(
                 code=200,
                 success=True,
                 msg='success',
-                data={}
+                data={'avg_fps': avg_fps_list,
+                      'already': already_list}
             )
         # IO Error
         except IOError as ioe:
+            print(ioe)
             # 에러 반환
             return jsonify(
                 code=500,

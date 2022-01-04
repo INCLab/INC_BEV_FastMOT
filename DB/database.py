@@ -96,7 +96,7 @@ def getGroupIDbyVideoID(videoID):
 # Insert New Frame Mouse Point
 # videoId : Video ID
 # pointList : BEV Point List (Left Top, Right Top, Left Bottom, Right Bottom)
-# ex. [(1, 1), (2, 1), (1, 0), (2, 0)]
+# ex. ((1, 1), (2, 1), (1, 0), (2, 0))
 def insertFrameMousePoint(videoId, pointList):
     pointCvt = []
 
@@ -129,6 +129,20 @@ def getGroupVideoList(groupId):
     cursor.execute("SELECT id, videoFileName, map_id from video where videoGroup_id = %s", groupId)
     return cursor.fetchall()
 
+# Check Already Run MOT
+# videoId : Video ID
+# Return True or False
+def isAlreadyMOT(videoId):
+    cursor = getCursor()
+    cursor.execute("SELECT distinct frameinfo_video_id from trackinginfo where frameinfo_video_id = %s", videoId)
+    result = cursor.fetchall()
+
+    if len(result) > 0:
+        return True
+    else:
+        return False
+
+
 ######################################
 
 ############## 지도 관련 ##############
@@ -156,7 +170,7 @@ def getAllMapList():
 # videoID : Video ID
 # mapId : Map ID
 # pointList : BEV Point List (Left Top, Right Top, Left Bottom, Right Bottom)
-# ex. [(1, 1), (2, 1), (1, 0), (2, 0)]
+# ex. ((1, 1), (2, 1), (1, 0), (2, 0))
 def insertMapMousePoint(videoId, mapId, pointList):
     pointCvt = []
 
@@ -166,6 +180,7 @@ def insertMapMousePoint(videoId, mapId, pointList):
         else:
             pointCvt.append("POINT({}, {})".format(pointList[pIdx][0], pointList[pIdx][1]))
 
+
     getCursor().execute("INSERT INTO `mousepoint_map`("
                         "video_id, "
                         "map_id, "
@@ -173,7 +188,7 @@ def insertMapMousePoint(videoId, mapId, pointList):
                         "righttop, "
                         "leftbottom, "
                         "rightbottom) "
-                        "values ({}, {})".format(videoId, mapId, ''.join(pointCvt)))
+                        "values ({}, {}, {})".format(videoId, mapId, ''.join(pointCvt)))
     mot_db.commit()
 
 

@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS `mapinfo` (
 
 CREATE TABLE IF NOT EXISTS `video` (
 	id INT PRIMARY KEY auto_increment,
-    videoFileName varchar(512) not null unique,
+    videoFileName varchar(512) not null,
     videoGroup_id INT NOT NULL,
     map_id INT DEFAULT NULL,
     createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
