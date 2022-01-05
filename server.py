@@ -24,7 +24,7 @@ app.config['MAX_CONTENT_LENGTH'] = 5000 * 1024 * 1024  # 5000MB (5GB)까지 업�
 
 
 # 비디오 파일 업로드
-@app.route('/create/videogroup', methods=['POST'])
+@app.route('/group/create', methods=['POST'])
 def create_videogroup():
     if request.method == 'POST':
         try:
@@ -57,7 +57,7 @@ def create_videogroup():
             encode = hashlib.sha256(datetime.now().strftime("%Y%m%d%H%M%S").encode()).hexdigest()
             uploadFolder = encode
             os.mkdir(FILE_UPLOAD_LOCATION + '/' + uploadFolder)
-            os.mkdir(RESULT_LOCATION + '/' +  uploadFolder)
+            os.mkdir(RESULT_LOCATION + '/' + uploadFolder)
 
             # DB에 그룹 생성
             videoGroupId = Database.newVideoGroup(jsonReq['groupName'], uploadFolder)
@@ -90,7 +90,7 @@ def create_videogroup():
 
 
 # 비디오 파일 업로드
-@app.route('/upload/videos', methods=['POST'])
+@app.route('/video/upload', methods=['POST'])
 def upload_videos():
     if request.method == 'POST':
         try:
@@ -188,7 +188,7 @@ def upload_videos():
 
 
 # 지도 업로드
-@app.route('/upload/map', methods=['POST'])
+@app.route('/map/upload', methods=['POST'])
 def upload_map():
     if request.method == 'POST':
         try:
@@ -277,7 +277,7 @@ def upload_map():
 
 
 # Video에 대한 BEV Mousepoint 정보 넣기
-@app.route('/upload/point/video/<int:videoId>', methods=['POST'])
+@app.route('/video/point/<int:videoId>', methods=['POST'])
 def insert_mousepoint_frame(videoId):
     if request.method == 'POST':
         try:
@@ -330,7 +330,7 @@ def insert_mousepoint_frame(videoId):
 
 
 # Map에 대한 BEV Mousepoint 정보 넣기
-@app.route('/upload/point/map/<int:videoId>/<int:mapId>', methods=['POST'])
+@app.route('/map/point/<int:videoId>/<int:mapId>', methods=['POST'])
 def insert_mousepoint_map(videoId, mapId):
     if request.method == 'POST':
         try:
@@ -382,7 +382,7 @@ def insert_mousepoint_map(videoId, mapId):
             )
 
 # MOT 결과 비디오 (그룹 전체) 다운로드
-@app.route('/download/mot/group/<int:groupId>', methods=['GET'])
+@app.route('/mot/download/<int:groupId>', methods=['GET'])
 def download_mot_group(groupId):
     if request.method == 'GET':
         try:
@@ -435,7 +435,7 @@ def download_mot_group(groupId):
 
 
 # MOT 결과 요청
-@app.route('/mot/<int:groupId>', methods=['GET'])
+@app.route('/mot/request/<int:groupId>', methods=['GET'])
 def run_mot_group(groupId):
     if request.method == 'GET':
         try:
@@ -603,7 +603,7 @@ def run_mot_group(groupId):
 
 
 # 전체 지도 목록 가져오기
-@app.route('/search/map', methods=['GET'])
+@app.route('/map/list', methods=['GET'])
 def get_map_list():
     if request.method == 'GET':
         try:
@@ -636,7 +636,7 @@ def get_map_list():
 
 
 # 전체 Video Group 목록 가져오기
-@app.route('/search/videogroup', methods=['GET'])
+@app.route('/group/list', methods=['GET'])
 def get_videogroup_list():
     if request.method == 'GET':
         try:
@@ -670,7 +670,7 @@ def get_videogroup_list():
 
 # Base ID와 일정 거리 내에 존재하는 사용자 구하기
 # ex. /search/nearby/1/12?minFrame=10&maxFrame=500&distance=10
-@app.route('/search/nearby/<int:groupId>/<int:baseId>', methods=['GET'])
+@app.route('/global/result/nearby/<int:groupId>/<int:baseId>', methods=['GET'])
 def get_nearby_list_with_base(groupId, baseId):
     if request.method == 'GET':
         try:
