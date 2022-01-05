@@ -1,4 +1,4 @@
-import BEV
+from BEV.BEV import save_dict, getcolor
 import cv2
 import os
 import sys
@@ -22,7 +22,7 @@ def start(output_path, map_path, group_id):
     # ==============  Global ID BEV result  ===================
     # Get Global info in DB table
     global_info_list = Database.getGlobalTrackingDatas(group_id)
-    globals()['g_frame'], globals()['g_point'] = BEV.save_dict(global_info_list)
+    globals()['g_frame'], globals()['g_point'] = save_dict(global_info_list)
 
     map = cv2.imread(str(map_path), -1)
 
@@ -30,7 +30,7 @@ def start(output_path, map_path, group_id):
         if globals()['g_point'].get(frames) is not None:
             for label in globals()['g_point'].get(frames):
                 lonlat = [label[1], label[2]]
-                color = BEV.getcolor(abs(label[0]))
+                color = getcolor(abs(label[0]))
                 cv2.circle(map, (lonlat[0], lonlat[1]), 3, color, -1)
 
         src = os.path.join(global_output_path, str(frames) + '.jpg')
