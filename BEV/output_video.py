@@ -46,6 +46,7 @@ def start(output_path):
     writer.release()
     cv2.destroyAllWindows()
 
+
 def _gst_write_pipeline(output_uri):
     gst_elements = str(subprocess.check_output('gst-inspect-1.0'))
     # use hardware encoder if found
