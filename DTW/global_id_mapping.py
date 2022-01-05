@@ -1,4 +1,4 @@
-import DTW.dtwfunction_DB_ver as dfunc
+import dtwfunction_DB_ver as dfunc
 
 import os
 import sys
