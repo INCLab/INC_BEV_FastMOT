@@ -316,6 +316,34 @@ def getMOTDatabyFrame(videoId, frameId):
 
     return datas
 
+# Get List of Frame Num by Local ID
+# videoId : Video ID
+# localId : User Local ID in Single Video
+def getFrameNumsbyId(videoId, localId):
+    cursor = getCursor()
+    cursor.execute("SELECT frame_id "
+                   "from `trackinginfo` "
+                   "where `frameinfo_video_id` = {} "
+                   "and `identifyID` = {}".format(videoId, localId))
+
+    return cursor.fetchall()
+
+def getVideoFileLocation(videoId):
+    cursor = getCursor()
+    cursor.execute("SELECT videoFileName, videoGroup_id from video where id = {}".format(videoId))
+
+    videoName = cursor.fetchall()[0][0]
+    videoGroup = cursor.fetchall()[0][1]
+
+    cursor.execute("SELECT location from VideoGroup where id = {}".format(videoGroup))
+
+    groupFolder = cursor.fetchall()[0][0]
+
+    return {
+        'input': 'video/' + groupFolder + '/' ,
+        'output_video': groupFolder + '/video/' + '/mot_{}'.format(videoName),
+        'output_frame': groupFolder + '/video/frames/{}/'.format(videoName)
+    }
 
 ######################################
 

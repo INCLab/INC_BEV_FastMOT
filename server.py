@@ -18,6 +18,8 @@ import werkzeug.utils
 from server_config import *
 import DB.database as Database
 
+import random
+
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False  # Jsonify 한글 정상 출력되도록 처리
 app.config['MAX_CONTENT_LENGTH'] = 5000 * 1024 * 1024  # 5000MB (5GB)까지 업로드 가능하도록 처리
@@ -666,6 +668,95 @@ def get_videogroup_list():
                 msg='SQL Error',
                 data={'error': str(sqle)}
             )
+
+# 특정 비디오의 MOT 결과에서 로컬 ID 목록 가져오기
+# videoId : 비디오 ID
+@app.route('/mot/result/<int:videoId>')
+def mot_result_get_ids(videoId):
+    try:
+        motlist = Database.getMOTDatas(videoId)
+
+        # MOT 결과가 비어있으면
+        if len(motlist) <= 0:
+            # 204 (Content 없음) 반환
+            return jsonify(
+                code=204,
+                success=True,
+                msg='No Content',
+                data={}
+            )
+
+        # ID 목록 만들기
+        idlist = []
+        for motdata in motlist:
+            idlist.append(motdata[1])
+
+        return jsonify(
+            code=200,
+            success=True,
+            msg='success',
+            data={'list': idlist}
+        )
+
+    # pymysql Error
+    except pymysql.err.Error as sqle:
+        # 에러 반환
+        return jsonify(
+            code=500,
+            success=False,
+            msg='SQL Error',
+            data={'error': str(sqle)}
+        )
+
+
+# 특정 비디오의 MOT 결과에서 특정 로컬 ID에 대한 프레임 이미지 하나 가져오기
+# videoId : 비디오 ID
+# localId : 로컬 ID
+@app.route('/mot/result/<int:videoId>/<int:localId>')
+def mot_result_get_id_image(videoId, localId):
+    try:
+        frameList = Database.getFrameNumsbyId(videoId, localId)
+
+        # Frame 목록이 비어있으면
+        if len(frameList) <= 0:
+            # 204 (Content 없음) 반환
+            return jsonify(
+                code=204,
+                success=True,
+                msg='No Content',
+                data={}
+            )
+
+        # 비디오 관련 폴더 목록 가져오기
+        videoFolder = Database.getVideoFileLocation(videoId)
+
+        # 랜덤으로 하나의 프레임 선택
+        randomFrameFile = random.choice(frameList)
+
+        # Client에 파일 전송
+        return send_file(videoFolder['output_frame'] + randomFrameFile + '.jpg',
+                         mimetype='image/jpg',
+                         as_attachment=False)
+
+    # IO Error
+    except IOError as ioe:
+        # 에러 반환
+        return jsonify(
+            code=500,
+            success=False,
+            msg='IO Error',
+            data={'error': str(ioe)}
+        )
+
+    # pymysql Error
+    except pymysql.err.Error as sqle:
+        # 에러 반환
+        return jsonify(
+            code=500,
+            success=False,
+            msg='SQL Error',
+            data={'error': str(sqle)}
+        )
 
 
 # Base ID와 일정 거리 내에 존재하는 사용자 구하기
