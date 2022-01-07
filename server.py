@@ -58,8 +58,8 @@ def create_videogroup():
             # 업로드 폴더 생성
             encode = hashlib.sha256(datetime.now().strftime("%Y%m%d%H%M%S").encode()).hexdigest()
             uploadFolder = encode
-            os.mkdir(FILE_UPLOAD_LOCATION + '/' + uploadFolder)
-            os.mkdir(RESULT_LOCATION + '/' + uploadFolder)
+            os.mkdir(os.path.join(FILE_UPLOAD_LOCATION, uploadFolder))
+            os.mkdir(os.path.join(RESULT_LOCATION, uploadFolder))
 
             # DB에 그룹 생성
             videoGroupId = Database.newVideoGroup(jsonReq['groupName'], uploadFolder)
@@ -127,7 +127,7 @@ def upload_videos():
                 if not Database.getGroupFolderName(request.form['videoGroup']) is None:
                     # 해당 Video Group을 정보로 사용
                     videoGroupId = request.form['videoGroup']
-                    uploadFolder = FILE_UPLOAD_LOCATION + '/video/' + Database.getGroupFolderName(videoGroupId) + '/'
+                    uploadFolder = os.path.join(FILE_UPLOAD_LOCATION, 'video', Database.getGroupFolderName(videoGroupId))
                     print(uploadFolder)
                 else:
                     # 에러 반환
@@ -222,7 +222,7 @@ def upload_map():
 
             # 업로드 폴더 생성
             encode = hashlib.sha256(datetime.now().strftime("%Y%m%d%H%M%S").encode()).hexdigest()
-            uploadFolder = FILE_UPLOAD_LOCATION + '/map/' + encode + '/'
+            uploadFolder = os.path.join(FILE_UPLOAD_LOCATION, 'map', encode)
 
             # 폴더 없으면
             if not os.path.exists(uploadFolder):
@@ -249,7 +249,7 @@ def upload_map():
             map.save(os.path.join(uploadFolder, fname))
 
             # DB에 맵 별명 및 경로 저장
-            Database.insertNewMap(mapName, uploadFolder + fname)
+            Database.insertNewMap(mapName, os.path.join(uploadFolder, fname))
 
             # 성공 반환
             return jsonify(
@@ -402,7 +402,7 @@ def download_mot_group(groupId):
                 )
 
             # 비디오가 있는 폴더 경로
-            filePath = RESULT_LOCATION + '/' + videoFolderName + '/video'
+            filePath = os.path.join(RESULT_LOCATION, videoFolderName, 'video')
 
             # 비디오 폴더에 있는 모든 파일 이름 가져오기
             fileList = os.listdir(filePath)
@@ -410,7 +410,7 @@ def download_mot_group(groupId):
             with zipfile.ZipFile('MOTResultVideo_group{}.zip'.format(groupId), 'w', zipfile.ZIP_DEFLATED) as zipf:
                 # 비디오를 압축 파일에 담기
                 for file in fileList:
-                    zipf.write(filePath + '/' + file)
+                    zipf.write(str(os.path.join(filePath, file)))
 
             # Client에 파일 전송
             return send_file('MOTResultVideo_group{}.zip'.format(groupId), attachment_filename='MOTResultVideo_group{}.zip'.format(groupId),
@@ -458,9 +458,9 @@ def run_mot_group(groupId):
             groupFolder = Database.getGroupFolderName(groupId)
 
             # 필요한 폴더 경로 String + 필요한 폴더 생성
-            videoInputFolder = FILE_UPLOAD_LOCATION + '/video/' + groupFolder + '/'
-            videoOutputFolder = RESULT_LOCATION + '/' + groupFolder + '/video'
-            frameOutputFolder = RESULT_LOCATION + '/' + groupFolder + '/video/frames'
+            videoInputFolder = os.path.join(FILE_UPLOAD_LOCATION, 'video', groupFolder)
+            videoOutputFolder = os.path.join(RESULT_LOCATION, groupFolder, 'video')
+            frameOutputFolder = os.path.join(RESULT_LOCATION, groupFolder, 'video', 'frames')
 
             # 폴더 없으면 폴더 생성
             if not os.path.exists(videoOutputFolder):
@@ -492,8 +492,8 @@ def run_mot_group(groupId):
 
                         # FastMOT 실행
                         stream = fastmot.VideoIO(config.resize_to,
-                                                 videoInputFolder + videoFile['videoFileName'],
-                                                 videoOutputFolder + "/mot_{}".format(videoFile['videoFileName']),
+                                                 os.path.join(videoInputFolder, videoFile['videoFileName']),
+                                                 os.path.join(videoOutputFolder, "/mot_{}".format(videoFile['videoFileName'])),
                                                  **vars(config.stream_cfg))
                         mot = fastmot.MOT(config.resize_to, **vars(config.mot_cfg), draw=True)
                         mot.reset(stream.cap_dt)
@@ -510,8 +510,8 @@ def run_mot_group(groupId):
                         stream.start_capture()
 
                         try:
-                            if not os.path.exists(frameOutputFolder + '/' + videoFile['videoFileName']):
-                                os.makedirs(frameOutputFolder + '/' + videoFile['videoFileName'])
+                            if not os.path.exists(os.path.join(frameOutputFolder, videoFile['videoFileName'])):
+                                os.makedirs(os.path.join(frameOutputFolder, videoFile['videoFileName']))
 
                             with Profiler('app') as prof:
                                 while True:
@@ -537,7 +537,7 @@ def run_mot_group(groupId):
                                             int((tl[1] + h) - 10)
                                         ])
 
-                                    cv2.imwrite("{}/{}.jpg".format(frameOutputFolder + '/' + videoFile['videoFileName'], framecount), frame)
+                                    cv2.imwrite("{}/{}.jpg".format(os.path.join(frameOutputFolder, videoFile['videoFileName']), framecount), frame)
                                     framecount += 1
                                     stream.write(frame)
                         finally:
@@ -734,7 +734,7 @@ def mot_result_get_id_image(videoId, localId):
         randomFrameFile = random.choice(frameList)
 
         # Client에 파일 전송
-        return send_file(videoFolder['output_frame'] + randomFrameFile + '.jpg',
+        return send_file(os.path.join(videoFolder['output_frame'], randomFrameFile + '.jpg'),
                          mimetype='image/jpg',
                          as_attachment=False)
 
