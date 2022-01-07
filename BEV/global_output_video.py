@@ -4,8 +4,10 @@ import numpy as np
 import cv2
 import subprocess
 
+
+#Todo: 새로운 비디오로 생성할 경우 고려하기
 def start(output_path):
-    path = os.path.join(output_path, 'map_frame')
+    path = os.path.join(output_path, 'global_map_frame')
     paths = [os.path.join(path, i) for i in os.listdir(path) if re.search(".jpg$", i)]
 
     ## 정렬 작업
@@ -23,7 +25,7 @@ def start(output_path):
     paths = list(np.sort(store1)) + list(np.sort(store2)) + list(np.sort(store3)) + list(np.sort(store4))
     # len('ims/2/a/2a.2710.png')
 
-    pathOut = str(output_path / 'output.mp4')
+    pathOut = os.path.join(output_path, 'global_output.mp4')
     fps = 25
     frame_array = []
     size = None
@@ -33,8 +35,6 @@ def start(output_path):
         height, width, layers = img.shape
         size = (width, height)
         frame_array.append(img)
-
-    print(size)
 
     writer = cv2.VideoWriter(_gst_write_pipeline(pathOut), cv2.CAP_GSTREAMER, fps, (1280, 720))
 

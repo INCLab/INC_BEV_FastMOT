@@ -66,7 +66,7 @@ def insertCorrectionTrackingInfos(videoID, trackingInfoList):
                             "`frameinfo_frame_id`, "
                             "`identifyID`, "
                             "`position`) "
-                            "values ({}, %s, %s, POINT(%s, %s))", videoID, trackingInfoList)
+                            "values ({}, %s, %s, POINT(%s, %s))".format(videoID), trackingInfoList)
     mot_db.commit()
 
 # Insert New Space Info
@@ -121,13 +121,14 @@ def getMOTDatabyFrame(videoId, frameId):
     for dataIdx in range(len(datas)):
         data = list(datas[dataIdx])
         positionData = list(map(int, data[1].replace('POINT(', '').replace(')', '').split(' ')))
-        data[1] = positionData[0]
+        data[2] = positionData[0]
         data.append(positionData[1])
 
         datas[dataIdx] = data
 
     return datas
 
+# Todo: mappingInfo Local ID 제거
 # Insert New BEV Data
 # groupID (Int) : Video Group ID
 # mappingInfo (List) : [[Video ID, Frame ID, BEV ID, Local ID], ...]
@@ -141,13 +142,13 @@ def insertBEVData(groupID, mappingInfo, bevInfo):
                             "`position`) "
                             "values ({}, %s, %s, %s, POINT(%s, %s))".format(groupID), bevInfo)
 
-    getCursor().executemany("insert into `trackinginfo_has_BEV`("
-                            "`videoGroup_id`, "
-                            "`localVideo_id`, "
-                            "`frame_id`, "
-                            "`bevID`, "
-                            "`trackingID`) "
-                            "values ({}, %s, %s, %s)".format(groupID), mappingInfo)
+    # getCursor().executemany("insert into `trackinginfo_has_BEV`("
+    #                         "`videoGroup_id`, "
+    #                         "`localVideo_id`, "
+    #                         "`frame_id`, "
+    #                         "`bevID`, "
+    #                         "`trackingID`) "
+    #                         "values ({}, %s, %s, %s, %s)".format(groupID), mappingInfo)
     mot_db.commit()
 
 
@@ -163,8 +164,8 @@ def getBEVDatabyVideoId(videoId):
     datas = list(cursor.fetchall())
     for dataIdx in range(len(datas)):
         data = list(datas[dataIdx])
-        positionData = list(map(int, data[1].replace('POINT(', '').replace(')', '').split(' ')))
-        data[1] = positionData[0]
+        positionData = list(map(int, data[2].replace('POINT(', '').replace(')', '').split(' ')))
+        data[2] = positionData[0]
         data.append(positionData[1])
 
         datas[dataIdx] = data
@@ -183,14 +184,15 @@ def getBEVDatabyGroupId(groupID):
     datas = list(cursor.fetchall())
     for dataIdx in range(len(datas)):
         data = list(datas[dataIdx])
-        positionData = list(map(int, data[1].replace('POINT(', '').replace(')', '').split(' ')))
-        data[1] = positionData[0]
+        positionData = list(map(int, data[3].replace('POINT(', '').replace(')', '').split(' ')))
+        data[3] = positionData[0]
         data.append(positionData[1])
 
         datas[dataIdx] = data
 
     return datas
 
+# Todo: mappingInf에서 Integrity error
 # Insert Global Tracking Info
 # groupID (Int) : Video Group ID (globaltrackinginfo's videoGroup_id)
 # mappingInfo (List) : [[Video ID, FrameID, GlobalID, BEV ID], [Video ID, FrameID, GlobalID, BEV ID], ...]
@@ -203,12 +205,13 @@ def insertGlobalTrackingInfo(groupID, mappingInfo, trackingInfo):
                             "`position`) "
                             "values ({}, %s, %s, POINT(%s, %s))".format(groupID), trackingInfo)
 
-    getCursor().executemany("insert into `BEV_has_globaltrackinginfo`("
-                            "`videoGroup_id`, "
-                            "`frame_id`, "
-                            "`globalID`, "
-                            "`bevID`) "
-                            "values ({}, %s, %s, %s, %s)".format(groupID), mappingInfo)
+    # getCursor().executemany("insert into `BEV_has_globaltrackinginfo`("
+    #                         "`videoGroup_id`, "
+    #                         "`localVideo_id`, "
+    #                         "`frame_id`, "
+    #                         "`globalID`, "
+    #                         "`bevID`) "
+    #                         "values ({}, %s, %s, %s, %s)".format(groupID), mappingInfo)
     mot_db.commit()
 
 
