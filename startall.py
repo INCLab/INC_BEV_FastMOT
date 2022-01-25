@@ -91,15 +91,10 @@ def start():
     # Output 폴더 생성
     Path(args.output_uri).mkdir(parents=True, exist_ok=True)
 
-    # MOT Skip한게 아니라면 SQL에 등록될 Group ID 생성
+    # MOT Skip 아니면 Output 폴더 비우기
     if not args.skip_mot:
-        groupID = Database.newVideoGroup()
-    else:
-        groupID = None
-
-    # For BEV param
-    # tracking_info: [[VideoName1, VideoID_1, tracking_list_1],[VideoName2, VideoID_2, tracking_list_2], ...]
-    tracking_info = []
+        if os.path.isdir(Path(args.output_uri)):
+            shutil.rmtree(Path(args.output_uri))
 
     # 모든 File 읽기 위해 Loop
     for videofile in videolist:
@@ -112,17 +107,6 @@ def start():
         if filemime is not None and filemime.find('video') is not -1:
             # MOT 작업을 Skip하지 않은 경우
             if not args.skip_mot:
-                # Insert Video with Group ID
-                if groupID:
-                    try:
-                        videoID = Database.addNewVideo(videofile, groupID)
-                    except pymysql.err.IntegrityError as e:
-                        logger.error(e)
-                        exit()
-
-                else:
-                    videoID = None
-
                 # FastMOT 실행
                 stream = fastmot.VideoIO(config.resize_to,
                                          args.input_uri + videofile,
@@ -142,13 +126,6 @@ def start():
                 logger.info('Starting video capture... ({})'.format(videofile))
                 stream.start_capture()
 
-                # Frame Number List
-                frameList = []
-
-                # Each Frame Tracking Data
-                # [[VideoID, FrameID, ID, X, Y], [VideoID, FrameID, ID, X, Y]..]
-                trackingList = []
-
                 try:
                     with Profiler('app') as prof:
                         while not args.show or cv2.getWindowProperty('Video', 0) >= 0:
@@ -158,25 +135,13 @@ def start():
 
                             mot.step(frame)
 
-                            # New Frame Info
-                            frameList.append([mot.frame_count])
-
                             for track in mot.visible_tracks():
                                 tl = track.tlbr[:2] / config.resize_to * stream.resolution
                                 br = track.tlbr[2:] / config.resize_to * stream.resolution
                                 w, h = br - tl + 1
 
                                 # New Text Format
-                                #txt.write(f'{mot.frame_count} {track.trk_id} {int(tl[0] + w / 2)} {int((tl[1] + h) - 10)}\n')
-
-
-                                # New Tracking Info
-                                trackingList.append([
-                                    mot.frame_count,
-                                    track.trk_id,
-                                    int(tl[0] + w / 2),
-                                    int((tl[1] + h) - 10)
-                                ])
+                                txt.write(f'{mot.frame_count} {track.trk_id} {int(tl[0] + w / 2)} {int((tl[1] + h) - 10)}\n')
 
                             if args.show:
                                 cv2.imshow('Video', frame)
@@ -193,21 +158,6 @@ def start():
 
                     stream.release()
                     cv2.destroyAllWindows()
-
-                    try:
-                        # Add Frame List
-                        if len(frameList) > 0:
-                            Database.insertVideoFrames(videoID, frameList)
-
-                        # Add Tracking Info
-                        if len(trackingList) > 0:
-                            Database.insertTrackingInfos(videoID, trackingList)
-
-                            # For BEV param
-                            tracking_info.append([name, videoID, trackingList])
-                    except Exception as e:
-                        logger.error(e)
-                        exit()
 
                     avg_fps = round(mot.frame_count / prof.duration)
                     logger.info('Average FPS: %d', avg_fps)
@@ -228,12 +178,13 @@ def start():
             logger.info('Waiting Select Points...')
             mouse_point.start(Path(__file__).parent / 'temp/points.txt', Path(args.output_uri + '/frame/'), args.map_uri)
 
+        # Todo: db가 아닌 txt로 읽어오는 방식으로 수정
         # BEV Start
         logger.info('Start BEV...')
         if len(tracking_info) > 0:
             BEV.start(Path(args.input_uri), Path(args.output_uri), Path(args.map_uri).absolute(), tracking_info)
         else:
-            logger.info('Tracking_info is empty! Stop BEV process.')
+            logger.info('Not exist MOT result file! Stop BEV process.')
 
         # Write BEV Video
         if len(tracking_info) > 0:
