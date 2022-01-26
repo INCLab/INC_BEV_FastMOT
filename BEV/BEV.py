@@ -20,7 +20,7 @@ lonloat : 도면 공간
 오른쪽 위, 왼쪽 위, 왼쪽 아래, 오른쪽 아래 순서
 '''
 
-def start(input_path, output_path, map_path, tracking_info):
+def start(input_path, output_path, map_path):
 
     heatmap_path = os.path.join(output_path, 'heatmap.png')
     original_output_path = output_path
@@ -85,33 +85,38 @@ def start(input_path, output_path, map_path, tracking_info):
     #PixelMapper로 값 전달
 
 
-    idxforfile = {}
-    idx = 0
+    # idxforfile = {}
+    # idx = 0
+    #
+    # # info: [VideoName, VideoID, tracking_list]
+    # for i in list(map_point.keys()):
+    #     idxforfile[i] = idx
+    #     tracking_list = []
+    #     for info in tracking_info:
+    #         if info[0] == i:
+    #             tracking_list = info[2]
+    #             break
+    #     if not tracking_list:
+    #         print('Tracking_list is empty!')
+    #
+    #
+    #     globals()['frame{}'.format(idxforfile[i])], globals()['point{}'.format(idxforfile[i])] = save_dict(tracking_list)
+    #     idx += 1
 
-    # info: [VideoName, VideoID, tracking_list]
-    for i in list(map_point.keys()):
-        idxforfile[i] = idx
-        tracking_list = []
-        for info in tracking_info:
-            if info[0] == i:
-                tracking_list = info[2]
-                break
-        if not tracking_list:
-            print('Tracking_list is empty!')
-
-
-        globals()['frame{}'.format(idxforfile[i])], globals()['point{}'.format(idxforfile[i])] = save_dict(tracking_list)
-        idx += 1
-
+    for filename in filelist:
+        ##############변경해야하는 부분#######################
+        # 좌표값을 받아야함(하나씩)
+        file = open(os.path.join(output_path, filename), 'r')
+        globals()['frame{}'.format(filename)], globals()['point{}'.format(filename)] = save_dict(file)
 
     map = cv2.imread(str(map_path), -1)
-    for i in list(map_point.keys()):
-        globals()['BEV_Point{}'.format(idxforfile[i])] = dict()
+    for filename in filelist:
+        globals()['BEV_Point{}'.format(filename)] = dict()
 
     max_frame = 0
-    for i in list(map_point.keys()):
-        if int(globals()['frame{}'.format(idxforfile[i])]) > max_frame:
-            max_frame = int(globals()['frame{}'.format(idxforfile[i])])
+    for filename in filelist:
+        if int(globals()['frame{}'.format(filename)]) > max_frame:
+            max_frame = int(globals()['frame{}'.format(filename)])
 
 
     for frames in range(1, max_frame + 1):
