@@ -34,7 +34,7 @@ def start(output_path):
         size = (width, height)
         frame_array.append(img)
 
-        if len(frame_array) >= 4500 or idx == len(frame_array) - 1:
+        if len(frame_array) >= 4500 or idx == len(path) - 1:
             writer = cv2.VideoWriter(_gst_write_pipeline(os.path.join(output_path, str(output_idx) + 'output.mp4')),
                                      cv2.CAP_GSTREAMER,
                                      fps,
