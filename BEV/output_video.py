@@ -27,34 +27,23 @@ def start(output_path):
     fps = 25
     frame_array = []
     size = None
-    i = 0
 
     for idx, path in enumerate(paths):
-        if len(frame_array) == i:
-            print('add new list')
-            frame_array.append([])
-
-        if len(frame_array[i]) >= 4500:
-            i += 1
-            frame_array.append([])
-            print('new i', i)
-
         img = cv2.imread(path)
         height, width, layers = img.shape
         size = (width, height)
-        frame_array[i].append(img)
+        frame_array.append(img)
+
+        if len(frame_array) >= 4500 or idx == len(frame_array) - 1:
+            for i in range(len(frame_array)):
+                writer = cv2.VideoWriter(_gst_write_pipeline(str(i) + '_' + pathOut), cv2.CAP_GSTREAMER, fps,
+                                         (1280, 720))
+                frame_array[i] = cv2.resize(frame_array[i], dsize=(1280, 720), interpolation=cv2.INTER_LINEAR)
+                writer.write(frame_array[i])
+                writer.release()
+            frame_array.clear()
 
     print(size)
-
-    for i in range(len(frame_array)):
-        writer = cv2.VideoWriter(_gst_write_pipeline(str(i) + '_' + pathOut), cv2.CAP_GSTREAMER, fps, (1280, 720))
-        for j in range(len(frame_array[i])):
-            # writing to a image array
-            frame_array[i][j] = cv2.resize(frame_array[i][j], dsize=(1280, 720), interpolation=cv2.INTER_LINEAR)
-            writer.write(frame_array[i][j])
-
-        writer.release()
-        cv2.destroyAllWindows()
 
 def _gst_write_pipeline(output_uri):
     gst_elements = str(subprocess.check_output('gst-inspect-1.0'))
