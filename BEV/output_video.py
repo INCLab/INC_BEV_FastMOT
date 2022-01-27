@@ -23,28 +23,38 @@ def start(output_path):
     paths = list(np.sort(store1)) + list(np.sort(store2)) + list(np.sort(store3)) + list(np.sort(store4))
     # len('ims/2/a/2a.2710.png')
 
-    pathOut = str(output_path / 'output.mp4')
+    pathOut = os.path.join(output_path, 'output.mp4')
     fps = 25
     frame_array = []
     size = None
+    i = 0
 
     for idx, path in enumerate(paths):
+        if len(frame_array) == i:
+            print('add new list')
+            frame_array.append([])
+
+        if len(frame_array[i]) >= 4500:
+            i += 1
+            frame_array.append([])
+            print('new i', i)
+
         img = cv2.imread(path)
         height, width, layers = img.shape
         size = (width, height)
-        frame_array.append(img)
+        frame_array[i].append(img)
 
     print(size)
 
-    writer = cv2.VideoWriter(_gst_write_pipeline(pathOut), cv2.CAP_GSTREAMER, fps, (1280, 720))
-
     for i in range(len(frame_array)):
-        # writing to a image array
-        frame_array[i] = cv2.resize(frame_array[i], dsize=(1280, 720), interpolation=cv2.INTER_LINEAR)
-        writer.write(frame_array[i])
+        writer = cv2.VideoWriter(_gst_write_pipeline(str(i) + '_' + pathOut), cv2.CAP_GSTREAMER, fps, (1280, 720))
+        for j in range(len(frame_array[i])):
+            # writing to a image array
+            frame_array[i][j] = cv2.resize(frame_array[i][j], dsize=(1280, 720), interpolation=cv2.INTER_LINEAR)
+            writer.write(frame_array[i][j])
 
-    writer.release()
-    cv2.destroyAllWindows()
+        writer.release()
+        cv2.destroyAllWindows()
 
 def _gst_write_pipeline(output_uri):
     gst_elements = str(subprocess.check_output('gst-inspect-1.0'))
