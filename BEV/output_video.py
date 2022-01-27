@@ -35,15 +35,15 @@ def start(output_path):
         frame_array.append(img)
 
         if len(frame_array) >= 4500 or idx == len(frame_array) - 1:
+            writer = cv2.VideoWriter(_gst_write_pipeline(os.path.join(output_path, str(output_idx) + 'output.mp4')),
+                                     cv2.CAP_GSTREAMER,
+                                     fps,
+                                     (1280, 720))
             for i in range(len(frame_array)):
-                writer = cv2.VideoWriter(_gst_write_pipeline(os.path.join(output_path, str(output_idx) + 'output.mp4')),
-                                         cv2.CAP_GSTREAMER,
-                                         fps,
-                                         (1280, 720))
                 frame_array[i] = cv2.resize(frame_array[i], dsize=(1280, 720), interpolation=cv2.INTER_LINEAR)
                 writer.write(frame_array[i])
-                writer.release()
 
+            writer.release()
             frame_array.clear()
             output_idx += 1
 
