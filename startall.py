@@ -97,13 +97,16 @@ def start():
             # MOT 작업을 Skip하지 않은 경우
             if not args.skip_mot:
                 # FastMOT 실행
-                stream = fastmot.VideoIO(config.resize_to, args.input_uri + videofile, args.output_uri + "mot_{}".format(videofile), **vars(config.stream_cfg))
+                stream = fastmot.VideoIO(config.resize_to,
+                                         args.input_uri + videofile,
+                                         args.output_uri + "/mot_{}".format(videofile),
+                                         **vars(config.stream_cfg))
                 mot = fastmot.MOT(config.resize_to, **vars(config.mot_cfg), draw=True)
                 mot.reset(stream.cap_dt)
 
                 txt = open(args.output_uri + '/' + name + '.txt', 'w')
 
-                Path(args.output_uri + '/frame/' + name + '/').mkdir(parents=True, exist_ok=True)
+                Path(args.output_uri + '/frame/' + name).mkdir(parents=True, exist_ok=True)
                 framecount = 0
 
                 if args.show:
@@ -133,7 +136,7 @@ def start():
                                 if cv2.waitKey(1) & 0xFF == 27:
                                     break
 
-                            cv2.imwrite("{}/{}.jpg".format(Path(args.output_uri + '/frame/' + name + '/'), framecount), frame)
+                            cv2.imwrite("{}/{}.jpg".format(Path(args.output_uri + '/frame/' + name), framecount), frame)
                             framecount += 1
                             stream.write(frame)
                 finally:

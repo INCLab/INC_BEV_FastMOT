@@ -1,7 +1,10 @@
+from copy import copy
+
 import cv2
 import os
 import sys
 import shutil
+import time
 
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -97,11 +100,18 @@ def start(input_path, output_path, map_path):
     for i in list(map_point.keys()):
         globals()['BEV_Point{}'.format(idxforfile[i])] = dict()
 
+    pointset = set()
+
+    # 말 그대로 프레임 몇 번쨰인지
     for frames in range(1, int(globals()['frame{}'.format(0)])):
+        tempmap = copy(map)
+        # 파일명
         for i in list(map_point.keys()):
             pm = PixelMapper(quad_coords_list[i]["pixel"], quad_coords_list[i]["lonlat"])
             if globals()['point{}'.format(idxforfile[i])].get(str(frames)) is not None:
+                # ID랑 X/Y
                 for label in globals()['point{}'.format(idxforfile[i])].get(str(frames)):
+                    print(frames, i, label)
                     uv = (label[1], label[2])
                     lonlat = list(pm.pixel_to_lonlat(uv))
                     li = [label[0], int(lonlat[0][0]), int(lonlat[0][1])]
@@ -111,11 +121,19 @@ def start(input_path, output_path, map_path):
                     else:
                         globals()['BEV_Point{}'.format(idxforfile[i])][frames] = [li]
 
-                    color = getcolor(abs(label[0]))
-                    cv2.circle(map, (int(lonlat[0][0]), int(lonlat[0][1])), 3, color, -1)
+                    tlabel = tuple(label)
+                    if tlabel not in pointset:
+                        color = getcolor(abs(label[0]))
+                        cv2.circle(tempmap, (int(lonlat[0][0]), int(lonlat[0][1])), 10, color, -1)
+                        pointset.add(tlabel)
+
+                    cv2.imshow('Video', tempmap)
+                    cv2.waitKey(1)
 
             src = os.path.join(output_path, str(frames) + '.jpg')
-            cv2.imwrite(src, map)
+            cv2.imwrite(src, tempmap)
+
+    cv2.destroyAllWindows()
 
     ## HeatMap ##
 
