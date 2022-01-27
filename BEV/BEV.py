@@ -8,9 +8,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import mimetypes
 
-sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-import DB.database as Database
-
 ##############################################################################
 
 '''
@@ -25,7 +22,7 @@ def start(input_path, output_path, map_path):
     heatmap_path = os.path.join(output_path, 'heatmap.png')
     original_output_path = output_path
     output_path = os.path.join(output_path, 'map_frame')
-    temp_path = "./temp"
+    temp_path = "../temp"
 
     if not os.path.exists(output_path):
         os.makedirs(output_path)
@@ -33,7 +30,10 @@ def start(input_path, output_path, map_path):
         shutil.rmtree(output_path)
         os.makedirs(output_path)
 
-    filelist = list(filter(lambda filename: mimetypes.guess_type(filename)[0] is not None and mimetypes.guess_type(filename)[0].find('video') is not -1, os.listdir(input_path)))
+    filelist = []
+    for file in os.listdir(original_output_path):
+        if file.endswith(".txt"):
+            filelist.append(file.rstrip('.txt'))
 
     f = open(os.path.join(temp_path, 'points.txt'), 'r')
     data = f.read()
@@ -82,105 +82,77 @@ def start(input_path, output_path, map_path):
         }
         quad_coords_list[i] = quad_coords
 
-    #PixelMapper로 값 전달
-
-
-    # idxforfile = {}
-    # idx = 0
-    #
-    # # info: [VideoName, VideoID, tracking_list]
-    # for i in list(map_point.keys()):
-    #     idxforfile[i] = idx
-    #     tracking_list = []
-    #     for info in tracking_info:
-    #         if info[0] == i:
-    #             tracking_list = info[2]
-    #             break
-    #     if not tracking_list:
-    #         print('Tracking_list is empty!')
-    #
-    #
-    #     globals()['frame{}'.format(idxforfile[i])], globals()['point{}'.format(idxforfile[i])] = save_dict(tracking_list)
-    #     idx += 1
+    max_frame = 0
 
     for filename in filelist:
-        ##############변경해야하는 부분#######################
-        # 좌표값을 받아야함(하나씩)
-        file = open(os.path.join(output_path, filename), 'r')
+        file = open(os.path.join(original_output_path, filename + '.txt'), 'r')
         globals()['frame{}'.format(filename)], globals()['point{}'.format(filename)] = save_dict(file)
 
-    map = cv2.imread(str(map_path), -1)
-    for filename in filelist:
         globals()['BEV_Point{}'.format(filename)] = dict()
 
-    max_frame = 0
-    for filename in filelist:
         if int(globals()['frame{}'.format(filename)]) > max_frame:
             max_frame = int(globals()['frame{}'.format(filename)])
 
+    map = cv2.imread(str(map_path), -1)
 
+    print("Create BEV map_frame...")
     for frames in range(1, max_frame + 1):
-        for i in list(map_point.keys()):
-            pm = PixelMapper(quad_coords_list[i]["pixel"], quad_coords_list[i]["lonlat"])
-            if globals()['point{}'.format(idxforfile[i])].get(frames) is not None:
-                for label in globals()['point{}'.format(idxforfile[i])].get(frames):
+        for filename in filelist:
+            pm = PixelMapper(quad_coords_list[filename]["pixel"], quad_coords_list[filename]["lonlat"])
+            if globals()['point{}'.format(filename)].get(frames) is not None:
+                for label in globals()['point{}'.format(filename)].get(frames):
                     uv = (label[1], label[2])
                     lonlat = list(pm.pixel_to_lonlat(uv))
                     li = [frames, label[0], int(lonlat[0][0]), int(lonlat[0][1])]
-                    if frames in globals()['BEV_Point{}'.format(idxforfile[i])]:
-                        line = globals()['BEV_Point{}'.format(idxforfile[i])].get(frames)
+                    if frames in globals()['BEV_Point{}'.format(filename)]:
+                        line = globals()['BEV_Point{}'.format(filename)].get(frames)
                         line.append(li)
                     else:
-                        globals()['BEV_Point{}'.format(idxforfile[i])][frames] = [li]
+                        globals()['BEV_Point{}'.format(filename)][frames] = [li]
 
                     color = getcolor(abs(label[0]))
                     cv2.circle(map, (int(lonlat[0][0]), int(lonlat[0][1])), 3, color, -1)
 
             src = os.path.join(output_path, str(frames) + '.jpg')
             cv2.imwrite(src, map)
+    print("Done")
 
-    print('Insert BEV tracking info...')
-    # Insert BEV tracking info in table
-    group_id = Database.getGroupIDbyVideoID(tracking_info[0][1])
-    for i in list(map_point.keys()):
-        bev_trackingList = []
-        mappingList = []
-        for key in globals()['BEV_Point{}'.format(idxforfile[i])]:
-            for info in globals()['BEV_Point{}'.format(idxforfile[i])][key]:
-                for t in tracking_info:
-                    if t[0] == i:
-                        video_id = [t[1]]
-                        bev_trackingList.append(video_id + info)
-                        mappingList.append(video_id + info[1:3] + [info[2]])
-                        break
-        Database.insertBEVData(group_id, mappingList, bev_trackingList)
-    print('Done')
+    # Create BEV_Result txt files
+    for filename in filelist:
+        with open(os.path.join(original_output_path, 'BEV_{}.txt'.format(filename)), 'w') as f:
+            for key in globals()['BEV_Point{}'.format(filename)]:
+                for info in globals()['BEV_Point{}'.format(filename)][key]:
+                    temp = ''
+                    for e in info:
+                        temp += str(e) + ' '
+                    temp.rstrip()
+                    f.write(temp.rstrip() + '\n')
 
 
-    ## HeatMap ##
-
-    # df = pd.DataFrame(index=range(0, 10), columns=range(0, 13))
-    df = [[0 for col in range(13)] for row in range(10)]
-
-    # df = df.fillna(0)
-
-    for frames in range(1, int(globals()['frame{}'.format(0)])):
-
-        for i in list(map_point.keys()):
-
-            if globals()['BEV_Point{}'.format(idxforfile[i])].get(frames) is not None:
-
-                for label in globals()['BEV_Point{}'.format(idxforfile[i])].get(frames):
-                    if label[2] < 0 or label[1] < 0 or label[1] > map.shape[1] or label[2] > map.shape[0]:
-                        continue
-
-                    x = round(int(label[2]) / map.shape[0] * 9)
-                    y = round(int(label[1]) / map.shape[1] * 12)
-                    df[x][y] += 1
-
-    sns.heatmap(df, linewidths=0.1, linecolor="black")
-
-    plt.savefig(heatmap_path)
+    # ## HeatMap ##
+    #
+    # # df = pd.DataFrame(index=range(0, 10), columns=range(0, 13))
+    # df = [[0 for col in range(13)] for row in range(10)]
+    #
+    # # df = df.fillna(0)
+    #
+    # for frames in range(1, int(globals()['frame{}'.format(0)])):
+    #
+    #     for i in list(map_point.keys()):
+    #
+    #         if globals()['BEV_Point{}'.format(idxforfile[i])].get(frames) is not None:
+    #
+    #             for label in globals()['BEV_Point{}'.format(idxforfile[i])].get(frames):
+    #                 if label[2] < 0 or label[1] < 0 or label[1] > map.shape[1] or label[2] > map.shape[0]:
+    #                     continue
+    #
+    #                 x = round(int(label[2]) / map.shape[0] * 9)
+    #                 y = round(int(label[1]) / map.shape[1] * 12)
+    #                 df[x][y] += 1
+    #
+    # sns.heatmap(df, linewidths=0.1, linecolor="black")
+    #
+    # plt.savefig(heatmap_path)
 
 '''
 id 라벨값에 맞춰 색깔을 지정하는 function
@@ -273,17 +245,30 @@ def save_lonlat_frame(point, pm,frame_num ,input_dir, output_dir):
         cv2.imwrite(src, map)
 
 
-def save_dict(tracking_list):
+def save_dict(file):
+    ##################################################
     frame = 0
     point = dict()
+    while True:
+        line = file.readline()
 
-    for tracking_info in tracking_list:
-        frame = tracking_info[0]
+        if not line:
+            break
 
-        if frame in point:
-            line = point.get(frame)
-            line.append(list(map(int, tracking_info[1:])))
+        info = list(map(int, line[:-1].split(" ")))
+
+        frame = info[0]
+
+        if info[0] in point:
+            line = point.get(info[0])
+            line.append(list(map(int, info[1:])))
         else:
-            point[frame] = [list(map(int, tracking_info[1:]))]
+            point[info[0]] = [list(map(int, info[1:]))]
+
+    file.close()
 
     return frame, point
+
+
+if __name__ == "__main__":
+    start('../input/edu_15m/', '../output/', '../input/edu_map.png')
