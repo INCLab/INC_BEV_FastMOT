@@ -128,8 +128,12 @@ def start(output_path, map_path):
             cv2.imwrite(src, map)
     print("Done")
 
-    # Create BEV_Result txt files
-    os.mkdir(os.path.join(original_output_path, 'bev_result'))
+    # #### Create BEV_Result txt files
+    # Check the directory already exist
+    if os.path.isdir(os.path.join(original_output_path, 'bev_result')):
+        shutil.rmtree(Path(args.output_uri))
+    else:
+        os.mkdir(os.path.join(original_output_path, 'bev_result'))
     is_success = False
     for filename in filelist:
         with open(os.path.join(original_output_path, 'bev_result', 'BEV_{}.txt'.format(filename)), 'w') as f:
