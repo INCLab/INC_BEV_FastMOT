@@ -1,7 +1,10 @@
+from copy import copy
+
 import cv2
 import os
 import sys
 import shutil
+import time
 
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -17,7 +20,7 @@ lonloat : 도면 공간
 오른쪽 위, 왼쪽 위, 왼쪽 아래, 오른쪽 아래 순서
 '''
 
-def start(input_path, output_path, map_path):
+def start(output_path, map_path):
 
     heatmap_path = os.path.join(output_path, 'heatmap.png')
     original_output_path = output_path
@@ -110,14 +113,22 @@ def start(input_path, output_path, map_path):
                     else:
                         globals()['BEV_Point{}'.format(filename)][frames] = [li]
 
-                    color = getcolor(abs(label[0]))
-                    cv2.circle(map, (int(lonlat[0][0]), int(lonlat[0][1])), 3, color, -1)
+                    tlabel = tuple(label)
+                    if tlabel not in pointset:
+                        color = getcolor(abs(label[0]))
+                        cv2.circle(tempmap, (int(lonlat[0][0]), int(lonlat[0][1])), 10, color, -1)
+                        pointset.add(tlabel)
+
+                    cv2.imshow('Video', tempmap)
+                    cv2.waitKey(1)
 
             src = os.path.join(output_path, str(frames) + '.jpg')
+
             cv2.imwrite(src, map)
     print("Done")
 
     # Create BEV_Result txt files
+    is_success = False
     for filename in filelist:
         with open(os.path.join(original_output_path, 'BEV_{}.txt'.format(filename)), 'w') as f:
             for key in globals()['BEV_Point{}'.format(filename)]:
@@ -127,6 +138,8 @@ def start(input_path, output_path, map_path):
                         temp += str(e) + ' '
                     temp.rstrip()
                     f.write(temp.rstrip() + '\n')
+            is_success = True
+
 
 
     # ## HeatMap ##
@@ -153,6 +166,9 @@ def start(input_path, output_path, map_path):
     # sns.heatmap(df, linewidths=0.1, linecolor="black")
     #
     # plt.savefig(heatmap_path)
+
+    return is_success
+
 
 '''
 id 라벨값에 맞춰 색깔을 지정하는 function

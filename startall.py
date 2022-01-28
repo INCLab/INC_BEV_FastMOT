@@ -117,7 +117,7 @@ def start():
 
                 txt = open(args.output_uri + '/' + name + '.txt', 'w')
 
-                Path(args.output_uri + '/frame/' + name + '/').mkdir(parents=True, exist_ok=True)
+                Path(args.output_uri + '/frame/' + name).mkdir(parents=True, exist_ok=True)
                 framecount = 0
 
                 if args.show:
@@ -148,7 +148,7 @@ def start():
                                 if cv2.waitKey(1) & 0xFF == 27:
                                     break
 
-                            cv2.imwrite("{}/{}.jpg".format(Path(args.output_uri + '/frame/' + name + '/'), framecount), frame)
+                            cv2.imwrite("{}/{}.jpg".format(Path(args.output_uri + '/frame/' + name), framecount), frame)
                             framecount += 1
                             stream.write(frame)
                 finally:
@@ -186,38 +186,38 @@ def start():
             if file.endswith(".txt"):
                 file_exist = True
 
+        bev_success = False
         if file_exist:
-            BEV.start(Path(args.input_uri), Path(args.output_uri), Path(args.map_uri).absolute())
+            bev_success = BEV.start(Path(args.output_uri), Path(args.map_uri).absolute())
         else:
             logger.info('Not exist MOT result file! Stop BEV process.')
 
-        # Todo: db가 아닌 txt로 읽어오는 방식으로 수정
-        # # Write BEV Video
-        # if len(tracking_info) > 0:
-        #     logger.info('Write BEV Video...')
-        #     output_video.start(Path(args.output_uri).absolute())
-        # else:
-        #     logger.info('Stop Write BEV Video process.')
-        #
-        # # Global mapping start
-        # is_exist_global_table = False
-        # if len(tracking_info) > 0:
-        #     logger.info('Start global mapping...')
-        #     is_exist_global_table = global_id_mapping.start(videolist)
-        # else:
-        #     logger.info('Stop global mapping process.')
-        #
-        # # Write Global BEV Video
-        # if is_exist_global_table:
-        #     logger.info('Create global mapping frames...')
-        #     global_BEV.start(Path(args.output_uri), Path(args.map_uri).absolute(), groupID)
-        #
-        #     logger.info('Write global BEV Video...')
-        #     global_output_video.start(Path(args.output_uri))
-        # else:
-        #     logger.info('Stop Write Global BEV Video process.')
-        #
-        # logger.info('Finished!')
+        # Write BEV Video
+        if bev_success:
+            logger.info('Write BEV Video...')
+            output_video.start(Path(args.output_uri).absolute())
+        else:
+            logger.info('Stop Write BEV Video process.')
+
+        # Global mapping start
+        is_exist_global_list = False
+        if bev_success:
+            logger.info('Start global mapping...')
+            is_exist_global_list = global_id_mapping.start(Path(args.output_uri))
+        else:
+            logger.info('Stop global mapping process.')
+
+        # Write Global BEV Video
+        if is_exist_global_list:
+            logger.info('Create global mapping frames...')
+            global_BEV.start(Path(args.output_uri), Path(args.map_uri).absolute())
+
+            logger.info('Write global BEV Video...')
+            global_output_video.start(Path(args.output_uri))
+        else:
+            logger.info('Stop Write Global BEV Video process.')
+
+        logger.info('Finished!')
 
     except:
         logger.error(traceback.format_exc())
