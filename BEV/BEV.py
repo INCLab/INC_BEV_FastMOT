@@ -25,7 +25,7 @@ def start(output_path, map_path):
     heatmap_path = os.path.join(output_path, 'heatmap.png')
     original_output_path = output_path
     output_path = os.path.join(output_path, 'map_frame')
-    temp_path = "./temp"
+    temp_path = "../temp"
 
     if not os.path.exists(output_path):
         os.makedirs(output_path)
@@ -129,9 +129,10 @@ def start(output_path, map_path):
     print("Done")
 
     # Create BEV_Result txt files
+    os.mkdir(os.path.join(original_output_path, 'bev_result'))
     is_success = False
     for filename in filelist:
-        with open(os.path.join(original_output_path, 'BEV_{}.txt'.format(filename)), 'w') as f:
+        with open(os.path.join(original_output_path, 'bev_result', 'BEV_{}.txt'.format(filename)), 'w') as f:
             for key in globals()['BEV_Point{}'.format(filename)]:
                 for info in globals()['BEV_Point{}'.format(filename)][key]:
                     temp = ''
