@@ -15,8 +15,8 @@ def start(output_path):
     # ID correction을 위한 id grouping
     # local_id_group_list: [CAM1_Local_ID_groupList, CAM2_Local_ID_groupList, CAM3_Local_ID_groupList]
     # drop_list: [CAM1_id_dropList, CAM2_id_dropList, CAM3_id_dropList]
-    local_id_group_list = [[[5, 7]], [[1, 8]], [[]]]
-    drop_list = [[2], [9], [4]]
+    local_id_group_list = [[[]], [[]], [[]], [[]]]
+    drop_list = [[], [], [], []]
     total_file_num = 3
 
     # Create Dataframes by id
