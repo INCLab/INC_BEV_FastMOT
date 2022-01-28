@@ -25,7 +25,7 @@ def start(output_path, map_path):
     heatmap_path = os.path.join(output_path, 'heatmap.png')
     original_output_path = output_path
     output_path = os.path.join(output_path, 'map_frame')
-    temp_path = "../temp"
+    temp_path = "./temp"
 
     if not os.path.exists(output_path):
         os.makedirs(output_path)
