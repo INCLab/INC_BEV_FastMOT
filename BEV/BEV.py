@@ -20,7 +20,7 @@ lonloat : 도면 공간
 오른쪽 위, 왼쪽 위, 왼쪽 아래, 오른쪽 아래 순서
 '''
 
-def start(input_path, output_path, map_path):
+def start(output_path, map_path):
 
     heatmap_path = os.path.join(output_path, 'heatmap.png')
     original_output_path = output_path
@@ -128,6 +128,7 @@ def start(input_path, output_path, map_path):
     print("Done")
 
     # Create BEV_Result txt files
+    is_success = False
     for filename in filelist:
         with open(os.path.join(original_output_path, 'BEV_{}.txt'.format(filename)), 'w') as f:
             for key in globals()['BEV_Point{}'.format(filename)]:
@@ -137,6 +138,8 @@ def start(input_path, output_path, map_path):
                         temp += str(e) + ' '
                     temp.rstrip()
                     f.write(temp.rstrip() + '\n')
+            is_success = True
+
 
 
     # ## HeatMap ##
@@ -163,6 +166,8 @@ def start(input_path, output_path, map_path):
     # sns.heatmap(df, linewidths=0.1, linecolor="black")
     #
     # plt.savefig(heatmap_path)
+
+    return is_success
 
 
 '''

@@ -4,12 +4,9 @@ import os
 import sys
 import shutil
 
-sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-import DB.database as Database
 ##############################################################################
 
-# Todo: bev import error확인
-def start(output_path, map_path, group_id):
+def start(output_path, map_path):
 
     global_output_path = os.path.join(output_path, 'global_map_frame')
 
@@ -19,10 +16,10 @@ def start(output_path, map_path, group_id):
         shutil.rmtree(global_output_path)
         os.makedirs(global_output_path)
 
+    filename = 'global_result.txt'
     # ==============  Global ID BEV result  ===================
-    # Get Global info in DB table
-    global_info_list = Database.getGlobalTrackingDatas(group_id)
-    globals()['g_frame'], globals()['g_point'] = save_dict(global_info_list)
+    file = open(os.path.join(output_path, filename), 'r')
+    globals()['g_frame'.format(filename)], globals()['g_point'.format(filename)] = save_dict(file)
 
     map = cv2.imread(str(map_path), -1)
 

@@ -5,7 +5,6 @@ import cv2
 import subprocess
 
 
-#Todo: 새로운 비디오로 생성할 경우 고려하기
 def start(output_path):
     path = os.path.join(output_path, 'global_map_frame')
     paths = [os.path.join(path, i) for i in os.listdir(path) if re.search(".jpg$", i)]
@@ -25,10 +24,10 @@ def start(output_path):
     paths = list(np.sort(store1)) + list(np.sort(store2)) + list(np.sort(store3)) + list(np.sort(store4))
     # len('ims/2/a/2a.2710.png')
 
-    pathOut = os.path.join(output_path, 'global_output.mp4')
     fps = 25
     frame_array = []
     size = None
+    output_idx = 1
 
     for idx, path in enumerate(paths):
         img = cv2.imread(path)
@@ -36,15 +35,20 @@ def start(output_path):
         size = (width, height)
         frame_array.append(img)
 
-    writer = cv2.VideoWriter(_gst_write_pipeline(pathOut), cv2.CAP_GSTREAMER, fps, (1280, 720))
+        if len(frame_array) >= 4500 or idx == len(path) - 1:
+            writer = cv2.VideoWriter(_gst_write_pipeline(os.path.join(output_path, str(output_idx) + 'global_output.mp4')),
+                                     cv2.CAP_GSTREAMER,
+                                     fps,
+                                     (1280, 720))
+            for i in range(len(frame_array)):
+                frame_array[i] = cv2.resize(frame_array[i], dsize=(1280, 720), interpolation=cv2.INTER_LINEAR)
+                writer.write(frame_array[i])
 
-    for i in range(len(frame_array)):
-        # writing to a image array
-        frame_array[i] = cv2.resize(frame_array[i], dsize=(1280, 720), interpolation=cv2.INTER_LINEAR)
-        writer.write(frame_array[i])
+            writer.release()
+            frame_array.clear()
+            output_idx += 1
 
-    writer.release()
-    cv2.destroyAllWindows()
+    print(size)
 
 
 def _gst_write_pipeline(output_uri):
