@@ -131,7 +131,7 @@ def start(output_path, map_path):
     # #### Create BEV_Result txt files
     # Check the directory already exist
     if os.path.isdir(os.path.join(original_output_path, 'bev_result')):
-        shutil.rmtree(Path(args.output_uri))
+        shutil.rmtree(os.path.join(original_output_path, 'bev_result'))
     else:
         os.mkdir(os.path.join(original_output_path, 'bev_result'))
     is_success = False
