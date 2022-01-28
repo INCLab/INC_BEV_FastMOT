@@ -1,5 +1,5 @@
 import pandas as pd
-import dtwfunction as dfunc
+import DTW.dtwfunction as dfunc
 
 LOCAL_INIT_ID = 1000
 GLOBAL_INIT_ID = 10000
