@@ -117,7 +117,7 @@ def start():
 
                 txt = open(args.output_uri + '/' + name + '.txt', 'w')
 
-                Path(args.output_uri + '/frame/' + name + '/').mkdir(parents=True, exist_ok=True)
+                Path(args.output_uri + '/frame/' + name).mkdir(parents=True, exist_ok=True)
                 framecount = 0
 
                 if args.show:
@@ -148,7 +148,7 @@ def start():
                                 if cv2.waitKey(1) & 0xFF == 27:
                                     break
 
-                            cv2.imwrite("{}/{}.jpg".format(Path(args.output_uri + '/frame/' + name + '/'), framecount), frame)
+                            cv2.imwrite("{}/{}.jpg".format(Path(args.output_uri + '/frame/' + name), framecount), frame)
                             framecount += 1
                             stream.write(frame)
                 finally:
