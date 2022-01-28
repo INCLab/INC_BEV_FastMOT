@@ -7,41 +7,48 @@ from sklearn.preprocessing import MinMaxScaler
 
 FRAME_THRESHOLD = 20
 
-def make_df_list(filename):
-    result = pd.read_csv('../temp/' + filename + '.txt', delimiter=' ', header=None)
+# ########### Preprocessing: ID Correction
+'''
+ If user choose IDs in single camera,
+ those IDs are assigned to new same local ID(Start at 1000)
+ <Input param>
+ e.g., id_list = [[id1, id2],[id4, id5, id9],...] 
+'''
+def id_correction(id_list, local_init_id, mot_df, txt_idx):
+    if id_list:
+        local_id = local_init_id * txt_idx
+        id_idx = 0
+
+        for id_group in id_list:
+            for id in id_group:
+                mot_df['id'][(mot_df['id'] == id)] = local_id + id_idx
+            id_idx += 1
+
+        return mot_df
+    else:
+        return mot_df
+
+
+'''
+    Drop the incorrectly detected targets (e.g., Not a person)
+'''
+def id_drop(drop_list, mot_df):
+    if drop_list:
+        for id in drop_list:
+            mot_df.drop(mot_df[mot_df['id'] == id].index, inplace=True)
+        return mot_df
+    else:
+        return mot_df
+
+
+def make_df_list(filepath, cor_id_list, drop_list, local_init_id, txt_idx):
+    result = pd.read_csv(filepath, delimiter=' ', header=None)
     result.columns = ['frame', 'id', 'x', 'y']
 
-    ##### 임시로 수동 전처리 ##############
-    '''
-        result0.txt
-        1. id 5를 7으로 변경
-        2. id 2 제거
-
-        result1.txt
-        1. id 1을 8로변경
-        4. id 9제거
-
-        result2.txt
-        1. id 4 제거
-    '''
-
-    if filename == 'BEV_result0':
-        result['id'][(result['id'] == 5)] = 7
-        result.drop(result[result['id'] == 2].index, inplace=True)
-        result.drop(result[result['id'] == 1].index, inplace=True)
-    elif filename == 'BEV_result1':
-        result['id'][(result['id'] == 1)] = 8
-        result.drop(result[result['id'] == 9].index, inplace=True)
-
-        result['id'][(result['id'] == 3)] = 13
-        result['id'][(result['id'] == 5)] = 15
-        result['id'][(result['id'] == 8)] = 18
-    elif filename == 'BEV_result2':
-        result['id'][(result['id'] == 1)] = 21
-        result['id'][(result['id'] == 2)] = 22
-        result['id'][(result['id'] == 3)] = 23
-        result.drop(result[result['id'] == 4].index, inplace=True)
-    ###################################
+    if cor_id_list:
+        result = id_correction(cor_id_list, local_init_id, result, txt_idx)
+    if drop_list:
+        result = id_drop(drop_list, result)
 
     id_df = result.drop_duplicates(['id'])
     id_list = id_df['id'].tolist()
