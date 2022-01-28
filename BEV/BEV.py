@@ -127,8 +127,8 @@ def start(input_path, output_path, map_path):
                         cv2.circle(tempmap, (int(lonlat[0][0]), int(lonlat[0][1])), 10, color, -1)
                         pointset.add(tlabel)
 
-                    cv2.imshow('Video', tempmap)
-                    cv2.waitKey(1)
+                    #cv2.imshow('Video', tempmap)
+                    #cv2.waitKey(1)
 
             src = os.path.join(output_path, str(frames) + '.jpg')
             cv2.imwrite(src, tempmap)
