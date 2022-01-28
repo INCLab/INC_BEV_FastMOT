@@ -25,7 +25,7 @@ def start(output_path, map_path):
     heatmap_path = os.path.join(output_path, 'heatmap.png')
     original_output_path = output_path
     output_path = os.path.join(output_path, 'map_frame')
-    temp_path = "../temp"
+    temp_path = "./temp"
 
     if not os.path.exists(output_path):
         os.makedirs(output_path)
@@ -97,6 +97,7 @@ def start(output_path, map_path):
             max_frame = int(globals()['frame{}'.format(filename)])
 
     map = cv2.imread(str(map_path), -1)
+    pointset = set()
 
     print("Create BEV map_frame...")
     for frames in range(1, max_frame + 1):
@@ -116,11 +117,11 @@ def start(output_path, map_path):
                     tlabel = tuple(label)
                     if tlabel not in pointset:
                         color = getcolor(abs(label[0]))
-                        cv2.circle(tempmap, (int(lonlat[0][0]), int(lonlat[0][1])), 10, color, -1)
+                        cv2.circle(map, (int(lonlat[0][0]), int(lonlat[0][1])), 10, color, -1)
                         pointset.add(tlabel)
 
-                    cv2.imshow('Video', tempmap)
-                    cv2.waitKey(1)
+                    #cv2.imshow('Video', map)
+                    #cv2.waitKey(1)
 
             src = os.path.join(output_path, str(frames) + '.jpg')
 
