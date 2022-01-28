@@ -9,7 +9,7 @@ def start(output_path):
     flag = False
 
     txt_name = []
-    for file in os.listdir(original_output_path):
+    for file in os.listdir(output_path):
         if file.endswith(".txt") and "BEV_" in file:
             txt_name.append(file)
 
