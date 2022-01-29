@@ -2,8 +2,15 @@ import math
 import numpy as np
 import dtw
 import pandas as pd
+import copy
+
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+import DB.database as Database
 
 from sklearn.preprocessing import MinMaxScaler
+
 
 FRAME_THRESHOLD = 20
 
@@ -14,12 +21,14 @@ FRAME_THRESHOLD = 20
  <Input param>
  e.g., id_list = [[id1, id2],[id4, id5, id9],...] 
 '''
-def id_correction(id_list, mot_df):
-    if id_list[0]:
+def id_correction(id_list, local_init_id, mot_df, video_id):
+    if id_list:
+        local_id = local_init_id * video_id
+        id_idx = 0
+
         for id_group in id_list:
-            base_id = id_group[0]
             for id in id_group:
-                mot_df['id'][(mot_df['id'] == id)] = base_id
+                mot_df['id'][(mot_df['id'] == id)] = local_id + id_idx
             id_idx += 1
 
         return mot_df
@@ -39,17 +48,39 @@ def id_drop(drop_list, mot_df):
         return mot_df
 
 
-def make_df_list(filepath, cor_id_list, drop_list):
-    result = pd.read_csv(filepath, delimiter=' ', header=None)
-    result.columns = ['frame', 'id', 'x', 'y']
+
+def create_corrected_table(crt_df, video_id):
+    crt_list = []
+
+    for i in range(0, len(crt_df)):
+        crt_info = crt_df.iloc[i].tolist()
+        crt_list.append(crt_info)
+
+    Database.insertCorrectionTrackingInfos(video_id, crt_list)
+
+
+'''
+    Read MOT data in DB table then, create mot result dataframe.
+    Input parameter == list of whole mot results
+    (e.g., [[localID, frame1, x1, y1], [localID, frame2, x2, y2], ...])
+'''
+def make_df_list(mot_list, cor_id_list, drop_list, local_init_id, video_id):
+    df_columns = ['frame', 'id', 'x', 'y']
+    result = pd.DataFrame(mot_list, columns=df_columns)
 
     if cor_id_list:
-        result = id_correction(cor_id_list, result)
+        result = id_correction(cor_id_list, local_init_id, result, video_id)
     if drop_list:
         result = id_drop(drop_list, result)
 
+
+    # Insert collection tracking information in DB table
+    create_corrected_table(result, video_id)
+
     id_df = result.drop_duplicates(['id'])
     id_list = id_df['id'].tolist()
+
+    print(id_list)
 
     df_list = []
 
@@ -57,7 +88,18 @@ def make_df_list(filepath, cor_id_list, drop_list):
         df = result[result['id'] == id]
         df_list.append(df)
 
-    return df_list, id_list
+    # ============ for global ID mapping, add 'video id' column ====
+    add_id_result = copy.deepcopy(result)
+    add_id_result.insert(0, 'video_id', video_id)
+
+    v_df_list = []
+
+    for id in id_list:
+        v_df = add_id_result[add_id_result['id'] == id]
+        v_df_list.append(v_df)
+    # ==============================================================
+
+    return df_list, id_list, v_df_list
 
 
 # ########## Create Feature for DTW #################
@@ -422,3 +464,32 @@ def generate_global_info(total_info):
                 I_G.append(total_info[i])
 
     return I_G
+
+
+def generate_mapping_df(v_T_set, id_set, gid_set):
+    mappingInfo = []
+
+    for T in v_T_set:
+        for id_info in T:
+            for i in range(0, len(id_set)):
+                if id_info['id'].iloc[0] in id_set[i]:
+                    id_info.insert(2, 'global_id', gid_set[i])
+                    id_info.drop(['x', 'y'], axis=1, inplace=True)
+                    mappingInfo.append(id_info)
+                    break
+    return mappingInfo
+
+
+# id_df -> column: [Video ID, FrameID, GlobalID, TrackingID], row: number of total frame
+def generate_mappingInfo(id_df_list):
+    total_list = []
+    for id_df in id_df_list:
+        id_info_list = []
+        for i in range(0, len(id_df)):
+            id_info = id_df.iloc[i].tolist()
+            id_info_list.append(id_info)
+        total_list += id_info_list
+
+    total_list.sort(key=lambda x: (x[1], x[2]))  # x[1]: Frame, x[2]: GlobalID
+
+    return total_list

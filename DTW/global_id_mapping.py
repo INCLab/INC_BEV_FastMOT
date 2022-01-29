@@ -2,8 +2,8 @@ import pandas as pd
 import dtwfunction as dfunc
 import os
 
-LOCAL_INIT_ID = 1000
-GLOBAL_INIT_ID = 10000
+GLOBAL_INIT_ID = 0
+
 
 def start(output_path):
     flag = False
@@ -25,15 +25,12 @@ def start(output_path):
     result_df_list = []
     total_id_list = []
 
-    for name in txt_name:
-        for i in range(total_file_num):
-            df_list, id_list = dfunc.make_df_list(os.path.join(output_path, name),
-                                                  local_id_group_list[i],
-                                                  drop_list[i],
-                                                  LOCAL_INIT_ID,
-                                                  i+1)
-            result_df_list.append(df_list)
-            total_id_list.append(id_list)
+    for i in range(total_file_num):
+        df_list, id_list = dfunc.make_df_list(os.path.join(output_path, txt_name[i]),
+                                              local_id_group_list[i],
+                                              drop_list[i])
+        result_df_list.append(df_list)
+        total_id_list.append(id_list)
 
     # Create id info list
     result_info_list = []
@@ -43,8 +40,8 @@ def start(output_path):
     dfunc.select_feature(result_df_list, result_info_list, feature='vector')
 
     # Create high similarity ID list
-    # ToDo: 현재는 result0를 기준으로 result1,2를 비교한 결과만 사용, 후에 result1을 기준으로 구한 값도 고려해야함
-    id_map_list = [[], []]
+    # ToDo: 현재는 result0를 기준으로 나머지를 비교한 결과만 사용, 후에 나머지를 기준으로 구한 값도 고려해야함
+    id_map_list = [[], [], [], []] # length of file
     for i in range(0, len(result_info_list)-1):
         result_dist_list = dfunc.check_similarity(result_info_list[i], result_info_list[i+1:])
         dfunc.id_mapping(result_dist_list, id_map_list[i])  # id_mapping에서 todo 처리

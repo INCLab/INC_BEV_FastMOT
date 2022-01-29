@@ -14,12 +14,14 @@ FRAME_THRESHOLD = 20
  <Input param>
  e.g., id_list = [[id1, id2],[id4, id5, id9],...] 
 '''
-def id_correction(id_list, mot_df):
-    if id_list[0]:
+def id_correction(id_list, local_init_id, mot_df, txt_idx):
+    if id_list:
+        local_id = local_init_id * txt_idx
+        id_idx = 0
+
         for id_group in id_list:
-            base_id = id_group[0]
             for id in id_group:
-                mot_df['id'][(mot_df['id'] == id)] = base_id
+                mot_df['id'][(mot_df['id'] == id)] = local_id + id_idx
             id_idx += 1
 
         return mot_df
@@ -39,12 +41,12 @@ def id_drop(drop_list, mot_df):
         return mot_df
 
 
-def make_df_list(filepath, cor_id_list, drop_list):
+def make_df_list(filepath, cor_id_list, drop_list, local_init_id, txt_idx):
     result = pd.read_csv(filepath, delimiter=' ', header=None)
     result.columns = ['frame', 'id', 'x', 'y']
 
     if cor_id_list:
-        result = id_correction(cor_id_list, result)
+        result = id_correction(cor_id_list, local_init_id, result, txt_idx)
     if drop_list:
         result = id_drop(drop_list, result)
 
