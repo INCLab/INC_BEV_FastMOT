@@ -1,37 +1,40 @@
 import pandas as pd
 import dtwfunction as dfunc
+import os
 
-LOCAL_INIT_ID = 1000
-GLOBAL_INIT_ID = 10000
+GLOBAL_INIT_ID = 0
+
+# test1 정익:[1,5],[3,9],[3,7,10,12],[2,10,12,13] / 민재:[4],[5,7,11],[6,13,15],[4,10,17] / 선우:[2],[4,6,8],[5,14],[3,11]
+# test1 drop 정익:[],[1],[1,2],[] 민재:[],[],[],[1] / 선우:[],[],[],[5,18]
 
 def start(output_path):
     flag = False
+    output_path = os.path.join(output_path, 'bev_result')
 
     txt_name = []
-    for file in os.listdir(original_output_path):
+    for file in os.listdir(output_path):
         if file.endswith(".txt") and "BEV_" in file:
             txt_name.append(file)
-
     # ID correction을 위한 id grouping
     # local_id_group_list: [CAM1_Local_ID_groupList, CAM2_Local_ID_groupList, CAM3_Local_ID_groupList]
     # drop_list: [CAM1_id_dropList, CAM2_id_dropList, CAM3_id_dropList]
-    local_id_group_list = [[[5, 7]], [[1, 8]], [[]]]
-    drop_list = [[2], [9], [4]]
-    total_file_num = 3
+    total_file_num = 4
+    local_id_group_list = [[[1,5]],  # video1
+                           [[3,9], [5,7,11], [4,6,8]],  # video2
+                           [[3,7,10,12], [6,13,15], [5,14]],  # video3
+                           [[2,10,12,13], [4,10,17], [3,11]]]  # video4
+    drop_list = [[], [1], [1,2,9,17], [1,5,6,18]]
 
     # Create Dataframes by id
     result_df_list = []
     total_id_list = []
 
-    for name in txt_name:
-        for i in range(total_file_num):
-            df_list, id_list = dfunc.make_df_list(os.path.join(output_path, name),
-                                                  local_id_group_list[i],
-                                                  drop_list[i],
-                                                  LOCAL_INIT_ID,
-                                                  i+1)
-            result_df_list.append(df_list)
-            total_id_list.append(id_list)
+    for i in range(total_file_num):
+        df_list, id_list = dfunc.make_df_list(os.path.join(output_path, txt_name[i]),
+                                              local_id_group_list[i],
+                                              drop_list[i], i+1)
+        result_df_list.append(df_list)
+        total_id_list.append(id_list)
 
     # Create id info list
     result_info_list = []
@@ -41,8 +44,8 @@ def start(output_path):
     dfunc.select_feature(result_df_list, result_info_list, feature='vector')
 
     # Create high similarity ID list
-    # ToDo: 현재는 result0를 기준으로 result1,2를 비교한 결과만 사용, 후에 result1을 기준으로 구한 값도 고려해야함
-    id_map_list = [[], []]
+    # ToDo: 현재는 result0를 기준으로 나머지를 비교한 결과만 사용, 후에 나머지를 기준으로 구한 값도 고려해야함
+    id_map_list = [[], [], [], []] # length of file
     for i in range(0, len(result_info_list)-1):
         result_dist_list = dfunc.check_similarity(result_info_list[i], result_info_list[i+1:])
         dfunc.id_mapping(result_dist_list, id_map_list[i])  # id_mapping에서 todo 처리
@@ -79,4 +82,5 @@ def start(output_path):
 
     return flag
 
-
+if __name__ == '__main__':
+    start('../output/edu_test1/')

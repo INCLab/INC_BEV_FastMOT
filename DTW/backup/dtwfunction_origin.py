@@ -6,7 +6,6 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 
 FRAME_THRESHOLD = 20
-LOCAL_INIT_ID = 10000
 
 # ########### Preprocessing: ID Correction
 '''
@@ -15,18 +14,15 @@ LOCAL_INIT_ID = 10000
  <Input param>
  e.g., id_list = [[id1, id2],[id4, id5, id9],...] 
 '''
-def id_correction(id_list, mot_df, file_idx):
-    # For changed ID by files
-    # e.g., file1 -> Start id: 1xLOCAL_INIT_ID + 1 = 10001
-    init_id = file_idx * LOCAL_INIT_ID
+def id_correction(id_list, local_init_id, mot_df, txt_idx):
+    if id_list:
+        local_id = local_init_id * txt_idx
+        id_idx = 0
 
-    if id_list[0]:
         for id_group in id_list:
-            base_id = id_group[0]
-            base_id = init_id + base_id
             for id in id_group:
-                id = init_id + id
-                mot_df['id'][(mot_df['id'] == id)] = base_id
+                mot_df['id'][(mot_df['id'] == id)] = local_id + id_idx
+            id_idx += 1
 
         return mot_df
     else:
@@ -36,26 +32,23 @@ def id_correction(id_list, mot_df, file_idx):
 '''
     Drop the incorrectly detected targets (e.g., Not a person)
 '''
-def id_drop(drop_list, mot_df, file_idx):
-    init_id = file_idx * LOCAL_INIT_ID
-
+def id_drop(drop_list, mot_df):
     if drop_list:
         for id in drop_list:
-            id = init_id + id
             mot_df.drop(mot_df[mot_df['id'] == id].index, inplace=True)
         return mot_df
     else:
         return mot_df
 
 
-def make_df_list(filepath, cor_id_list, drop_list, file_idx):
+def make_df_list(filepath, cor_id_list, drop_list, local_init_id, txt_idx):
     result = pd.read_csv(filepath, delimiter=' ', header=None)
     result.columns = ['frame', 'id', 'x', 'y']
 
     if cor_id_list:
-        result = id_correction(cor_id_list, result, file_idx)
+        result = id_correction(cor_id_list, local_init_id, result, txt_idx)
     if drop_list:
-        result = id_drop(drop_list, result, file_idx)
+        result = id_drop(drop_list, result)
 
     id_df = result.drop_duplicates(['id'])
     id_list = id_df['id'].tolist()

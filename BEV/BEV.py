@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import mimetypes
 
+LOCAL_INIT_ID = 10000
 ##############################################################################
 
 '''
@@ -20,12 +21,11 @@ lonloat : 도면 공간
 오른쪽 위, 왼쪽 위, 왼쪽 아래, 오른쪽 아래 순서
 '''
 
-def start(output_path, map_path):
+def start(output_path, map_path, temp_path='./temp'):
 
     heatmap_path = os.path.join(output_path, 'heatmap.png')
     original_output_path = output_path
     output_path = os.path.join(output_path, 'map_frame')
-    temp_path = "../temp"
 
     if not os.path.exists(output_path):
         os.makedirs(output_path)
@@ -86,17 +86,18 @@ def start(output_path, map_path):
         quad_coords_list[i] = quad_coords
 
     max_frame = 0
-
+    file_num = 1
     for filename in filelist:
         file = open(os.path.join(original_output_path, filename + '.txt'), 'r')
-        globals()['frame{}'.format(filename)], globals()['point{}'.format(filename)] = save_dict(file)
-
+        globals()['frame{}'.format(filename)], globals()['point{}'.format(filename)] = save_dict(file, LOCAL_INIT_ID, file_num)
         globals()['BEV_Point{}'.format(filename)] = dict()
 
         if int(globals()['frame{}'.format(filename)]) > max_frame:
             max_frame = int(globals()['frame{}'.format(filename)])
+        file_num += 1
 
     map = cv2.imread(str(map_path), -1)
+    pointset = set()
 
     print("Create BEV map_frame...")
     for frames in range(1, max_frame + 1):
@@ -116,21 +117,25 @@ def start(output_path, map_path):
                     tlabel = tuple(label)
                     if tlabel not in pointset:
                         color = getcolor(abs(label[0]))
-                        cv2.circle(tempmap, (int(lonlat[0][0]), int(lonlat[0][1])), 10, color, -1)
+                        cv2.circle(map, (int(lonlat[0][0]), int(lonlat[0][1])), 10, color, -1)
                         pointset.add(tlabel)
 
-                    cv2.imshow('Video', tempmap)
-                    cv2.waitKey(1)
+                    #cv2.imshow('Video', map)
+                    #cv2.waitKey(1)
 
             src = os.path.join(output_path, str(frames) + '.jpg')
 
             cv2.imwrite(src, map)
     print("Done")
 
-    # Create BEV_Result txt files
+    # #### Create BEV_Result txt files
+    # Check the directory already exist
+    if not os.path.isdir(os.path.join(original_output_path, 'bev_result')):
+        os.mkdir(os.path.join(original_output_path, 'bev_result'))
+
     is_success = False
     for filename in filelist:
-        with open(os.path.join(original_output_path, 'BEV_{}.txt'.format(filename)), 'w') as f:
+        with open(os.path.join(original_output_path, 'bev_result', 'BEV_{}.txt'.format(filename)), 'w') as f:
             for key in globals()['BEV_Point{}'.format(filename)]:
                 for info in globals()['BEV_Point{}'.format(filename)][key]:
                     temp = ''
@@ -261,10 +266,14 @@ def save_lonlat_frame(point, pm,frame_num ,input_dir, output_dir):
         cv2.imwrite(src, map)
 
 
-def save_dict(file):
-    ##################################################
+def save_dict(file, local_init_id, file_num):
     frame = 0
     point = dict()
+
+    # All mot result files start with same ID '1'
+    # So we should change the start ID number in each files
+    init_id = local_init_id * file_num
+
     while True:
         line = file.readline()
 
@@ -276,10 +285,14 @@ def save_dict(file):
         frame = info[0]
 
         if info[0] in point:
-            line = point.get(info[0])
-            line.append(list(map(int, info[1:])))
+            data = point.get(info[0])
+            data.append(list(map(int, info[1:])))
+            # Change ID with init_id
+            data[-1][0] = init_id + data[-1][0]
         else:
             point[info[0]] = [list(map(int, info[1:]))]
+            # Change ID with init_id
+            point[info[0]][0][0] = init_id + point[info[0]][0][0]
 
     file.close()
 
@@ -287,4 +300,4 @@ def save_dict(file):
 
 
 if __name__ == "__main__":
-    start('../input/edu_15m/', '../output/', '../input/edu_map.png')
+    start('../output/edu_test1', '../input/edu_map.png', temp_path = "../temp")

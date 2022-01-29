@@ -1,5 +1,5 @@
 # FastMOT + BEV All-in-One Script
-# Usage : python3 startall.py -i ./input -o ./output -m ./input/311_maps.png
+# Usage : python3 startall.py -i ./input -o ./output -m ./input/edu_map.png
 # 필수 옵션 : -i, -o, -m
 # -i (--input-uri) : Input Video 들어있는 경로
 # -o (--output-uri) : Output 폴더 경로
@@ -16,7 +16,6 @@ import os
 import shutil
 import traceback
 import mimetypes
-import pymysql
 
 import fastmot
 import cv2
@@ -32,7 +31,6 @@ from BEV import global_output_video
 
 from DTW import global_id_mapping
 
-import DB.database as Database
 
 def start():
     #### Arguments Setting ####
@@ -174,9 +172,9 @@ def start():
         오른쪽 위, 왼쪽 위, 왼쪽 아래, 오른쪽 아래 순서
         '''
 
-        if not args.skip_point:
-            logger.info('Waiting Select Points...')
-            mouse_point.start(Path(__file__).parent / 'temp/points.txt', Path(args.output_uri + '/frame/'), args.map_uri)
+        # if not args.skip_point:
+        #     logger.info('Waiting Select Points...')
+        #     mouse_point.start(Path(__file__).parent / 'temp/points.txt', Path(args.output_uri + '/frame/'), args.map_uri)
 
         # BEV Start
         logger.info('Start BEV...')
