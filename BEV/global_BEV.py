@@ -1,4 +1,4 @@
-from BEV.BEV import save_dict, getcolor
+from BEV import getcolor
 import cv2
 import os
 import sys
@@ -33,3 +33,26 @@ def start(output_path, map_path):
         src = os.path.join(global_output_path, str(frames) + '.jpg')
         cv2.imwrite(src, map)
 
+
+def save_dict(file):
+    frame = 0
+    point = dict()
+    while True:
+        line = file.readline()
+
+        if not line:
+            break
+
+        info = line[:-1].split(" ")
+
+        frame = info[0]
+
+        if info[0] in point:
+            line = point.get(info[0])
+            line.append(list(map(int, info[1:])))
+        else:
+            point[info[0]] = [list(map(int, info[1:]))]
+
+    file.close()
+
+    return frame, point

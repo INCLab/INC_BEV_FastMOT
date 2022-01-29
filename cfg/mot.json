@@ -3,7 +3,7 @@
 
     "stream_cfg": {
         "resolution": [1920, 1080],
-        "frame_rate": 30,
+        "frame_rate": 20,
         "buffer_size": 10
     },
 
