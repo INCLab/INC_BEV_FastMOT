@@ -22,11 +22,15 @@ def start(output_path):
 
     paths = list(np.sort(store1)) + list(np.sort(store2)) + list(np.sort(store3)) + list(np.sort(store4))
 
+    output_video_path = os.path.join(output_path, 'bev_output.mp4')
     fps = 25
     frame_array = []
     size = None
 
-    writer = cv2.VideoWriter(_gst_write_pipeline(os.path.join(output_path, 'bev_output.mp4')),
+    if os.path.isfile(output_video_path):
+        os.remove(output_video_path)
+
+    writer = cv2.VideoWriter(_gst_write_pipeline(output_video_path),
                              cv2.CAP_GSTREAMER,
                              fps,
                              (1280, 720))
