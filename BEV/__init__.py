@@ -1,2 +1,2 @@
 import BEV
-from BEV import getcolor
+from BEV.BEV import getcolor
