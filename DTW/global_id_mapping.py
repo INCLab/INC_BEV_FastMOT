@@ -9,11 +9,16 @@ GLOBAL_INIT_ID = 0
 
 def start(output_path):
     flag = False
+    result_path = os.path.join(output_path, 'global_result')
     output_path = os.path.join(output_path, 'bev_result')
+
+    # Check result directory is exist
+    if not os.path.isdir(result_path):
+        os.mkdir(result_path)
 
     txt_name = []
     for file in os.listdir(output_path):
-        if file.endswith(".txt") and "BEV_" in file:
+        if file.endswith(".txt") in file:
             txt_name.append(file)
     print(txt_name.sort())
     # ID correction을 위한 id grouping
@@ -78,7 +83,7 @@ def start(output_path):
     print(global_df)
 
     # Create Global information txt file
-    global_df.to_csv(os.path.join(output_path, 'global_result.txt'),
+    global_df.to_csv(os.path.join(result_path, 'global_result.txt'),
                      sep=' ', header=None, index=None)
 
     return flag

@@ -135,7 +135,8 @@ def start(output_path, map_path, temp_path='./temp'):
 
     is_success = False
     for filename in filelist:
-        with open(os.path.join(original_output_path, 'bev_result', 'BEV_{}.txt'.format(filename)), 'w') as f:
+        num = filename[2:4]
+        with open(os.path.join(original_output_path, 'bev_result', num +'_{}.txt'.format(filename)), 'w') as f:
             for key in globals()['BEV_Point{}'.format(filename)]:
                 for info in globals()['BEV_Point{}'.format(filename)][key]:
                     temp = ''
