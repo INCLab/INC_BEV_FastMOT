@@ -1,5 +1,5 @@
 import pandas as pd
-import dtwfunction as dfunc
+from DTW import dtwfunction as dfunc
 import os
 
 GLOBAL_INIT_ID = 0
