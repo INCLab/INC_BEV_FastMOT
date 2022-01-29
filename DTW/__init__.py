@@ -1,1 +1,1 @@
-import dtwfunction
+from DTW import dtwfunction
