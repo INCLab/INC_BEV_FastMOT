@@ -18,9 +18,11 @@ def start(output_path):
 
     txt_name = []
     for file in os.listdir(output_path):
-        if file.endswith(".txt") in file:
+        if file.endswith(".txt"):
             txt_name.append(file)
-    print(txt_name.sort())
+
+    txt_name = strange_sort(txt_name, 0, 2)
+
     # ID correction을 위한 id grouping
     # local_id_group_list: [CAM1_Local_ID_groupList, CAM2_Local_ID_groupList, CAM3_Local_ID_groupList]
     # drop_list: [CAM1_id_dropList, CAM2_id_dropList, CAM3_id_dropList]
@@ -87,6 +89,10 @@ def start(output_path):
                      sep=' ', header=None, index=None)
 
     return flag
+
+
+def strange_sort(strings, n, m):
+    return sorted(strings, key=lambda element: element[n:m])
 
 if __name__ == '__main__':
     start('../output/edu_test1/')
