@@ -22,6 +22,7 @@ def start(output_path):
             txt_name.append(file)
 
     txt_name = strange_sort(txt_name, 0, 2)
+    print(txt_name)
 
     # ID correction을 위한 id grouping
     # local_id_group_list: [CAM1_Local_ID_groupList, CAM2_Local_ID_groupList, CAM3_Local_ID_groupList]
