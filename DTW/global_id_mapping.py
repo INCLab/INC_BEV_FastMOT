@@ -15,7 +15,7 @@ def start(output_path):
     for file in os.listdir(output_path):
         if file.endswith(".txt") and "BEV_" in file:
             txt_name.append(file)
-    print(txt_name)
+    print(txt_name.sort())
     # ID correction을 위한 id grouping
     # local_id_group_list: [CAM1_Local_ID_groupList, CAM2_Local_ID_groupList, CAM3_Local_ID_groupList]
     # drop_list: [CAM1_id_dropList, CAM2_id_dropList, CAM3_id_dropList]
