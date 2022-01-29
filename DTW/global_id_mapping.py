@@ -18,11 +18,13 @@ def start(output_path):
 
     txt_name = []
     for file in os.listdir(output_path):
-        if file.endswith(".txt"):
+        if file.endswith(".txt") and "BEV_" in file:
             txt_name.append(file)
 
-    txt_name = strange_sort(txt_name, 0, 2)
-    print(txt_name)
+    # Sort files
+    # Among the file names, you must specify a location indicating the order
+    # e.g., 'BEV_ch01-....' -> [2:4]
+    txt_name = strange_sort(txt_name, 6, 8)
 
     # ID correction을 위한 id grouping
     # local_id_group_list: [CAM1_Local_ID_groupList, CAM2_Local_ID_groupList, CAM3_Local_ID_groupList]
