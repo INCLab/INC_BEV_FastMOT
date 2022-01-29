@@ -21,12 +21,15 @@ def start(output_path):
             store1.append(i)
 
     paths = list(np.sort(store1)) + list(np.sort(store2)) + list(np.sort(store3)) + list(np.sort(store4))
-    # len('ims/2/a/2a.2710.png')
 
     fps = 25
     frame_array = []
     size = None
-    output_idx = 1
+
+    writer = cv2.VideoWriter(_gst_write_pipeline(os.path.join(output_path, 'bev_output.mp4')),
+                             cv2.CAP_GSTREAMER,
+                             fps,
+                             (1280, 720))
 
     for idx, path in enumerate(paths):
         img = cv2.imread(path)
@@ -34,19 +37,13 @@ def start(output_path):
         size = (width, height)
         frame_array.append(img)
 
-        if len(frame_array) >= 4500 or idx == len(path) - 1:
-            writer = cv2.VideoWriter(_gst_write_pipeline(os.path.join(output_path, str(output_idx) + 'output.mp4')),
-                                     cv2.CAP_GSTREAMER,
-                                     fps,
-                                     (1280, 720))
+        if len(frame_array) >= 4500:
             for i in range(len(frame_array)):
                 frame_array[i] = cv2.resize(frame_array[i], dsize=(1280, 720), interpolation=cv2.INTER_LINEAR)
                 writer.write(frame_array[i])
-
-            writer.release()
             frame_array.clear()
-            output_idx += 1
 
+    writer.release()
     print(size)
 
 def _gst_write_pipeline(output_uri):
