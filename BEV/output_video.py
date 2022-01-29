@@ -43,6 +43,11 @@ def start(output_path):
                 writer.write(frame_array[i])
             frame_array.clear()
 
+    if len(frame_array) > 0:
+        for i in range(len(frame_array)):
+            frame_array[i] = cv2.resize(frame_array[i], dsize=(1280, 720), interpolation=cv2.INTER_LINEAR)
+            writer.write(frame_array[i])
+
     writer.release()
     print(size)
 

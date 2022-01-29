@@ -111,7 +111,6 @@ def start(input_path, output_path, map_path):
             if globals()['point{}'.format(idxforfile[i])].get(str(frames)) is not None:
                 # ID랑 X/Y
                 for label in globals()['point{}'.format(idxforfile[i])].get(str(frames)):
-                    print(frames, i, label)
                     uv = (label[1], label[2])
                     lonlat = list(pm.pixel_to_lonlat(uv))
                     li = [label[0], int(lonlat[0][0]), int(lonlat[0][1])]
@@ -126,9 +125,6 @@ def start(input_path, output_path, map_path):
                         color = getcolor(abs(label[0]))
                         cv2.circle(tempmap, (int(lonlat[0][0]), int(lonlat[0][1])), 10, color, -1)
                         pointset.add(tlabel)
-
-                    cv2.imshow('Video', tempmap)
-                    cv2.waitKey(1)
 
             src = os.path.join(output_path, str(frames) + '.jpg')
             cv2.imwrite(src, tempmap)
