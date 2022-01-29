@@ -5,7 +5,7 @@ import os
 GLOBAL_INIT_ID = 0
 
 # test1 정익:[1,5],[3,9],[3,7,10,12],[2,10,12,13] / 민재:[4],[5,7,11],[6,13,15],[4,10,17] / 선우:[2],[4,6,8],[5,14],[3,11]
-# test1 drop 정익:[],[1],[1,2],[] 민재:[],[],[],[1] / 선우:[],[],[],[5,18]
+# test1 drop 정익:[3],[1],[1,2],[] 민재:[],[10],[],[1] / 선우:[6],[2],[],[5,18]
 
 def start(output_path):
     flag = False
@@ -34,7 +34,10 @@ def start(output_path):
                            [[3,9], [5,7,11], [4,6,8]],  # video2
                            [[3,7,10,12], [6,13,15], [5,14]],  # video3
                            [[2,10,12,13], [4,10,17], [3,11]]]  # video4
-    drop_list = [[], [1], [1,2,9,17], [1,5,6,18]]
+    drop_list = [[3,6],  # video1
+                 [1,2,10],  # video2
+                 [1,2,9,17],  # video3
+                 [1,5,6,18]]  # video4
 
     # Create Dataframes by id
     result_df_list = []
@@ -61,6 +64,7 @@ def start(output_path):
         result_dist_list = dfunc.check_similarity(result_info_list[i], result_info_list[i+1:])
         dfunc.id_mapping(result_dist_list, id_map_list[i])  # id_mapping에서 todo 처리
 
+    print('### Global Re-ID list ###\n')
     print(id_map_list[0])
 
     # Assign global id
