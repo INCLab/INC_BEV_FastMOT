@@ -1,5 +1,5 @@
 import pandas as pd
-import DTW.dtwfunction as dfunc
+import dtwfunction as dfunc
 import os
 
 LOCAL_INIT_ID = 1000
@@ -7,6 +7,7 @@ GLOBAL_INIT_ID = 10000
 
 def start(output_path):
     flag = False
+    output_path = os.path.join(output_path, 'bev_result')
 
     txt_name = []
     for file in os.listdir(output_path):
@@ -16,9 +17,9 @@ def start(output_path):
     # ID correction을 위한 id grouping
     # local_id_group_list: [CAM1_Local_ID_groupList, CAM2_Local_ID_groupList, CAM3_Local_ID_groupList]
     # drop_list: [CAM1_id_dropList, CAM2_id_dropList, CAM3_id_dropList]
+    total_file_num = 4
     local_id_group_list = [[[]], [[]], [[]], [[]]]
     drop_list = [[], [], [], []]
-    total_file_num = 3
 
     # Create Dataframes by id
     result_df_list = []
@@ -80,4 +81,5 @@ def start(output_path):
 
     return flag
 
-
+if __name__ == '__main__':
+    start('../output/edu_test1/')
