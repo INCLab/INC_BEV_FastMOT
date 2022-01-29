@@ -1,4 +1,4 @@
-from BEV import save_dict, getcolor
+from BEV import getcolor
 import cv2
 import os
 import sys

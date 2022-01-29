@@ -300,4 +300,4 @@ def save_dict(file, local_init_id, file_num):
 
 
 if __name__ == "__main__":
-    start('../output/edu_test1', '../input/edu_map.png', temp_path = "../temp")
+    start('../output/edu_test1', '../input/edu_map.png', temp_path="../temp")
