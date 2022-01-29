@@ -196,7 +196,6 @@ def start():
             output_video.start(Path(args.output_uri).absolute())
         else:
             logger.info('Stop Write BEV Video process.')
-        print(bev_success)
 
         # Global mapping start
         is_exist_global_list = False
@@ -205,7 +204,7 @@ def start():
             is_exist_global_list = global_id_mapping.start(Path(args.output_uri))
         else:
             logger.info('Stop global mapping process.')
-        print(is_exist_global_list)
+
         # Write Global BEV Video
         if is_exist_global_list:
             logger.info('Create global mapping frames...')

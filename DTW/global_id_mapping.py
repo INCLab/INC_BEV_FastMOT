@@ -58,7 +58,9 @@ def start(output_path):
     for i in range(1, len(id_map_list[0]) + 1):
         global_id_set.append(GLOBAL_INIT_ID + i)
 
+    print(global_id_set)
     if global_id_set:
+        print('in')
         flag = True
 
     dfunc.change_to_global(result_df_list, id_map_list[0], global_id_set)
