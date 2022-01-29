@@ -4,6 +4,8 @@ import os
 
 GLOBAL_INIT_ID = 0
 
+# test1 정익:[1,5],[3,9],[3,7,10,12],[2,10,12,13] / 민재:[4],[5,7,11],[6,13,15],[4,10,17] / 선우:[2],[4,6,8],[5,14],[3,11]
+# test1 drop 정익:[],[1],[1,2],[] 민재:[],[],[],[1] / 선우:[],[],[],[5,18]
 
 def start(output_path):
     flag = False
@@ -13,13 +15,15 @@ def start(output_path):
     for file in os.listdir(output_path):
         if file.endswith(".txt") and "BEV_" in file:
             txt_name.append(file)
-
     # ID correction을 위한 id grouping
     # local_id_group_list: [CAM1_Local_ID_groupList, CAM2_Local_ID_groupList, CAM3_Local_ID_groupList]
     # drop_list: [CAM1_id_dropList, CAM2_id_dropList, CAM3_id_dropList]
     total_file_num = 4
-    local_id_group_list = [[[]], [[]], [[]], [[]]]
-    drop_list = [[], [], [], []]
+    local_id_group_list = [[[1,5]],  # video1
+                           [[3,9], [5,7,11], [4,6,8]],  # video2
+                           [[3,7,10,12], [6,13,15], [5,14]],  # video3
+                           [[2,10,12,13], [4,10,17], [3,11]]]  # video4
+    drop_list = [[], [1], [1,2,9,17], [1,5,6,18]]
 
     # Create Dataframes by id
     result_df_list = []
@@ -28,7 +32,7 @@ def start(output_path):
     for i in range(total_file_num):
         df_list, id_list = dfunc.make_df_list(os.path.join(output_path, txt_name[i]),
                                               local_id_group_list[i],
-                                              drop_list[i])
+                                              drop_list[i], i+1)
         result_df_list.append(df_list)
         total_id_list.append(id_list)
 
