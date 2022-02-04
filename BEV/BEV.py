@@ -110,40 +110,90 @@ def start(input_path, output_path, map_path):
 
     pointset = set()
 
-    # 말 그대로 프레임 몇 번쨰인지
-    for frames in range(1, int(globals()['frame{}'.format(0)])):
-        tempmap = copy(map)
-        # 파일명
-        for i in list(map_point.keys()):
-            pm = PixelMapper(quad_coords_list[i]["pixel"], quad_coords_list[i]["lonlat"])
-            if globals()['point{}'.format(idxforfile[i])].get(str(frames)) is not None:
-                # ID랑 X/Y
-                for label in globals()['point{}'.format(idxforfile[i])].get(str(frames)):
-                    uv = (label[1], label[2])
+    # 파일마다 Loop
+    for filename in list(map_point.keys()):
+        # 지도 - 영상 좌표 간 Mapping
+        pm = PixelMapper(quad_coords_list[filename]["pixel"], quad_coords_list[filename]["lonlat"])
+
+        # 테스트용 Print (frame0엔 뭐가 들어있나..?)
+        print(int(globals()['frame{}'.format(0)]))
+
+        # 파일 기록을 위해 파일 열기
+        with open(os.path.join(original_output_path, 'bev_result', 'BEV_{}.txt'.format(filename)), 'w') as f:
+            # 프레임 수만큼 Loop
+            for frames in range(1, int(globals()['frame{}'.format(0)])):
+                # 이미 해당 프레임에 대해 저장된 이미지가 있다면
+                if os.path.isfile(os.path.join(output_path, str(frames) + '.jpg')):
+                    # 해당 이미지에 그림을 그리도록 함
+                    img_file = os.path.join(output_path, str(frames) + '.jpg')
+                # 그렇지 않다면
+                else:
+                    # 지도 자체에 그림 그리기
+                    img_file = map
+
+                # 파일의 특정 프레임에 대한 좌표 정보들 가져오기
+                # 0 : ID
+                # 1 : X
+                # 2 : Y
+                for positiondata in globals()['point{}'.format(idxforfile[filename])].get(str(frames)):
+                    # X/Y 좌표를 Tuple에 담기
+                    uv = (positiondata[1], positiondata[2])
+
+                    # 영상 좌표를 지도 좌표로 변환
                     lonlat = list(pm.pixel_to_lonlat(uv))
-                    li = [label[0], int(lonlat[0][0]), int(lonlat[0][1])]
-                    if frames in globals()['BEV_Point{}'.format(idxforfile[i])]:
-                        line = globals()['BEV_Point{}'.format(idxforfile[i])].get(frames)
-                        line.append(li)
-                    else:
-                        globals()['BEV_Point{}'.format(idxforfile[i])][frames] = [li]
 
-                    tlabel = tuple(label)
-                    if tlabel not in pointset:
-                        # 각 파일에 Text 작성
-                        txtfilelist[i].write("{} {} {} {}"
-                                             .format(frames, label[0], int(lonlat[0][0]), int(lonlat[0][1]))
-                                             + '\n')
-                        color = getcolor(abs(label[0]))
-                        cv2.circle(tempmap, (int(lonlat[0][0]), int(lonlat[0][1])), 10, color, -1)
-                        pointset.add(tlabel)
+                    # 각 파일에 Text 작성
+                    f.write("{} {} {} {}\n".format(
+                        frames,  # 프레임 번호
+                        positiondata[0],  # ID
+                        int(lonlat[0][0]),  # 매핑 X
+                        int(lonlat[0][1])))  # 매핑 Y
 
-        src = os.path.join(output_path, str(frames) + '.jpg')
-        cv2.imwrite(src, tempmap)
+                    # 색상
+                    color = getcolor(abs(positiondata[0]))
+
+                    # 원 찍기
+                    cv2.circle(img_file, (int(lonlat[0][0]), int(lonlat[0][1])), 10, color, -1)
+
+                # 프레임 저장
+                src = os.path.join(output_path, str(frames) + '.jpg')
+                cv2.imwrite(src, img_file)
+
+    # # 말 그대로 프레임 몇 번쨰인지
+    # for frames in range(1, int(globals()['frame{}'.format(0)])):
+    #     tempmap = copy(map)
+    #     # 파일명
+    #     for i in list(map_point.keys()):
+    #         pm = PixelMapper(quad_coords_list[i]["pixel"], quad_coords_list[i]["lonlat"])
+    #         if globals()['point{}'.format(idxforfile[i])].get(str(frames)) is not None:
+    #             # ID랑 X/Y
+    #             for label in globals()['point{}'.format(idxforfile[i])].get(str(frames)):
+    #                 uv = (label[1], label[2])
+    #                 lonlat = list(pm.pixel_to_lonlat(uv))
+    #                 li = [label[0], int(lonlat[0][0]), int(lonlat[0][1])]
+    #                 if frames in globals()['BEV_Point{}'.format(idxforfile[i])]:
+    #                     line = globals()['BEV_Point{}'.format(idxforfile[i])].get(frames)
+    #                     line.append(li)
+    #                 else:
+    #                     globals()['BEV_Point{}'.format(idxforfile[i])][frames] = [li]
+    #
+    #                 tlabel = tuple(label)
+    #                 if tlabel not in pointset:
+    #                     # 각 파일에 Text 작성
+    #                     txtfilelist[i].write("{} {} {} {}"
+    #                                          .format(frames, label[0], int(lonlat[0][0]), int(lonlat[0][1]))
+    #                                          + '\n')
+    #                     color = getcolor(abs(label[0]))
+    #                     cv2.circle(tempmap, (int(lonlat[0][0]), int(lonlat[0][1])), 10, color, -1)
+    #                     pointset.add(tlabel)
+    #
+    #     src = os.path.join(output_path, str(frames) + '.jpg')
+    #     cv2.imwrite(src, tempmap)
 
     # 파일 닫기
     for filekey in txtfilelist.keys():
         txtfilelist[filekey].close()
+
 
 # ## HeatMap ##
 #
