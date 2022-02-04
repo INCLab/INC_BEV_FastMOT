@@ -129,34 +129,50 @@ def start(input_path, output_path, map_path):
             src = os.path.join(output_path, str(frames) + '.jpg')
             cv2.imwrite(src, tempmap)
 
-    cv2.destroyAllWindows()
+    # #### Create BEV_Result txt files
+    # Check the directory already exist
+    if not os.path.isdir(os.path.join(original_output_path, 'bev_result')):
+        os.mkdir(os.path.join(original_output_path, 'bev_result'))
 
-    ## HeatMap ##
+    is_success = False
+    for filename in filelist:
+        with open(os.path.join(original_output_path, 'bev_result', 'BEV_{}.txt'.format(filename)), 'w') as f:
+            for key in globals()['BEV_Point{}'.format(filename)]:
+                for info in globals()['BEV_Point{}'.format(filename)][key]:
+                    temp = ''
+                    for e in info:
+                        temp += str(e) + ' '
+                    temp.rstrip()
+                    f.write(temp.rstrip() + '\n')
+            is_success = True
 
-    # df = pd.DataFrame(index=range(0, 10), columns=range(0, 13))
-    df = [[0 for col in range(13)] for row in range(10)]
 
-    # df = df.fillna(0)
-
-    for frames in range(1, int(globals()['frame{}'.format(0)])):
-
-        for i in list(map_point.keys()):
-
-            if globals()['BEV_Point{}'.format(idxforfile[i])].get(frames) is not None:
-
-                for label in globals()['BEV_Point{}'.format(idxforfile[i])].get(frames):
-                    if label[2] < 0 or label[1] < 0 or label[1] > map.shape[1] or label[2] > map.shape[0]:
-                        continue
-
-                    x = round(int(label[2]) / map.shape[0] * 9)
-                    y = round(int(label[1]) / map.shape[1] * 12)
-                    df[x][y] += 1
-
-    print(df)
-
-    sns.heatmap(df, linewidths=0.1, linecolor="black")
-
-    plt.savefig(heatmap_path)
+    # ## HeatMap ##
+    #
+    # # df = pd.DataFrame(index=range(0, 10), columns=range(0, 13))
+    # df = [[0 for col in range(13)] for row in range(10)]
+    #
+    # # df = df.fillna(0)
+    #
+    # for frames in range(1, int(globals()['frame{}'.format(0)])):
+    #
+    #     for i in list(map_point.keys()):
+    #
+    #         if globals()['BEV_Point{}'.format(idxforfile[i])].get(frames) is not None:
+    #
+    #             for label in globals()['BEV_Point{}'.format(idxforfile[i])].get(frames):
+    #                 if label[2] < 0 or label[1] < 0 or label[1] > map.shape[1] or label[2] > map.shape[0]:
+    #                     continue
+    #
+    #                 x = round(int(label[2]) / map.shape[0] * 9)
+    #                 y = round(int(label[1]) / map.shape[1] * 12)
+    #                 df[x][y] += 1
+    #
+    # print(df)
+    #
+    # sns.heatmap(df, linewidths=0.1, linecolor="black")
+    #
+    # plt.savefig(heatmap_path)
 
 '''
 id 라벨값에 맞춰 색깔을 지정하는 function
