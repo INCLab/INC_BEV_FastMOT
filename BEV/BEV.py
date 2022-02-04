@@ -101,22 +101,15 @@ def start(input_path, output_path, map_path):
     if not os.path.isdir(os.path.join(original_output_path, 'bev_result')):
         os.mkdir(os.path.join(original_output_path, 'bev_result'))
 
-    txtfilelist = {}
+    # 지도 읽기
     map = cv2.imread(str(map_path), -1)
-    for i in list(map_point.keys()):
-        globals()['BEV_Point{}'.format(idxforfile[i])] = dict()
-        # 미리 파일 열기
-        txtfilelist[i] = open(os.path.join(original_output_path, 'bev_result', 'BEV_{}.txt'.format(i)), 'w')
-
-    pointset = set()
+    # for i in list(map_point.keys()):
+    #     globals()['BEV_Point{}'.format(idxforfile[i])] = dict()
 
     # 파일마다 Loop
     for filename in list(map_point.keys()):
         # 지도 - 영상 좌표 간 Mapping
         pm = PixelMapper(quad_coords_list[filename]["pixel"], quad_coords_list[filename]["lonlat"])
-
-        # 테스트용 Print (frame0엔 뭐가 들어있나..?)
-        print(int(globals()['frame{}'.format(0)]))
 
         # 파일 기록을 위해 파일 열기
         with open(os.path.join(original_output_path, 'bev_result', 'BEV_{}.txt'.format(filename)), 'w') as f:
@@ -131,29 +124,31 @@ def start(input_path, output_path, map_path):
                     # 지도 자체에 그림 그리기
                     img_file = map
 
-                # 파일의 특정 프레임에 대한 좌표 정보들 가져오기
-                # 0 : ID
-                # 1 : X
-                # 2 : Y
-                for positiondata in globals()['point{}'.format(idxforfile[filename])].get(str(frames)):
-                    # X/Y 좌표를 Tuple에 담기
-                    uv = (positiondata[1], positiondata[2])
+                # Point에 프레임 정보가 있으면
+                if globals()['point{}'.format(idxforfile[filename])].get(str(frames)) is not None:
+                    # 파일의 특정 프레임에 대한 좌표 정보들 가져오기
+                    # 0 : ID
+                    # 1 : X
+                    # 2 : Y
+                    for positiondata in globals()['point{}'.format(idxforfile[filename])].get(str(frames)):
+                        # X/Y 좌표를 Tuple에 담기
+                        uv = (positiondata[1], positiondata[2])
 
-                    # 영상 좌표를 지도 좌표로 변환
-                    lonlat = list(pm.pixel_to_lonlat(uv))
+                        # 영상 좌표를 지도 좌표로 변환
+                        lonlat = list(pm.pixel_to_lonlat(uv))
 
-                    # 각 파일에 Text 작성
-                    f.write("{} {} {} {}\n".format(
-                        frames,  # 프레임 번호
-                        positiondata[0],  # ID
-                        int(lonlat[0][0]),  # 매핑 X
-                        int(lonlat[0][1])))  # 매핑 Y
+                        # 각 파일에 Text 작성
+                        f.write("{} {} {} {}\n".format(
+                            frames,  # 프레임 번호
+                            positiondata[0],  # ID
+                            int(lonlat[0][0]),  # 매핑 X
+                            int(lonlat[0][1])))  # 매핑 Y
 
-                    # 색상
-                    color = getcolor(abs(positiondata[0]))
+                        # 색상
+                        color = getcolor(abs(positiondata[0]))
 
-                    # 원 찍기
-                    cv2.circle(img_file, (int(lonlat[0][0]), int(lonlat[0][1])), 10, color, -1)
+                        # 원 찍기
+                        cv2.circle(img_file, (int(lonlat[0][0]), int(lonlat[0][1])), 10, color, -1)
 
                 # 프레임 저장
                 src = os.path.join(output_path, str(frames) + '.jpg')
@@ -190,9 +185,9 @@ def start(input_path, output_path, map_path):
     #     src = os.path.join(output_path, str(frames) + '.jpg')
     #     cv2.imwrite(src, tempmap)
 
-    # 파일 닫기
-    for filekey in txtfilelist.keys():
-        txtfilelist[filekey].close()
+    # # 파일 닫기
+    # for filekey in txtfilelist.keys():
+    #     txtfilelist[filekey].close()
 
 
 # ## HeatMap ##
