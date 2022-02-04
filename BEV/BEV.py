@@ -102,49 +102,40 @@ def start(input_path, output_path, map_path):
 
     pointset = set()
 
-    # 말 그대로 프레임 몇 번쨰인지
-    for frames in range(1, int(globals()['frame{}'.format(0)])):
-        tempmap = copy(map)
-        # 파일명
-        for i in list(map_point.keys()):
-            pm = PixelMapper(quad_coords_list[i]["pixel"], quad_coords_list[i]["lonlat"])
-            if globals()['point{}'.format(idxforfile[i])].get(str(frames)) is not None:
-                # ID랑 X/Y
-                for label in globals()['point{}'.format(idxforfile[i])].get(str(frames)):
-                    uv = (label[1], label[2])
-                    lonlat = list(pm.pixel_to_lonlat(uv))
-                    li = [label[0], int(lonlat[0][0]), int(lonlat[0][1])]
-                    if frames in globals()['BEV_Point{}'.format(idxforfile[i])]:
-                        line = globals()['BEV_Point{}'.format(idxforfile[i])].get(frames)
-                        line.append(li)
-                    else:
-                        globals()['BEV_Point{}'.format(idxforfile[i])][frames] = [li]
-
-                    tlabel = tuple(label)
-                    if tlabel not in pointset:
-                        color = getcolor(abs(label[0]))
-                        cv2.circle(tempmap, (int(lonlat[0][0]), int(lonlat[0][1])), 10, color, -1)
-                        pointset.add(tlabel)
-
-            src = os.path.join(output_path, str(frames) + '.jpg')
-            cv2.imwrite(src, tempmap)
-
     # #### Create BEV_Result txt files
     # Check the directory already exist
     if not os.path.isdir(os.path.join(original_output_path, 'bev_result')):
         os.mkdir(os.path.join(original_output_path, 'bev_result'))
 
-    is_success = False
-    for i in list(map_point.keys()):
-        with open(os.path.join(original_output_path, 'bev_result', 'BEV_{}.txt'.format(i)), 'w') as f:
-            for key in globals()['BEV_Point{}'.format(idxforfile[i])]:
-                for info in globals()['BEV_Point{}'.format(idxforfile[i])][key]:
-                    temp = ''
-                    for e in info:
-                        temp += str(e) + ' '
-                    temp.rstrip()
-                    f.write(temp.rstrip() + '\n')
-            is_success = True
+    # 말 그대로 프레임 몇 번쨰인지
+    for frames in range(1, int(globals()['frame{}'.format(0)])):
+        tempmap = copy(map)
+        # 파일명
+        for i in list(map_point.keys()):
+            with open(os.path.join(original_output_path, 'bev_result', 'BEV_{}.txt'.format(i)), 'w') as f:
+                pm = PixelMapper(quad_coords_list[i]["pixel"], quad_coords_list[i]["lonlat"])
+                if globals()['point{}'.format(idxforfile[i])].get(str(frames)) is not None:
+                    # ID랑 X/Y
+                    for label in globals()['point{}'.format(idxforfile[i])].get(str(frames)):
+                        uv = (label[1], label[2])
+                        lonlat = list(pm.pixel_to_lonlat(uv))
+                        li = [label[0], int(lonlat[0][0]), int(lonlat[0][1])]
+                        if frames in globals()['BEV_Point{}'.format(idxforfile[i])]:
+                            line = globals()['BEV_Point{}'.format(idxforfile[i])].get(frames)
+                            line.append(li)
+                        else:
+                            globals()['BEV_Point{}'.format(idxforfile[i])][frames] = [li]
+
+                        tlabel = tuple(label)
+                        if tlabel not in pointset:
+                            f.write("{} {} {} {}".format(frames, label[0], int(lonlat[0][0]), int(lonlat[0][1])) + '\n')
+
+                            color = getcolor(abs(label[0]))
+                            cv2.circle(tempmap, (int(lonlat[0][0]), int(lonlat[0][1])), 10, color, -1)
+                            pointset.add(tlabel)
+
+            src = os.path.join(output_path, str(frames) + '.jpg')
+            cv2.imwrite(src, tempmap)
 
 
     # ## HeatMap ##
