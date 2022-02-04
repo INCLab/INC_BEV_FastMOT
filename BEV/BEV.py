@@ -137,8 +137,8 @@ def start(input_path, output_path, map_path):
     is_success = False
     for i in list(map_point.keys()):
         with open(os.path.join(original_output_path, 'bev_result', 'BEV_{}.txt'.format(i)), 'w') as f:
-            for key in globals()['BEV_Point{}'.format(i)]:
-                for info in globals()['BEV_Point{}'.format(i)][key]:
+            for key in globals()['BEV_Point{}'.format(idxforfile[i])]:
+                for info in globals()['BEV_Point{}'.format(idxforfile[i])][key]:
                     temp = ''
                     for e in info:
                         temp += str(e) + ' '
