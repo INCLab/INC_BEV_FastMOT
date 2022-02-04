@@ -20,8 +20,8 @@ lonloat : 도면 공간
 오른쪽 위, 왼쪽 위, 왼쪽 아래, 오른쪽 아래 순서
 '''
 
-def start(input_path, output_path, map_path):
 
+def start(input_path, output_path, map_path):
     heatmap_path = os.path.join(output_path, 'heatmap.png')
     original_output_path = output_path
     output_path = os.path.join(output_path, 'map_frame')
@@ -33,7 +33,9 @@ def start(input_path, output_path, map_path):
         shutil.rmtree(output_path)
         os.makedirs(output_path)
 
-    filelist = list(filter(lambda filename: mimetypes.guess_type(filename)[0] is not None and mimetypes.guess_type(filename)[0].find('video') is not -1, os.listdir(input_path)))
+    filelist = list(filter(
+        lambda filename: mimetypes.guess_type(filename)[0] is not None and mimetypes.guess_type(filename)[0].find(
+            'video') is not -1, os.listdir(input_path)))
 
     f = open(os.path.join(temp_path, 'points.txt'), 'r')
     data = f.read()
@@ -68,22 +70,21 @@ def start(input_path, output_path, map_path):
     for i in list(map_point.keys()):
         quad_coords = {
             "pixel": np.array([
-                [frame_point[i][0][0],   frame_point[i][0][1]],  # Third lampost top right
-                [frame_point[i][1][0],   frame_point[i][1][1]],  # Corner of white rumble strip top left
-                [frame_point[i][2][0],   frame_point[i][2][1]],  # Corner of rectangular road marking bottom left
-                [frame_point[i][3][0],   frame_point[i][3][1]]  # Corner of dashed line bottom right
+                [frame_point[i][0][0], frame_point[i][0][1]],  # Third lampost top right
+                [frame_point[i][1][0], frame_point[i][1][1]],  # Corner of white rumble strip top left
+                [frame_point[i][2][0], frame_point[i][2][1]],  # Corner of rectangular road marking bottom left
+                [frame_point[i][3][0], frame_point[i][3][1]]  # Corner of dashed line bottom right
             ]),
             "lonlat": np.array([
-                [map_point[i][0][0],   map_point[i][0][1]],  # Third lampost top right
-                [map_point[i][1][0],   map_point[i][1][1]],  # Corner of white rumble strip top left
-                [map_point[i][2][0],   map_point[i][2][1]],  # Corner of rectangular road marking bottom left
-                [map_point[i][3][0],   map_point[i][3][1]]  # Corner of dashed line bottom right
+                [map_point[i][0][0], map_point[i][0][1]],  # Third lampost top right
+                [map_point[i][1][0], map_point[i][1][1]],  # Corner of white rumble strip top left
+                [map_point[i][2][0], map_point[i][2][1]],  # Corner of rectangular road marking bottom left
+                [map_point[i][3][0], map_point[i][3][1]]  # Corner of dashed line bottom right
             ])
         }
         quad_coords_list[i] = quad_coords
 
-    #PixelMapper로 값 전달
-
+    # PixelMapper로 값 전달
 
     idxforfile = {}
     idx = 0
@@ -95,86 +96,97 @@ def start(input_path, output_path, map_path):
         globals()['frame{}'.format(idx)], globals()['point{}'.format(idx)] = save_dict(file)
         idx += 1
 
-
-    map = cv2.imread(str(map_path), -1)
-    for i in list(map_point.keys()):
-        globals()['BEV_Point{}'.format(idxforfile[i])] = dict()
-
-    pointset = set()
-
     # #### Create BEV_Result txt files
     # Check the directory already exist
     if not os.path.isdir(os.path.join(original_output_path, 'bev_result')):
         os.mkdir(os.path.join(original_output_path, 'bev_result'))
+
+    txtfilelist = {}
+    map = cv2.imread(str(map_path), -1)
+    for i in list(map_point.keys()):
+        globals()['BEV_Point{}'.format(idxforfile[i])] = dict()
+        # 미리 파일 열기
+        txtfilelist[i] = open(os.path.join(original_output_path, 'bev_result', 'BEV_{}.txt'.format(i)), 'w')
+
+    pointset = set()
 
     # 말 그대로 프레임 몇 번쨰인지
     for frames in range(1, int(globals()['frame{}'.format(0)])):
         tempmap = copy(map)
         # 파일명
         for i in list(map_point.keys()):
-            with open(os.path.join(original_output_path, 'bev_result', 'BEV_{}.txt'.format(i)), 'w') as f:
-                pm = PixelMapper(quad_coords_list[i]["pixel"], quad_coords_list[i]["lonlat"])
-                if globals()['point{}'.format(idxforfile[i])].get(str(frames)) is not None:
-                    # ID랑 X/Y
-                    for label in globals()['point{}'.format(idxforfile[i])].get(str(frames)):
-                        uv = (label[1], label[2])
-                        lonlat = list(pm.pixel_to_lonlat(uv))
-                        li = [label[0], int(lonlat[0][0]), int(lonlat[0][1])]
-                        if frames in globals()['BEV_Point{}'.format(idxforfile[i])]:
-                            line = globals()['BEV_Point{}'.format(idxforfile[i])].get(frames)
-                            line.append(li)
-                        else:
-                            globals()['BEV_Point{}'.format(idxforfile[i])][frames] = [li]
+            pm = PixelMapper(quad_coords_list[i]["pixel"], quad_coords_list[i]["lonlat"])
+            if globals()['point{}'.format(idxforfile[i])].get(str(frames)) is not None:
+                # ID랑 X/Y
+                for label in globals()['point{}'.format(idxforfile[i])].get(str(frames)):
+                    uv = (label[1], label[2])
+                    lonlat = list(pm.pixel_to_lonlat(uv))
+                    li = [label[0], int(lonlat[0][0]), int(lonlat[0][1])]
+                    if frames in globals()['BEV_Point{}'.format(idxforfile[i])]:
+                        line = globals()['BEV_Point{}'.format(idxforfile[i])].get(frames)
+                        line.append(li)
+                    else:
+                        globals()['BEV_Point{}'.format(idxforfile[i])][frames] = [li]
 
-                        tlabel = tuple(label)
-                        if tlabel not in pointset:
-                            f.write("{} {} {} {}".format(frames, label[0], int(lonlat[0][0]), int(lonlat[0][1])) + '\n')
+                    tlabel = tuple(label)
+                    if tlabel not in pointset:
+                        # 각 파일에 Text 작성
+                        txtfilelist[i].write("{} {} {} {}"
+                                             .format(frames, label[0], int(lonlat[0][0]), int(lonlat[0][1]))
+                                             + '\n')
+                        color = getcolor(abs(label[0]))
+                        cv2.circle(tempmap, (int(lonlat[0][0]), int(lonlat[0][1])), 10, color, -1)
+                        pointset.add(tlabel)
 
-                            color = getcolor(abs(label[0]))
-                            cv2.circle(tempmap, (int(lonlat[0][0]), int(lonlat[0][1])), 10, color, -1)
-                            pointset.add(tlabel)
+        src = os.path.join(output_path, str(frames) + '.jpg')
+        cv2.imwrite(src, tempmap)
 
-            src = os.path.join(output_path, str(frames) + '.jpg')
-            cv2.imwrite(src, tempmap)
+    # 파일 닫기
+    for filekey in txtfilelist.keys():
+        txtfilelist[filekey].close()
 
-
-    # ## HeatMap ##
-    #
-    # # df = pd.DataFrame(index=range(0, 10), columns=range(0, 13))
-    # df = [[0 for col in range(13)] for row in range(10)]
-    #
-    # # df = df.fillna(0)
-    #
-    # for frames in range(1, int(globals()['frame{}'.format(0)])):
-    #
-    #     for i in list(map_point.keys()):
-    #
-    #         if globals()['BEV_Point{}'.format(idxforfile[i])].get(frames) is not None:
-    #
-    #             for label in globals()['BEV_Point{}'.format(idxforfile[i])].get(frames):
-    #                 if label[2] < 0 or label[1] < 0 or label[1] > map.shape[1] or label[2] > map.shape[0]:
-    #                     continue
-    #
-    #                 x = round(int(label[2]) / map.shape[0] * 9)
-    #                 y = round(int(label[1]) / map.shape[1] * 12)
-    #                 df[x][y] += 1
-    #
-    # print(df)
-    #
-    # sns.heatmap(df, linewidths=0.1, linecolor="black")
-    #
-    # plt.savefig(heatmap_path)
+# ## HeatMap ##
+#
+# # df = pd.DataFrame(index=range(0, 10), columns=range(0, 13))
+# df = [[0 for col in range(13)] for row in range(10)]
+#
+# # df = df.fillna(0)
+#
+# for frames in range(1, int(globals()['frame{}'.format(0)])):
+#
+#     for i in list(map_point.keys()):
+#
+#         if globals()['BEV_Point{}'.format(idxforfile[i])].get(frames) is not None:
+#
+#             for label in globals()['BEV_Point{}'.format(idxforfile[i])].get(frames):
+#                 if label[2] < 0 or label[1] < 0 or label[1] > map.shape[1] or label[2] > map.shape[0]:
+#                     continue
+#
+#                 x = round(int(label[2]) / map.shape[0] * 9)
+#                 y = round(int(label[1]) / map.shape[1] * 12)
+#                 df[x][y] += 1
+#
+# print(df)
+#
+# sns.heatmap(df, linewidths=0.1, linecolor="black")
+#
+# plt.savefig(heatmap_path)
 
 '''
 id 라벨값에 맞춰 색깔을 지정하는 function
 '''
+
+
 def getcolor(idx):
     idx = idx * 3
     return (37 * idx) % 255, (17 * idx) % 255, (29 * idx) % 255
 
+
 '''
 실제공간과 도면을 mapping해주는 class
 '''
+
+
 class PixelMapper(object):
     """
     Create an object for converting pixels to geographic coordinates,
@@ -195,7 +207,7 @@ class PixelMapper(object):
         self.M = cv2.getPerspectiveTransform(np.float32(pixel_array), np.float32(lonlat_array))
         self.invM = cv2.getPerspectiveTransform(np.float32(lonlat_array), np.float32(pixel_array))
 
-    #실제 공간을 도면으로 바꿈
+    # 실제 공간을 도면으로 바꿈
     def pixel_to_lonlat(self, pixel):
         """
         Convert a set of pixel coordinates to lon-lat coordinates
@@ -215,7 +227,8 @@ class PixelMapper(object):
         lonlat = np.dot(self.M, pixel.T)
 
         return (lonlat[:2, :] / lonlat[2, :]).T
-    #도면 공간을 실제 공간으로 바꿈
+
+    # 도면 공간을 실제 공간으로 바꿈
     def lonlat_to_pixel(self, lonlat):
         """
         Convert a set of lon-lat coordinates to pixel coordinates
@@ -236,23 +249,27 @@ class PixelMapper(object):
 
         return (pixel[:2, :] / pixel[2, :]).T
 
+
 """
 lonlat에 frame을 한번에 저장하는 function
 """
-def save_lonlat_frame(point, pm,frame_num ,input_dir, output_dir):
+
+
+def save_lonlat_frame(point, pm, frame_num, input_dir, output_dir):
     map = cv2.imread(input_dir, -1)
 
-    #1541
-    for frames in range(1, frame_num): #object ID마다 색깔바꿔서 점찍기
+    # 1541
+    for frames in range(1, frame_num):  # object ID마다 색깔바꿔서 점찍기
         if point.get(str(frames)) != None:
-            for label in point.get(str(frames)) :
+            for label in point.get(str(frames)):
                 uv = (label[1], label[2])
                 lonlat = list(pm.pixel_to_lonlat(uv))
                 color = getcolor(abs(label[0]))
                 cv2.circle(map, (int(lonlat[0][0]), int(lonlat[0][1])), 3, color, -1)
 
-        src = os.path.join(output_dir, str(frames)+'.jpg')
+        src = os.path.join(output_dir, str(frames) + '.jpg')
         cv2.imwrite(src, map)
+
 
 def save_dict(file):
     ##################################################
