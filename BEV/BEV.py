@@ -118,7 +118,7 @@ def start(input_path, output_path, map_path):
                 # 이미 해당 프레임에 대해 저장된 이미지가 있다면
                 if os.path.isfile(os.path.join(output_path, str(frames) + '.jpg')):
                     # 해당 이미지에 그림을 그리도록 함
-                    img_file = os.path.join(output_path, str(frames) + '.jpg')
+                    img_file = cv2.imread(os.path.join(output_path, str(frames) + '.jpg'), -1)
                 # 그렇지 않다면
                 else:
                     # 지도 자체에 그림 그리기
