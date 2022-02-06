@@ -113,7 +113,6 @@ def start(input_path, output_path, map_path):
         pm = PixelMapper(quad_coords_list[filename]["pixel"], quad_coords_list[filename]["lonlat"])
         # 파일 기록을 위해 파일 열기
         with open(os.path.join(original_output_path, 'bev_result', 'BEV_{}.txt'.format(filename)), 'w') as f:
-            pointset = set()
             # 프레임 수만큼 Loop - 'frame' Dict에는 영상 별 프레임 갯수가 들어가 있음
             # 0을 쓰는 이유는 첫 영상과 프레임 수를 동일하게 맞추기 위해서로 추정
             for frames in range(1, int(globals()['frame{}'.format(0)])):
@@ -139,23 +138,18 @@ def start(input_path, output_path, map_path):
                         # 영상 좌표를 지도 좌표로 변환
                         lonlat = list(pm.pixel_to_lonlat(uv))
 
-                        # 중복 제거
-                        tdata = tuple(positiondata)
-                        if tdata not in pointset:
-                            # 각 파일에 Text 작성
-                            f.write("{} {} {} {}\n".format(
-                                frames,  # 프레임 번호
-                                positiondata[0],  # ID
-                                int(lonlat[0][0]),  # 매핑 X
-                                int(lonlat[0][1])))  # 매핑 Y
+                        # 각 파일에 Text 작성
+                        f.write("{} {} {} {}\n".format(
+                            frames,  # 프레임 번호
+                            positiondata[0],  # ID
+                            int(lonlat[0][0]),  # 매핑 X
+                            int(lonlat[0][1])))  # 매핑 Y
 
-                            # 색상
-                            color = getcolor(abs(positiondata[0]))
+                        # 색상
+                        color = getcolor(abs(positiondata[0]))
 
-                            # 원 찍기
-                            cv2.circle(img_file, (int(lonlat[0][0]), int(lonlat[0][1])), 10, color, -1)
-
-                            pointset.add(tdata)
+                        # 원 찍기
+                        cv2.circle(img_file, (int(lonlat[0][0]), int(lonlat[0][1])), 10, color, -1)
 
                 # 프레임 저장
                 src = os.path.join(output_path, str(frames) + '.jpg')
