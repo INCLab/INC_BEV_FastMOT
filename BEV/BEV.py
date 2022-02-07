@@ -247,7 +247,7 @@ def start(input_path, output_path, map_path):
                     else:
                         id = globalmapping[i][id]
 
-                    recent_trackings[id] = [id, (int(lonlat[0][0]), int(lonlat[0][1]))]
+                    recent_trackings[id] = [frames, (int(lonlat[0][0]), int(lonlat[0][1]))]
 
                     if frames in globals()['BEV_Point{}'.format(idxforfile[i])]:
                         line = globals()['BEV_Point{}'.format(idxforfile[i])].get(frames)
