@@ -212,9 +212,11 @@ def start(input_path, output_path, map_path):
     # 말 그대로 프레임 몇 번쨰인지
     for frames in range(1, int(globals()['frame{}'.format(0)])):
         tempmap = copy(map)
-        globalmapping[frames] = {}
         # 파일명
         for i in list(map_point.keys()):
+            if i not in globalmapping.keys():
+                globalmapping[i] = {}
+
             if i not in txtfilelist.keys():
                 txtfilelist[i] = open(
                     os.path.join(original_output_path,
@@ -231,7 +233,7 @@ def start(input_path, output_path, map_path):
                     li = [label[0], int(lonlat[0][0]), int(lonlat[0][1])]
 
                     id = label[0]
-                    if label[0] not in globalmapping[frames].keys():
+                    if label[0] not in globalmapping[i].keys():
                         newid = find_nearest_id(recent_trackings, frames, (int(lonlat[0][0]), int(lonlat[0][1])))
                         if newid == -1:
                             id = curid
@@ -241,9 +243,9 @@ def start(input_path, output_path, map_path):
                             id = newid
                             print('[{}] Mapping to Exists ID ({}, {})'.format(frames, label[0], id))
 
-                        globalmapping[frames][label[0]] = id
+                        globalmapping[i][label[0]] = id
                     else:
-                        id = globalmapping[frames][id]
+                        id = globalmapping[i][id]
 
                     if frames in globals()['BEV_Point{}'.format(idxforfile[i])]:
                         line = globals()['BEV_Point{}'.format(idxforfile[i])].get(frames)
