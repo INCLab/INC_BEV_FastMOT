@@ -230,7 +230,7 @@ def start(input_path, output_path, map_path):
                 for label in globals()['point{}'.format(idxforfile[i])].get(str(frames)):
                     uv = (label[1], label[2])
                     lonlat = list(pm.pixel_to_lonlat(uv))
-                    li = [label[0], int(lonlat[0][0]), int(lonlat[0][1])]
+                    #li = [label[0], int(lonlat[0][0]), int(lonlat[0][1])]
 
                     # 아이디 변수 (기본은 MOT랑 동일)
                     id = label[0]
@@ -259,7 +259,7 @@ def start(input_path, output_path, map_path):
                         globalmapping[i][label[0]] = id
 
                         # 해당 ID의 마지막 트래킹 정보를 동일한 프레임에서 찾은거라면
-                        if recent_trackings[id][0] == frames:
+                        if id in recent_trackings.keys() and recent_trackings[id][0] == frames:
                             # 위치 정보는 기존 정보 활용
                             pos = recent_trackings[id][1]
                     # Mapping Table에 존재하면
@@ -282,6 +282,12 @@ def start(input_path, output_path, map_path):
 
                     color = getcolor(abs(id))
                     cv2.circle(tempmap, pos, 10, color, -1)
+                    cv2.putText(tempmap,
+                                str(id),
+                                pos,
+                                cv2.FONT_HERSHEY_SIMPLEX,
+                                0.5,
+                                (255, 255, 255))
 
         src = os.path.join(output_path, str(frames) + '.jpg')
         cv2.imwrite(src, tempmap)
