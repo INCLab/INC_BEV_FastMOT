@@ -103,8 +103,8 @@ def start(input_path, output_path, map_path):
     # for i in list(map_point.keys()):
     #     globals()['BEV_Point{}'.format(idxforfile[i])] = dict()
 
-    mapping_frame_threshold = 25
-    mapping_threshold = 5
+    mapping_frame_threshold = 50
+    mapping_threshold = 10
 
     # 파일마다 Loop
     for filename in list(map_point.keys()):
@@ -163,9 +163,11 @@ def start(input_path, output_path, map_path):
                                         skey = key
 
                             # 최종 ID 저장
+                            print(positiondata[0], 'changed to', skey, 'distance', sdistance)
                             last_list[skey] = [frames, (int(lonlat[0][0]), int(lonlat[0][1]))]
                             newid = skey
                         else:
+                            print(positiondata[0], 'id already exists')
                             # 최종 프레임, (X, Y)
                             last_list[positiondata[0]] = [frames, (int(lonlat[0][0]), int(lonlat[0][1]))]
 
