@@ -1,15 +1,12 @@
+import sys
 from copy import copy
 
 import cv2
 import os
-import sys
 import shutil
-import time
-
-import seaborn as sns
-import matplotlib.pyplot as plt
 import numpy as np
 import mimetypes
+from scipy.spatial import distance
 
 ##############################################################################
 
@@ -107,12 +104,17 @@ def start(input_path, output_path, map_path):
     #     globals()['BEV_Point{}'.format(idxforfile[i])] = dict()
 
 
+    mapping_frame_threshold = 25
+    mapping_threshold = 50
+
     # 파일마다 Loop
     for filename in list(map_point.keys()):
         # 지도 - 영상 좌표 간 Mapping
         pm = PixelMapper(quad_coords_list[filename]["pixel"], quad_coords_list[filename]["lonlat"])
         # 파일 기록을 위해 파일 열기
         with open(os.path.join(original_output_path, 'bev_result', 'BEV_{}.txt'.format(filename)), 'w') as f:
+            last_list = {}
+
             # 프레임 수만큼 Loop - 'frame' Dict에는 영상 별 프레임 갯수가 들어가 있음
             # 0을 쓰는 이유는 첫 영상과 프레임 수를 동일하게 맞추기 위해서로 추정
             for frames in range(1, int(globals()['frame{}'.format(0)])):
@@ -124,6 +126,7 @@ def start(input_path, output_path, map_path):
                 else:
                     # 지도 자체에 그림 그리기
                     img_file = copy(map)
+
                 # Point에 프레임 정보가 있으면
                 # 'Point' Dict에는 좌표가 들어가 있음 (Key -> File Idx)
                 if globals()['point{}'.format(idxforfile[filename])].get(str(frames)) is not None:
@@ -138,18 +141,58 @@ def start(input_path, output_path, map_path):
                         # 영상 좌표를 지도 좌표로 변환
                         lonlat = list(pm.pixel_to_lonlat(uv))
 
+                        # ID 저장용 변수
+                        newid = positiondata[0]
+
+                        # ID가 사라진 경우
+                        if positiondata[0] not in last_list.keys():
+                            # 최소 거리
+                            sdistance = sys.maxsize
+                            # 최소 거리 키
+                            skey = positiondata[0]
+
+                            # Loop
+                            for key in last_list.keys():
+                                # Threshold 내에서 사라진 ID라면
+                                if frames - last_list[key][0] <= mapping_frame_threshold:
+                                    # 현재 사용자와 거리 비교
+                                    dis = distance.euclidean(last_list[key][1], (int(lonlat[0][0]), int(lonlat[0][1])))
+                                    # 거리 Threshold 안쪽이고, 이전 가장 짧은 거리보다 더 짧다면
+                                    if dis < mapping_threshold and dis < sdistance:
+                                        # 최소 거리 및 키 업데이트
+                                        sdistance = dis
+                                        skey = key
+                                # Threshold를 넘은 경우
+                                else:
+                                    # 제거
+                                    del(last_list[key])
+
+                            # 최종 ID 저장
+                            last_list[skey] = [frames, (int(lonlat[0][0]), int(lonlat[0][1]))]
+                            newid = skey
+                        else:
+                            # 최종 프레임, (X, Y)
+                            last_list[positiondata[0]] = [frames, (int(lonlat[0][0]), int(lonlat[0][1]))]
+
+
                         # 각 파일에 Text 작성
                         f.write("{} {} {} {}\n".format(
                             frames,  # 프레임 번호
-                            positiondata[0],  # ID
+                            newid,  # ID
                             int(lonlat[0][0]),  # 매핑 X
                             int(lonlat[0][1])))  # 매핑 Y
 
                         # 색상
-                        color = getcolor(abs(positiondata[0]))
+                        color = getcolor(abs(newid))
 
                         # 원 찍기
                         cv2.circle(img_file, (int(lonlat[0][0]), int(lonlat[0][1])), 10, color, -1)
+                        cv2.putText(img_file,
+                                    str(newid),
+                                    (int(lonlat[0][0]), int(lonlat[0][1])),
+                                    cv2.FONT_HERSHEY_SIMPLEX,
+                                    5,
+                                    (255, 255, 255))
 
                 # 프레임 저장
                 src = os.path.join(output_path, str(frames) + '.jpg')
