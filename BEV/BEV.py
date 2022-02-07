@@ -258,14 +258,15 @@ def start(input_path, output_path, map_path):
                         # Global Mapping 테이블 업데이트
                         globalmapping[i][label[0]] = id
 
-                        # 해당 ID의 마지막 트래킹 정보를 동일한 프레임에서 찾은거라면
-                        if id in recent_trackings.keys() and recent_trackings[id][0] == frames:
-                            # 위치 정보는 기존 정보 활용
-                            pos = recent_trackings[id][1]
                     # Mapping Table에 존재하면
                     else:
                         # Global Mapping 테이블 정보 활용
                         id = globalmapping[i][id]
+
+                    # 해당 ID의 마지막 트래킹 정보를 동일한 프레임에서 찾은거라면
+                    if id in recent_trackings.keys() and recent_trackings[id][0] == frames:
+                        # 위치 정보는 기존 정보 활용
+                        pos = recent_trackings[id][1]
 
                     # 최근 트래킹 정보 업데이트
                     recent_trackings[id] = [frames, pos]
