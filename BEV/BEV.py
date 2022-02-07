@@ -103,9 +103,8 @@ def start(input_path, output_path, map_path):
     # for i in list(map_point.keys()):
     #     globals()['BEV_Point{}'.format(idxforfile[i])] = dict()
 
-
     mapping_frame_threshold = 25
-    mapping_threshold = 50
+    mapping_threshold = 10
 
     # 파일마다 Loop
     for filename in list(map_point.keys()):
@@ -170,7 +169,6 @@ def start(input_path, output_path, map_path):
                             # 최종 프레임, (X, Y)
                             last_list[positiondata[0]] = [frames, (int(lonlat[0][0]), int(lonlat[0][1]))]
 
-
                         # 각 파일에 Text 작성
                         f.write("{} {} {} {}\n".format(
                             frames,  # 프레임 번호
@@ -187,7 +185,7 @@ def start(input_path, output_path, map_path):
                                     str(newid),
                                     (int(lonlat[0][0]), int(lonlat[0][1])),
                                     cv2.FONT_HERSHEY_SIMPLEX,
-                                    5,
+                                    0.5,
                                     (255, 255, 255))
 
                 # 프레임 저장
