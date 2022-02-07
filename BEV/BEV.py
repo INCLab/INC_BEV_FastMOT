@@ -113,6 +113,7 @@ def start(input_path, output_path, map_path):
         # 파일 기록을 위해 파일 열기
         with open(os.path.join(original_output_path, 'bev_result', 'BEV_{}.txt'.format(filename)), 'w') as f:
             last_list = {}
+            id_mapping_list = {}
 
             # 프레임 수만큼 Loop - 'frame' Dict에는 영상 별 프레임 갯수가 들어가 있음
             # 0을 쓰는 이유는 첫 영상과 프레임 수를 동일하게 맞추기 위해서로 추정
@@ -140,11 +141,20 @@ def start(input_path, output_path, map_path):
                         # 영상 좌표를 지도 좌표로 변환
                         lonlat = list(pm.pixel_to_lonlat(uv))
 
-                        # ID 저장용 변수
-                        newid = positiondata[0]
+                        # ID 저장용 변수 값 체크
+                        # 현재 ID가 이전 리스트에 있다면
+                        if positiondata[0] in id_mapping_list.keys():
+                            # 지금 ID를 해당 ID로
+                            newid = id_mapping_list[positiondata[0]]
+                        # 없다면
+                        else:
+                            # 현재 ID를 새 ID로
+                            id_mapping_list[positiondata[0]] = positiondata[0]
+                            newid = positiondata[0]
+
 
                         # ID가 사라진 경우
-                        if positiondata[0] not in last_list.keys():
+                        if newid not in last_list.keys():
                             # 최소 거리
                             sdistance = sys.maxsize
                             # 최소 거리 키
@@ -165,11 +175,12 @@ def start(input_path, output_path, map_path):
                             # 최종 ID 저장
                             print(positiondata[0], 'changed to', skey, 'distance', sdistance)
                             last_list[skey] = [frames, (int(lonlat[0][0]), int(lonlat[0][1]))]
+                            id_mapping_list[newid] = skey
                             newid = skey
                         else:
-                            print(positiondata[0], 'id already exists')
+                            print(newid, 'id already exists')
                             # 최종 프레임, (X, Y)
-                            last_list[positiondata[0]] = [frames, (int(lonlat[0][0]), int(lonlat[0][1]))]
+                            last_list[newid] = [frames, (int(lonlat[0][0]), int(lonlat[0][1]))]
 
                         # 각 파일에 Text 작성
                         f.write("{} {} {} {}\n".format(
