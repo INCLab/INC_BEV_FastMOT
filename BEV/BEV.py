@@ -162,10 +162,6 @@ def start(input_path, output_path, map_path):
                                         # 최소 거리 및 키 업데이트
                                         sdistance = dis
                                         skey = key
-                                # Threshold를 넘은 경우
-                                else:
-                                    # 제거
-                                    del(last_list[key])
 
                             # 최종 ID 저장
                             last_list[skey] = [frames, (int(lonlat[0][0]), int(lonlat[0][1]))]
