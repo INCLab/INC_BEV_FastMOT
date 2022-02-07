@@ -104,7 +104,7 @@ def start(input_path, output_path, map_path):
     #     globals()['BEV_Point{}'.format(idxforfile[i])] = dict()
 
     mapping_frame_threshold = 25
-    mapping_threshold = 10
+    mapping_threshold = 5
 
     # 파일마다 Loop
     for filename in list(map_point.keys()):
@@ -152,8 +152,8 @@ def start(input_path, output_path, map_path):
 
                             # Loop
                             for key in last_list.keys():
-                                # Threshold 내에서 사라진 ID라면
-                                if frames - last_list[key][0] <= mapping_frame_threshold:
+                                # 현재 Frame에서 나타나지 않았고, Threshold 내에서 사라진 ID라면
+                                if frames != last_list[key][0] and frames - last_list[key][0] <= mapping_frame_threshold:
                                     # 현재 사용자와 거리 비교
                                     dis = distance.euclidean(last_list[key][1], (int(lonlat[0][0]), int(lonlat[0][1])))
                                     # 거리 Threshold 안쪽이고, 이전 가장 짧은 거리보다 더 짧다면
