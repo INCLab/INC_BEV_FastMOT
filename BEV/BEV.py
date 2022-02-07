@@ -100,8 +100,8 @@ def start(input_path, output_path, map_path):
 
     # 지도 읽기
     map = cv2.imread(str(map_path), -1)
-    # for i in list(map_point.keys()):
-    #     globals()['BEV_Point{}'.format(idxforfile[i])] = dict()
+    for i in list(map_point.keys()):
+        globals()['BEV_Point{}'.format(idxforfile[i])] = dict()
 
     # # 파일마다 Loop
     # for filename in list(map_point.keys()):
