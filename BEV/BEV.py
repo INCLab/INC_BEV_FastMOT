@@ -297,7 +297,7 @@ def start(input_path, output_path, map_path):
         txtfilelist[filekey].close()
 
 
-mapping_dist_threshold = 20
+mapping_dist_threshold = 35
 
 
 def find_nearest_id(recent_trackings: dict, currentframe: int, position: tuple):
