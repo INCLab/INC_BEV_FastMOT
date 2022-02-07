@@ -232,35 +232,56 @@ def start(input_path, output_path, map_path):
                     lonlat = list(pm.pixel_to_lonlat(uv))
                     li = [label[0], int(lonlat[0][0]), int(lonlat[0][1])]
 
+                    # 아이디 변수 (기본은 MOT랑 동일)
                     id = label[0]
+
+                    # 위치 (우선 현재 위치로)
+                    pos = int(lonlat[0][0]), int(lonlat[0][1])
+
+                    # 현재 MOT ID가 Global Mapping Table에 없다면
                     if label[0] not in globalmapping[i].keys():
+                        # 새 아이디 찾기
                         newid = find_nearest_id(recent_trackings, frames, (int(lonlat[0][0]), int(lonlat[0][1])))
+
+                        # 못 찾았으면
                         if newid == -1:
+                            # 새 Global ID 부여
                             id = curid
                             print('[{}/{}] Added New Global ID ({}, {})'.format(i, frames, label[0], id))
                             curid += 1
+                        # 찾았으면
                         else:
+                            # 기존 아이디로 매핑
                             id = newid
                             print('[{}/{}] Mapping to Exists ID ({}, {})'.format(i, frames, label[0], id))
 
+                        # Global Mapping 테이블 업데이트
                         globalmapping[i][label[0]] = id
+
+                        # 해당 ID의 마지막 트래킹 정보를 동일한 프레임에서 찾은거라면
+                        if recent_trackings[id][0] == frames:
+                            # 위치 정보는 기존 정보 활용
+                            pos = recent_trackings[id][1]
+                    # Mapping Table에 존재하면
                     else:
+                        # Global Mapping 테이블 정보 활용
                         id = globalmapping[i][id]
 
-                    recent_trackings[id] = [frames, (int(lonlat[0][0]), int(lonlat[0][1]))]
+                    # 최근 트래킹 정보 업데이트
+                    recent_trackings[id] = [frames, pos]
 
-                    if frames in globals()['BEV_Point{}'.format(idxforfile[i])]:
-                        line = globals()['BEV_Point{}'.format(idxforfile[i])].get(frames)
-                        line.append(li)
-                    else:
-                        globals()['BEV_Point{}'.format(idxforfile[i])][frames] = [li]
+                    # if frames in globals()['BEV_Point{}'.format(idxforfile[i])]:
+                    #     line = globals()['BEV_Point{}'.format(idxforfile[i])].get(frames)
+                    #     line.append(li)
+                    # else:
+                    #     globals()['BEV_Point{}'.format(idxforfile[i])][frames] = [li]
 
                     txtfilelist[i].write("{} {} {} {}"
-                                         .format(frames, id, int(lonlat[0][0]), int(lonlat[0][1]))
+                                         .format(frames, id, pos[0], pos[1])
                                          + '\n')
 
                     color = getcolor(abs(id))
-                    cv2.circle(tempmap, (int(lonlat[0][0]), int(lonlat[0][1])), 10, color, -1)
+                    cv2.circle(tempmap, pos, 10, color, -1)
 
         src = os.path.join(output_path, str(frames) + '.jpg')
         cv2.imwrite(src, tempmap)
@@ -270,7 +291,7 @@ def start(input_path, output_path, map_path):
         txtfilelist[filekey].close()
 
 
-mapping_dist_threshold = 50
+mapping_dist_threshold = 20
 
 
 def find_nearest_id(recent_trackings: dict, currentframe: int, position: tuple):
