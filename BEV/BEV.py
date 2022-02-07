@@ -247,6 +247,8 @@ def start(input_path, output_path, map_path):
                     else:
                         id = globalmapping[i][id]
 
+                    recent_trackings[id] = [id, (int(lonlat[0][0]), int(lonlat[0][1]))]
+
                     if frames in globals()['BEV_Point{}'.format(idxforfile[i])]:
                         line = globals()['BEV_Point{}'.format(idxforfile[i])].get(frames)
                         line.append(li)
@@ -277,7 +279,7 @@ def find_nearest_id(recent_trackings: dict, currentframe: int, position: tuple):
 
     for key in recent_trackings.keys():
         if currentframe == recent_trackings[key][0]:
-            dist = distance.euclidean(position, (recent_trackings[key][1], recent_trackings[key][2]))
+            dist = distance.euclidean(position, recent_trackings[key][1])
             if dist < near_distance and dist <= mapping_dist_threshold:
                 near_id = key
                 near_distance = dist
