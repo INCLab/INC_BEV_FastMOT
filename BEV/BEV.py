@@ -268,8 +268,7 @@ def start(input_path, output_path, map_path):
         txtfilelist[filekey].close()
 
 
-mapping_frame_threshold = 25
-mapping_dist_threshold = 10
+mapping_dist_threshold = 30
 
 
 def find_nearest_id(recent_trackings: dict, currentframe: int, position: tuple):
@@ -277,7 +276,7 @@ def find_nearest_id(recent_trackings: dict, currentframe: int, position: tuple):
     near_id = -1
 
     for key in recent_trackings.keys():
-        if currentframe == recent_trackings[key][0] and recent_trackings[key][0] <= mapping_frame_threshold:
+        if currentframe == recent_trackings[key][0]:
             dist = distance.euclidean(position, (recent_trackings[key][1], recent_trackings[key][2]))
             if dist < near_distance and dist <= mapping_dist_threshold:
                 near_id = key
