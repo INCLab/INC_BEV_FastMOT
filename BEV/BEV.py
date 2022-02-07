@@ -231,13 +231,17 @@ def start(input_path, output_path, map_path):
                     li = [label[0], int(lonlat[0][0]), int(lonlat[0][1])]
 
                     id = label[0]
-                    if id not in globalmapping[frames].keys():
+                    if label[0] not in globalmapping[frames].keys():
                         newid = find_nearest_id(recent_trackings, frames, (int(lonlat[0][0]), int(lonlat[0][1])))
                         if newid == -1:
                             id = curid
+                            print('[{}] Added New Global ID ({}, {})'.format(frames, label[0], id))
                             curid += 1
                         else:
                             id = newid
+                            print('[{}] Mapping to Exists ID ({}, {})'.format(frames, label[0], id))
+
+                        globalmapping[frames][label[0]] = id
                     else:
                         id = globalmapping[frames][id]
 
