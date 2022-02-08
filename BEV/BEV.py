@@ -113,7 +113,7 @@ def start(input_path, output_path, map_path):
     # Recent Tracking Infomation
     recent_trackings = {}
 
-    total_txt = open(os.path.join(original_output_path, 'bev_result', 'BEV_Total.txt', 'w'))
+    total_txt = open(os.path.join(original_output_path, 'bev_result', 'BEV_Total.txt'), 'w')
 
     # 말 그대로 프레임 몇 번쨰인지
     for frames in range(1, int(globals()['frame{}'.format(0)])):
