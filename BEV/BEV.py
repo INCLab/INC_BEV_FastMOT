@@ -104,110 +104,6 @@ def start(input_path, output_path, map_path):
     for i in list(map_point.keys()):
         globals()['BEV_Point{}'.format(idxforfile[i])] = dict()
 
-    # # 파일마다 Loop
-    # for filename in list(map_point.keys()):
-    #     # 지도 - 영상 좌표 간 Mapping
-    #     pm = PixelMapper(quad_coords_list[filename]["pixel"], quad_coords_list[filename]["lonlat"])
-    #     # 파일 기록을 위해 파일 열기
-    #     with open(os.path.join(original_output_path, 'bev_result', 'BEV_{}.txt'.format(filename)), 'w') as f:
-    #         last_list = {}
-    #         id_mapping_list = {}
-    #
-    #         # 프레임 수만큼 Loop - 'frame' Dict에는 영상 별 프레임 갯수가 들어가 있음
-    #         # 0을 쓰는 이유는 첫 영상과 프레임 수를 동일하게 맞추기 위해서로 추정
-    #         for frames in range(1, int(globals()['frame{}'.format(0)])):
-    #             # 이미 해당 프레임에 대해 저장된 이미지가 있다면
-    #             if os.path.isfile(os.path.join(output_path, str(frames) + '.jpg')):
-    #                 # 해당 이미지에 그림을 그리도록 함
-    #                 img_file = cv2.imread(os.path.join(output_path, str(frames) + '.jpg'), -1)
-    #             # 그렇지 않다면
-    #             else:
-    #                 # 지도 자체에 그림 그리기
-    #                 img_file = copy(map)
-    #
-    #             # Point에 프레임 정보가 있으면
-    #             # 'Point' Dict에는 좌표가 들어가 있음 (Key -> File Idx)
-    #             if globals()['point{}'.format(idxforfile[filename])].get(str(frames)) is not None:
-    #                 # 파일의 특정 프레임에 대한 좌표 정보들 가져오기
-    #                 # 0 : ID
-    #                 # 1 : X
-    #                 # 2 : Y
-    #                 for positiondata in globals()['point{}'.format(idxforfile[filename])].get(str(frames)):
-    #                     # X/Y 좌표를 Tuple에 담기
-    #                     uv = (positiondata[1], positiondata[2])
-    #
-    #                     # 영상 좌표를 지도 좌표로 변환
-    #                     lonlat = list(pm.pixel_to_lonlat(uv))
-    #
-    #                     # ID 저장용 변수 값 체크
-    #                     # 현재 ID가 이전 리스트에 있다면
-    #                     if positiondata[0] in id_mapping_list.keys():
-    #                         # 지금 ID를 해당 ID로
-    #                         newid = id_mapping_list[positiondata[0]]
-    #                     # 없다면
-    #                     else:
-    #                         # 현재 ID를 새 ID로
-    #                         id_mapping_list[positiondata[0]] = positiondata[0]
-    #                         newid = positiondata[0]
-    #
-    #
-    #                     # ID가 사라진 경우
-    #                     if newid not in last_list.keys():
-    #                         # 최소 거리
-    #                         sdistance = sys.maxsize
-    #                         # 최소 거리 키
-    #                         skey = positiondata[0]
-    #
-    #                         # Loop
-    #                         for key in last_list.keys():
-    #                             # 현재 Frame에서 나타나지 않았고, Threshold 내에서 사라진 ID라면
-    #                             if newid > key and frames != last_list[key][0] and frames - last_list[key][0] <= mapping_frame_threshold:
-    #                                 # 현재 사용자와 거리 비교
-    #                                 dis = distance.euclidean(last_list[key][1], (int(lonlat[0][0]), int(lonlat[0][1])))
-    #                                 # 거리 Threshold 안쪽이고, 이전 가장 짧은 거리보다 더 짧다면
-    #                                 if dis < mapping_threshold and dis < sdistance:
-    #                                     # 최소 거리 및 키 업데이트
-    #                                     sdistance = dis
-    #                                     skey = key
-    #
-    #                         # 최종 ID 저장
-    #                         if skey != newid:
-    #                             print(positiondata[0], 'changed to', skey, 'distance', sdistance)
-    #
-    #                         last_list[skey] = [frames, (int(lonlat[0][0]), int(lonlat[0][1]))]
-    #                         id_mapping_list[newid] = skey
-    #                         newid = skey
-    #                     else:
-    #                         print(newid, 'id already exists')
-    #                         # 최종 프레임, (X, Y)
-    #                         last_list[newid] = [frames, (int(lonlat[0][0]), int(lonlat[0][1]))]
-    #
-    #                     # 각 파일에 Text 작성
-    #                     f.write("{} {} {} {}\n".format(
-    #                         frames,  # 프레임 번호
-    #                         newid,  # ID
-    #                         int(lonlat[0][0]),  # 매핑 X
-    #                         int(lonlat[0][1])))  # 매핑 Y
-    #
-    #                     # 색상
-    #                     color = getcolor(abs(newid))
-    #
-    #                     # 원 찍기
-    #                     cv2.circle(img_file, (int(lonlat[0][0]), int(lonlat[0][1])), 10, color, -1)
-    #                     cv2.putText(img_file,
-    #                                 str(newid),
-    #                                 (int(lonlat[0][0]), int(lonlat[0][1])),
-    #                                 cv2.FONT_HERSHEY_SIMPLEX,
-    #                                 0.5,
-    #                                 (255, 255, 255))
-    #
-    #             # 프레임 저장
-    #             src = os.path.join(output_path, str(frames) + '.jpg')
-    #             cv2.imwrite(src, img_file)
-
-    # TXT Result
-    txtfilelist = {}
-
     # Global Mapping Table
     globalmapping = {}
 
@@ -217,27 +113,22 @@ def start(input_path, output_path, map_path):
     # Recent Tracking Infomation
     recent_trackings = {}
 
+    total_txt = open(os.path.join(original_output_path, 'bev_result', 'BEV_Total.txt', 'w'))
+
     # 말 그대로 프레임 몇 번쨰인지
     for frames in range(1, int(globals()['frame{}'.format(0)])):
+        current_frame_ids = []
+
         # 지도 이미지 복사
         tempmap = copy(map)
 
         # 파일명
         for i in list(map_point.keys()):
-            current_file_ids = []
+
             # 현재 영상에 대한 Global Mapping 정보가 없다면
             if i not in globalmapping.keys():
                 # 생성
                 globalmapping[i] = {}
-
-            # 현재 영상에 대한 TXT File 정보가 없다면
-            if i not in txtfilelist.keys():
-                # TXT File 열기
-                txtfilelist[i] = open(
-                    os.path.join(original_output_path,
-                                 'bev_result',
-                                 'BEV_{}.txt'.format(i)),
-                    'w')
 
             # 영상 - 이미지간 픽셀 매핑
             pm = PixelMapper(quad_coords_list[i]["pixel"], quad_coords_list[i]["lonlat"])
@@ -290,34 +181,32 @@ def start(input_path, output_path, map_path):
                     recent_trackings[id] = [frames, pos]
 
                     # 그릴 아이디 추가
-                    if id not in current_file_ids:
-                        current_file_ids.append(id)
+                    if id not in current_frame_ids:
+                        current_frame_ids.append(id)
 
-            # 추가된 아이디들 그리기
-            for id in current_file_ids:
-                # 파일 내용 작성
-                txtfilelist[i].write("{} {} {} {}"
-                    .format(frames, id, recent_trackings[id][1][0], recent_trackings[id][1][1])
-                    + '\n')
+        # 추가된 아이디들 그리기
+        for id in current_frame_ids:
+            # 파일 내용 작성
+            total_txt.write("{} {} {} {}"
+                            .format(frames, id, recent_trackings[id][1][0], recent_trackings[id][1][1])
+                            + '\n')
 
-                # 이미지에 포인트 찍기
-                color = getcolor(abs(id))
-                cv2.circle(tempmap, recent_trackings[id][1], 10, color, -1)
-                cv2.putText(tempmap,
-                            str(id),
-                            recent_trackings[id][1],
-                            cv2.FONT_HERSHEY_SIMPLEX,
-                            0.5,
-                            (255, 255, 255))
-
+            # 이미지에 포인트 찍기
+            color = getcolor(abs(id))
+            cv2.circle(tempmap, recent_trackings[id][1], 10, color, -1)
+            cv2.putText(tempmap,
+                        str(id),
+                        recent_trackings[id][1],
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.5,
+                        (255, 255, 255))
 
         # 이미지 저장
         src = os.path.join(output_path, str(frames) + '.jpg')
         cv2.imwrite(src, tempmap)
 
     # 파일 닫기
-    for filekey in txtfilelist.keys():
-        txtfilelist[filekey].close()
+    total_txt.close()
 
 
 # 매핑 거리 Threshold
