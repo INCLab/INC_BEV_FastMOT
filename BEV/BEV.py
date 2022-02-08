@@ -341,7 +341,7 @@ def find_nearest_id(recent_trackings: dict, currentframe: int, position: tuple):
 
 # 두 점 사이의 중간 점 찾기
 def get_midpoint(p1, p2):
-    return ((p1[0] + p2[0]) / 2), ((p1[1] + p2[1]) / 2)
+    return int((p1[0] + p2[0]) / 2), int((p1[1] + p2[1]) / 2)
 
 
 # ## HeatMap ##
