@@ -1,3 +1,4 @@
+import math
 import sys
 from copy import copy
 
@@ -204,33 +205,49 @@ def start(input_path, output_path, map_path):
     #             src = os.path.join(output_path, str(frames) + '.jpg')
     #             cv2.imwrite(src, img_file)
 
+    # TXT Result
     txtfilelist = {}
+
+    # Global Mapping Table
     globalmapping = {}
+
+    # Last Global ID
     curid = 1000
+
+    # Recent Tracking Infomation
     recent_trackings = {}
 
     # 말 그대로 프레임 몇 번쨰인지
     for frames in range(1, int(globals()['frame{}'.format(0)])):
+        # 지도 이미지 복사
         tempmap = copy(map)
+
         # 파일명
         for i in list(map_point.keys()):
+            # 현재 영상에 대한 Global Mapping 정보가 없다면
             if i not in globalmapping.keys():
+                # 생성
                 globalmapping[i] = {}
 
+            # 현재 영상에 대한 TXT File 정보가 없다면
             if i not in txtfilelist.keys():
+                # TXT File 열기
                 txtfilelist[i] = open(
                     os.path.join(original_output_path,
                                  'bev_result',
                                  'BEV_{}.txt'.format(i)),
                     'w')
 
+            # 영상 - 이미지간 픽셀 매핑
             pm = PixelMapper(quad_coords_list[i]["pixel"], quad_coords_list[i]["lonlat"])
+
+            # 지금 영상에 지금 프레임에 대한 포인트 정보가 존재한다면
             if globals()['point{}'.format(idxforfile[i])].get(str(frames)) is not None:
-                # ID랑 X/Y
+                # Point 정보 가져오기
+                # ID, X, Y
                 for label in globals()['point{}'.format(idxforfile[i])].get(str(frames)):
                     uv = (label[1], label[2])
                     lonlat = list(pm.pixel_to_lonlat(uv))
-                    #li = [label[0], int(lonlat[0][0]), int(lonlat[0][1])]
 
                     # 아이디 변수 (기본은 MOT랑 동일)
                     id = label[0]
@@ -265,22 +282,18 @@ def start(input_path, output_path, map_path):
 
                     # 해당 ID의 마지막 트래킹 정보를 동일한 프레임에서 찾은거라면
                     if id in recent_trackings.keys() and recent_trackings[id][0] == frames:
-                        # 위치 정보는 기존 정보 활용
-                        pos = recent_trackings[id][1]
+                        # 중간 점을 찾아서 해당 위치를 새로운 좌표로 설정
+                        pos = get_midpoint(recent_trackings[id][1], pos)
 
                     # 최근 트래킹 정보 업데이트
                     recent_trackings[id] = [frames, pos]
 
-                    # if frames in globals()['BEV_Point{}'.format(idxforfile[i])]:
-                    #     line = globals()['BEV_Point{}'.format(idxforfile[i])].get(frames)
-                    #     line.append(li)
-                    # else:
-                    #     globals()['BEV_Point{}'.format(idxforfile[i])][frames] = [li]
-
+                    # 파일 내용 작성
                     txtfilelist[i].write("{} {} {} {}"
                                          .format(frames, id, pos[0], pos[1])
                                          + '\n')
 
+                    # 이미지에 포인트 찍기
                     color = getcolor(abs(id))
                     cv2.circle(tempmap, pos, 10, color, -1)
                     cv2.putText(tempmap,
@@ -290,6 +303,7 @@ def start(input_path, output_path, map_path):
                                 0.5,
                                 (255, 255, 255))
 
+        # 이미지 저장
         src = os.path.join(output_path, str(frames) + '.jpg')
         cv2.imwrite(src, tempmap)
 
@@ -298,21 +312,36 @@ def start(input_path, output_path, map_path):
         txtfilelist[filekey].close()
 
 
-mapping_dist_threshold = 35
+# 매핑 거리 Threshold
+mapping_dist_threshold = 50
 
 
+# 가장 가까운 아이디 찾기
 def find_nearest_id(recent_trackings: dict, currentframe: int, position: tuple):
+    # 가장 가까운 거리
     near_distance = sys.maxsize
+
+    # 가장 가까운 거리를 가지는 ID
     near_id = -1
 
+    # 모든 최근 추적 정보에 대해 Loop
     for key in recent_trackings.keys():
+        # 해당 추적 정보가 현재 프레임 내에 있는 경우
         if currentframe == recent_trackings[key][0]:
+            # 거리 측정
             dist = distance.euclidean(position, recent_trackings[key][1])
-            if dist < near_distance and dist <= mapping_dist_threshold:
+            # Threshold 안쪽이고, 마지막으로 가장 가까운 거리보다 더 가깝다면
+            if dist <= mapping_dist_threshold and dist < near_distance:
+                # 가까운 거리 정보와 ID 변경
                 near_id = key
                 near_distance = dist
 
     return near_id
+
+
+# 두 점 사이의 중간 점 찾기
+def get_midpoint(p1, p2):
+    return ((p1[0] + p2[0]) / 2), ((p1[1] + p2[1]) / 2)
 
 
 # ## HeatMap ##
