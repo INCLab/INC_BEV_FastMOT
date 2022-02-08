@@ -224,6 +224,7 @@ def start(input_path, output_path, map_path):
 
         # 파일명
         for i in list(map_point.keys()):
+            current_file_ids = []
             # 현재 영상에 대한 Global Mapping 정보가 없다면
             if i not in globalmapping.keys():
                 # 생성
@@ -288,20 +289,27 @@ def start(input_path, output_path, map_path):
                     # 최근 트래킹 정보 업데이트
                     recent_trackings[id] = [frames, pos]
 
-                    # 파일 내용 작성
-                    txtfilelist[i].write("{} {} {} {}"
-                                         .format(frames, id, pos[0], pos[1])
-                                         + '\n')
+                    # 그릴 아이디 추가
+                    if id not in current_file_ids:
+                        current_file_ids.append(id)
 
-                    # 이미지에 포인트 찍기
-                    color = getcolor(abs(id))
-                    cv2.circle(tempmap, pos, 10, color, -1)
-                    cv2.putText(tempmap,
-                                str(id),
-                                pos,
-                                cv2.FONT_HERSHEY_SIMPLEX,
-                                0.5,
-                                (255, 255, 255))
+            # 추가된 아이디들 그리기
+            for id in current_file_ids:
+                # 파일 내용 작성
+                txtfilelist[i].write("{} {} {} {}"
+                    .format(frames, id, recent_trackings[id][1][0], recent_trackings[id][1][1])
+                    + '\n')
+
+                # 이미지에 포인트 찍기
+                color = getcolor(abs(id))
+                cv2.circle(tempmap, recent_trackings[id][1], 10, color, -1)
+                cv2.putText(tempmap,
+                            str(id),
+                            recent_trackings[id][1],
+                            cv2.FONT_HERSHEY_SIMPLEX,
+                            0.5,
+                            (255, 255, 255))
+
 
         # 이미지 저장
         src = os.path.join(output_path, str(frames) + '.jpg')
