@@ -175,6 +175,8 @@ def start(input_path, output_path, map_path):
                                 if len(sameid_filter) > 0:
                                     # 현재 ID에 대한 매핑 ID로 본인 기록
                                     mapping_table[current_id] = current_id
+
+                                    print('[{}] {} nearest {}, but same detected, ignore.'.format(frames, current_id, nearest_id))
                                 else:
                                     # 현재 ID에 대한 매핑 ID로 발견한 ID 기록
                                     mapping_table[current_id] = nearest_id
@@ -201,7 +203,7 @@ def start(input_path, output_path, map_path):
                         cv2.circle(img_file, (int(lonlat[0][0]), int(lonlat[0][1])), 10, color, -1)
                         cv2.putText(img_file,
                                     str(current_id),
-                                    (int(lonlat[0][0]), int(lonlat[0][1])),
+                                    (int(lonlat[0][0])-5, int(lonlat[0][1])),
                                     cv2.FONT_HERSHEY_SIMPLEX,
                                     0.5,
                                     (255, 255, 255))
@@ -212,7 +214,7 @@ def start(input_path, output_path, map_path):
 
 
 # 매핑 프레임 Threshold
-mapping_frame_threshold = 50
+mapping_frame_threshold = 100
 
 # 매핑 거리 Threshold
 mapping_dist_threshold = 100
