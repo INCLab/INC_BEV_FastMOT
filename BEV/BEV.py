@@ -134,8 +134,7 @@ def start(input_path, output_path, map_path):
                 if globals()['point{}'.format(idxforfile[filename])].get(str(frames)) is not None:
                     # 프레임 포인트 정보들 가져오고, 순서 뒤집기
                     # 뒤집는 이유 -> 맨 뒤에 있는 포인트가 최근 생성된 포인트들이기 때문
-                    pointData = reversed(globals()['point{}'.format(idxforfile[filename])].get(str(frames)))
-                    print(pointData)
+                    pointData = list(reversed(globals()['point{}'.format(idxforfile[filename])].get(str(frames))))
 
                     # 파일의 특정 프레임에 대한 좌표 정보들 가져오기
                     # 0 : ID
@@ -163,19 +162,27 @@ def start(input_path, output_path, map_path):
                             nearest_id = find_nearest_id(recent_trackings, frames,
                                                          (int(lonlat[0][0]), int(lonlat[0][1])))
 
-                            # 발견하지 못했거나, 포인트 정보에 해당 아이디가 이미 존재한다면
-                            if nearest_id == -1 or nearest_id not in pointData.keys():
+                            # 발견하지 못했다면
+                            if nearest_id == -1:
                                 # 현재 ID에 대한 매핑 ID로 본인 기록
                                 mapping_table[current_id] = current_id
                             # 발견했다면
                             else:
-                                # 현재 ID에 대한 매핑 ID로 발견한 ID 기록
-                                mapping_table[current_id] = nearest_id
+                                # Point Data에서 Nearest ID와 동일한 아이디 찾기
+                                sameid_filter = list(filter(lambda x: x[0] == nearest_id, pointData))
 
-                                print('[{}] {} mapping to {}'.format(frames, current_id, nearest_id))
+                                # 같은 아이디가 발견되었다면
+                                if len(sameid_filter) > 0:
+                                    # 현재 ID에 대한 매핑 ID로 본인 기록
+                                    mapping_table[current_id] = current_id
+                                else:
+                                    # 현재 ID에 대한 매핑 ID로 발견한 ID 기록
+                                    mapping_table[current_id] = nearest_id
 
-                                # 현재 ID 업데이트
-                                current_id = nearest_id
+                                    print('[{}] {} mapping to {}'.format(frames, current_id, nearest_id))
+
+                                    # 현재 ID 업데이트
+                                    current_id = nearest_id
 
                         # 최근 추적 정보 저장
                         recent_trackings[current_id] = [frames, (int(lonlat[0][0]), int(lonlat[0][1]))]
