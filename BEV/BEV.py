@@ -104,113 +104,106 @@ def start(input_path, output_path, map_path):
     for i in list(map_point.keys()):
         globals()['BEV_Point{}'.format(idxforfile[i])] = dict()
 
-    # Global Mapping Table
-    globalmapping = {}
+    # 파일마다 Loop
+    for filename in list(map_point.keys()):
+        print('[BEV] Start {}..'.format(filename))
+        # ID 간 매핑 테이블
+        mapping_table = {}
 
-    # Last Global ID
-    curid = 1000
+        # 최근 트래킹 정보 테이블
+        recent_trackings = {}
 
-    # Recent Tracking Infomation
-    recent_trackings = {}
+        # 지도 - 영상 좌표 간 Mapping
+        pm = PixelMapper(quad_coords_list[filename]["pixel"], quad_coords_list[filename]["lonlat"])
+        # 파일 기록을 위해 파일 열기
+        with open(os.path.join(original_output_path, 'bev_result', 'BEV_{}.txt'.format(filename)), 'w') as f:
+            # 프레임 수만큼 Loop - 'frame' Dict에는 영상 별 프레임 갯수가 들어가 있음
+            # 0을 쓰는 이유는 첫 영상과 프레임 수를 동일하게 맞추기 위해서로 추정
+            for frames in range(1, int(globals()['frame{}'.format(0)])):
+                # 이미 해당 프레임에 대해 저장된 이미지가 있다면
+                if os.path.isfile(os.path.join(output_path, str(frames) + '.jpg')):
+                    # 해당 이미지에 그림을 그리도록 함
+                    img_file = cv2.imread(os.path.join(output_path, str(frames) + '.jpg'), -1)
+                # 그렇지 않다면
+                else:
+                    # 지도 자체에 그림 그리기
+                    img_file = copy(map)
 
-    total_txt = open(os.path.join(original_output_path, 'bev_result', 'BEV_Total.txt'), 'w')
+                # Point에 프레임 정보가 있으면
+                # 'Point' Dict에는 좌표가 들어가 있음 (Key -> File Idx)
+                if globals()['point{}'.format(idxforfile[filename])].get(str(frames)) is not None:
+                    # 파일의 특정 프레임에 대한 좌표 정보들 가져오기
+                    # 0 : ID
+                    # 1 : X
+                    # 2 : Y
+                    for positiondata in reversed(globals()['point{}'.format(idxforfile[filename])].get(str(frames))):
+                        # X/Y 좌표를 Tuple에 담기
+                        uv = (positiondata[1], positiondata[2])
 
-    # 말 그대로 프레임 몇 번쨰인지
-    for frames in range(1, int(globals()['frame{}'.format(0)])):
-        current_frame_ids = []
+                        # 영상 좌표를 지도 좌표로 변환
+                        lonlat = list(pm.pixel_to_lonlat(uv))
 
-        # 지도 이미지 복사
-        tempmap = copy(map)
+                        # 현재 아이디를 담을 변수
+                        current_id = positiondata[0]
 
-        # 파일명
-        for i in list(map_point.keys()):
-
-            # 현재 영상에 대한 Global Mapping 정보가 없다면
-            if i not in globalmapping.keys():
-                # 생성
-                globalmapping[i] = {}
-
-            # 영상 - 이미지간 픽셀 매핑
-            pm = PixelMapper(quad_coords_list[i]["pixel"], quad_coords_list[i]["lonlat"])
-
-            # 지금 영상에 지금 프레임에 대한 포인트 정보가 존재한다면
-            if globals()['point{}'.format(idxforfile[i])].get(str(frames)) is not None:
-                # Point 정보 가져오기
-                # ID, X, Y
-                for label in globals()['point{}'.format(idxforfile[i])].get(str(frames)):
-                    uv = (label[1], label[2])
-                    lonlat = list(pm.pixel_to_lonlat(uv))
-
-                    # 아이디 변수 (기본은 MOT랑 동일)
-                    id = label[0]
-
-                    # 위치 (우선 현재 위치로)
-                    pos = int(lonlat[0][0]), int(lonlat[0][1])
-
-                    # 현재 MOT ID가 Global Mapping Table에 없다면
-                    if label[0] not in globalmapping[i].keys():
-                        # 새 아이디 찾기
-                        newid = find_nearest_id(recent_trackings, frames, (int(lonlat[0][0]), int(lonlat[0][1])))
-
-                        # 못 찾았으면
-                        if newid == -1:
-                            # 새 Global ID 부여
-                            id = curid
-                            print('[{}/{}] Added New Global ID ({}, {})'.format(i, frames, label[0], id))
-                            curid += 1
-                        # 찾았으면
+                        # 현재 ID가 매핑 테이블에 이미 존재한다면
+                        if current_id in mapping_table.keys():
+                            # 매핑 테이블 ID와 현재 ID가 다르다면
+                            if mapping_table[current_id] != current_id:
+                                # ID를 매핑 테이블 ID 정보로 사용
+                                current_id = mapping_table[current_id]
+                        # 존재하지 않으면 (새로운 ID)
                         else:
-                            # 기존 아이디로 매핑
-                            id = newid
-                            print('[{}/{}] Mapping to Exists ID ({}, {})'.format(i, frames, label[0], id))
+                            # 이전 Tracking 정보에서 가장 가까운 ID 찾기
+                            nearest_id = find_nearest_id(recent_trackings, frames,
+                                                         (int(lonlat[0][0]), int(lonlat[0][1])))
 
-                        # Global Mapping 테이블 업데이트
-                        globalmapping[i][label[0]] = id
+                            # 발견하지 못했다면
+                            if nearest_id == -1:
+                                # 현재 ID에 대한 매핑 ID로 본인 기록
+                                mapping_table[current_id] = current_id
+                            # 발견했다면
+                            else:
+                                # 현재 ID에 대한 매핑 ID로 발견한 ID 기록
+                                mapping_table[current_id] = nearest_id
 
-                    # Mapping Table에 존재하면
-                    else:
-                        # Global Mapping 테이블 정보 활용
-                        id = globalmapping[i][id]
+                                print('[{}] {} mapping to {}'.format(frames, current_id, nearest_id))
 
-                    # 해당 ID의 마지막 트래킹 정보를 동일한 프레임에서 찾은거라면
-                    if id in recent_trackings.keys() and recent_trackings[id][0] == frames:
-                        # 중간 점을 찾아서 해당 위치를 새로운 좌표로 설정
-                        pos = get_midpoint(recent_trackings[id][1], pos)
+                                # 현재 ID 업데이트
+                                current_id = nearest_id
 
-                    # 최근 트래킹 정보 업데이트
-                    recent_trackings[id] = [frames, pos]
+                        # 최근 추적 정보 저장
+                        recent_trackings[current_id] = [frames, (int(lonlat[0][0]), int(lonlat[0][1]))]
 
-                    # 그릴 아이디 추가
-                    if id not in current_frame_ids:
-                        current_frame_ids.append(id)
+                        # 각 파일에 Text 작성
+                        f.write("{} {} {} {}\n".format(
+                            frames,  # 프레임 번호
+                            current_id,  # ID
+                            int(lonlat[0][0]),  # 매핑 X
+                            int(lonlat[0][1])))  # 매핑 Y
 
-        # 추가된 아이디들 그리기
-        for id in current_frame_ids:
-            # 파일 내용 작성
-            total_txt.write("{} {} {} {}"
-                            .format(frames, id, recent_trackings[id][1][0], recent_trackings[id][1][1])
-                            + '\n')
+                        # 색상
+                        color = getcolor(abs(current_id))
 
-            # 이미지에 포인트 찍기
-            color = getcolor(abs(id))
-            cv2.circle(tempmap, recent_trackings[id][1], 10, color, -1)
-            cv2.putText(tempmap,
-                        str(id),
-                        recent_trackings[id][1],
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        0.5,
-                        (255, 255, 255))
+                        # 원 찍기
+                        cv2.circle(img_file, (int(lonlat[0][0]), int(lonlat[0][1])), 10, color, -1)
+                        cv2.putText(img_file,
+                                    str(current_id),
+                                    (int(lonlat[0][0]), int(lonlat[0][1])),
+                                    cv2.FONT_HERSHEY_SIMPLEX,
+                                    0.5,
+                                    (255, 255, 255))
 
-        # 이미지 저장
-        src = os.path.join(output_path, str(frames) + '.jpg')
-        cv2.imwrite(src, tempmap)
+                # 프레임 저장
+                src = os.path.join(output_path, str(frames) + '.jpg')
+                cv2.imwrite(src, img_file)
 
-    # 파일 닫기
-    total_txt.close()
 
+# 매핑 프레임 Threshold
+mapping_frame_threshold = 250
 
 # 매핑 거리 Threshold
-mapping_dist_threshold = 50
+mapping_dist_threshold = 100
 
 
 # 가장 가까운 아이디 찾기
@@ -223,11 +216,16 @@ def find_nearest_id(recent_trackings: dict, currentframe: int, position: tuple):
 
     # 모든 최근 추적 정보에 대해 Loop
     for key in recent_trackings.keys():
-        # 해당 추적 정보가 현재 프레임 내에 있는 경우
-        if currentframe == recent_trackings[key][0]:
+        # 현재 프레임 내가 아니고, 지도를 벗어나지 않으면서 Frame Threshold 내에 있던 추적 결과인 경우
+        if currentframe != recent_trackings[key][0] and \
+                (recent_trackings[key][1][0] >= 0 and recent_trackings[key][1][1] >= 0) and \
+                (currentframe - recent_trackings[key][0]) <= mapping_frame_threshold:
+
             # 거리 측정
             dist = distance.euclidean(position, recent_trackings[key][1])
-            # Threshold 안쪽이고, 마지막으로 가장 가까운 거리보다 더 가깝다면
+            print(dist)
+
+            # 거리 Threshold 안쪽이고, 마지막으로 가장 가까운 거리보다 더 가깝다면
             if dist <= mapping_dist_threshold and dist < near_distance:
                 # 가까운 거리 정보와 ID 변경
                 near_id = key
