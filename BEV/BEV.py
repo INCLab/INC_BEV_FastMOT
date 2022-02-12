@@ -212,11 +212,10 @@ def start(input_path, output_path, map_path):
 
 
 # 매핑 프레임 Threshold
-mapping_frame_threshold = 250
+mapping_frame_threshold = 50
 
 # 매핑 거리 Threshold
 mapping_dist_threshold = 100
-
 
 # 가장 가까운 아이디 찾기
 def find_nearest_id(recent_trackings: dict, currentframe: int, position: tuple):
