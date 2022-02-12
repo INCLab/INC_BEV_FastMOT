@@ -132,11 +132,16 @@ def start(input_path, output_path, map_path):
                 # Point에 프레임 정보가 있으면
                 # 'Point' Dict에는 좌표가 들어가 있음 (Key -> File Idx)
                 if globals()['point{}'.format(idxforfile[filename])].get(str(frames)) is not None:
+                    # 프레임 포인트 정보들 가져오고, 순서 뒤집기
+                    # 뒤집는 이유 -> 맨 뒤에 있는 포인트가 최근 생성된 포인트들이기 때문
+                    pointData = dict(reversed(globals()['point{}'.format(idxforfile[filename])].get(str(frames))))
+                    print(pointData)
+
                     # 파일의 특정 프레임에 대한 좌표 정보들 가져오기
                     # 0 : ID
                     # 1 : X
                     # 2 : Y
-                    for positiondata in reversed(globals()['point{}'.format(idxforfile[filename])].get(str(frames))):
+                    for positiondata in pointData:
                         # X/Y 좌표를 Tuple에 담기
                         uv = (positiondata[1], positiondata[2])
 
@@ -158,8 +163,8 @@ def start(input_path, output_path, map_path):
                             nearest_id = find_nearest_id(recent_trackings, frames,
                                                          (int(lonlat[0][0]), int(lonlat[0][1])))
 
-                            # 발견하지 못했다면
-                            if nearest_id == -1:
+                            # 발견하지 못했거나, 포인트 정보에 해당 아이디가 이미 존재한다면
+                            if nearest_id == -1 or nearest_id not in pointData.keys():
                                 # 현재 ID에 대한 매핑 ID로 본인 기록
                                 mapping_table[current_id] = current_id
                             # 발견했다면
@@ -223,7 +228,6 @@ def find_nearest_id(recent_trackings: dict, currentframe: int, position: tuple):
 
             # 거리 측정
             dist = distance.euclidean(position, recent_trackings[key][1])
-            print(dist)
 
             # 거리 Threshold 안쪽이고, 마지막으로 가장 가까운 거리보다 더 가깝다면
             if dist <= mapping_dist_threshold and dist < near_distance:
