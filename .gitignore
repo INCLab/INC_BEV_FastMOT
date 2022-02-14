@@ -8,3 +8,4 @@ fastmot/models/*.pb
 fastmot/models/*.trt
 *.mp4
 temp/
+.DS_Store
