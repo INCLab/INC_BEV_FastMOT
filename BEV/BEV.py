@@ -106,7 +106,7 @@ def start(input_path, output_path, map_path):
 
     # 파일마다 Loop
     for filename in list(map_point.keys()):
-        print('[BEV] Start {}..'.format(filename))
+        print('\n[BEV] Start {}..'.format(filename))
         # ID 간 매핑 테이블
         mapping_table = {}
 
@@ -159,13 +159,16 @@ def start(input_path, output_path, map_path):
                         # 존재하지 않으면 (새로운 ID)
                         else:
                             # 이전 Tracking 정보에서 가장 가까운 ID 찾기
-                            nearest_id, dist = find_nearest_id(recent_trackings, frames,
-                                                         (int(lonlat[0][0]), int(lonlat[0][1])))
+                            nearest_id, dist = find_nearest_id(pointData, recent_trackings, frames,
+                                                               (int(lonlat[0][0]), int(lonlat[0][1])))
 
                             # 발견하지 못했다면
                             if nearest_id == -1:
                                 # 현재 ID에 대한 매핑 ID로 본인 기록
                                 mapping_table[current_id] = current_id
+
+                                # 가장 최근에 저장된 추적 정보 제거
+
                             # 발견했다면
                             else:
                                 # Point Data에서 Nearest ID와 동일한 아이디 찾기(같은 frame)
@@ -188,6 +191,7 @@ def start(input_path, output_path, map_path):
 
                         # 최근 추적 정보 저장
                         recent_trackings[current_id] = [frames, (int(lonlat[0][0]), int(lonlat[0][1]))]
+                        # 마지막으로 저장된 추적정보 아이디 저장
 
                         # 각 파일에 Text 작성
                         f.write("{} {} {} {}\n".format(
@@ -220,7 +224,7 @@ mapping_frame_threshold = 300
 mapping_dist_threshold = 145
 
 # 가장 가까운 아이디 찾기
-def find_nearest_id(recent_trackings: dict, currentframe: int, position: tuple):
+def find_nearest_id(pointData: tuple, recent_trackings: dict, currentframe: int, position: tuple):
     # 가장 가까운 거리
     near_distance = sys.maxsize
 
@@ -229,6 +233,7 @@ def find_nearest_id(recent_trackings: dict, currentframe: int, position: tuple):
 
     # 모든 최근 추적 정보에 대해 Loop
     for key in recent_trackings.keys():
+
         # 현재 프레임 내가 아니고, 지도를 벗어나지 않으면서 Frame Threshold 내에 있던 추적 결과인 경우
         if currentframe != recent_trackings[key][0] and \
                 (recent_trackings[key][1][0] >= 0 and recent_trackings[key][1][1] >= 0) and \
@@ -242,6 +247,13 @@ def find_nearest_id(recent_trackings: dict, currentframe: int, position: tuple):
                 # 가까운 거리 정보와 ID 변경
                 near_id = key
                 near_distance = dist
+            else:
+                # 거리가 threshold를 넘어가고,
+                # 현재 프레임에서 최근 추적 정보에 담긴 아이디가 없는 경우
+                # 그 아이디 정보는 최근 추적 정보에서 지우고 다른 아이디와 매핑되지 않도록 하는것이 좋다
+                # (보수적으로 매핑하기 위해)
+                # Todo: 이 방법이 적합한지 확인과정 필요
+                if list(filter(lambda x: x[0] == key, pointData))
 
     return near_id, near_distance
 
@@ -403,4 +415,5 @@ def save_dict(file):
     ###########################################################################
 
 if __name__ == "__main__":
+    print(distance.euclidean([1274, 773], [1146, 940]))
     start('../input/edu_test1/', '../output/edu_test1/', '../input/edu_map.png')
