@@ -23,7 +23,7 @@ def start(input_path, output_path, map_path):
     heatmap_path = os.path.join(output_path, 'heatmap.png')
     original_output_path = output_path
     output_path = os.path.join(output_path, 'map_frame')
-    temp_path = "./temp"
+    temp_path = "../temp"
 
     if not os.path.exists(output_path):
         os.makedirs(output_path)
@@ -89,7 +89,7 @@ def start(input_path, output_path, map_path):
     for inputfile in list(map_point.keys()):
         ##############변경해야하는 부분#######################
         # 좌표값을 받아야함(하나씩)
-        file = open(original_output_path / (inputfile + '.txt'), 'r')
+        file = open(original_output_path +'/' + (inputfile + '.txt'), 'r')
         idxforfile[inputfile] = idx
         globals()['frame{}'.format(idx)], globals()['point{}'.format(idx)] = save_dict(file)
         idx += 1
@@ -159,7 +159,7 @@ def start(input_path, output_path, map_path):
                         # 존재하지 않으면 (새로운 ID)
                         else:
                             # 이전 Tracking 정보에서 가장 가까운 ID 찾기
-                            nearest_id = find_nearest_id(recent_trackings, frames,
+                            nearest_id, dist = find_nearest_id(recent_trackings, frames,
                                                          (int(lonlat[0][0]), int(lonlat[0][1])))
 
                             # 발견하지 못했다면
@@ -168,7 +168,7 @@ def start(input_path, output_path, map_path):
                                 mapping_table[current_id] = current_id
                             # 발견했다면
                             else:
-                                # Point Data에서 Nearest ID와 동일한 아이디 찾기
+                                # Point Data에서 Nearest ID와 동일한 아이디 찾기(같은 frame)
                                 sameid_filter = list(filter(lambda x: x[0] == nearest_id, pointData))
 
                                 # 같은 아이디가 발견되었다면
@@ -181,7 +181,7 @@ def start(input_path, output_path, map_path):
                                     # 현재 ID에 대한 매핑 ID로 발견한 ID 기록
                                     mapping_table[current_id] = nearest_id
 
-                                    print('[{}] {} mapping to {}'.format(frames, current_id, nearest_id))
+                                    print('[{}] {} mapping to {} dist: {}'.format(frames, current_id, nearest_id, dist))
 
                                     # 현재 ID 업데이트
                                     current_id = nearest_id
@@ -214,10 +214,10 @@ def start(input_path, output_path, map_path):
 
 
 # 매핑 프레임 Threshold
-mapping_frame_threshold = 100
+mapping_frame_threshold = 300
 
 # 매핑 거리 Threshold
-mapping_dist_threshold = 100
+mapping_dist_threshold = 145
 
 # 가장 가까운 아이디 찾기
 def find_nearest_id(recent_trackings: dict, currentframe: int, position: tuple):
@@ -243,7 +243,7 @@ def find_nearest_id(recent_trackings: dict, currentframe: int, position: tuple):
                 near_id = key
                 near_distance = dist
 
-    return near_id
+    return near_id, near_distance
 
 
 # 두 점 사이의 중간 점 찾기
@@ -401,3 +401,6 @@ def save_dict(file):
 
     return frame, point
     ###########################################################################
+
+if __name__ == "__main__":
+    start('../input/edu_test1/', '../output/edu_test1/', '../input/edu_map.png')
