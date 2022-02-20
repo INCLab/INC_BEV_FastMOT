@@ -239,10 +239,6 @@ def start(input_path, output_path, map_path):
                 src = os.path.join(output_path, str(frames) + '.jpg')
                 cv2.imwrite(src, img_file)
 
-    plt.title("Distance")
-    plt.barh(graph_dict.values(), graph_dict.keys())
-    plt.savefig('distance.png')
-
 
 # 매핑 프레임 Threshold
 mapping_frame_threshold = 100
