@@ -212,7 +212,7 @@ def start(input_path, output_path, map_path):
                                        -1)
                         elif drawfunc[filename] == 1:
                             cv2.fillPoly(img_file,
-                                         get_triangle_points((int(lonlat[0][0]), int(lonlat[0][1]))),
+                                         [get_triangle_points((int(lonlat[0][0]), int(lonlat[0][1])))],
                                          color,
                                          cv2.LINE_AA)
                         elif drawfunc[filename] == 2:
@@ -224,7 +224,7 @@ def start(input_path, output_path, map_path):
                                           -1)
                         elif drawfunc[filename] == 3:
                             cv2.fillPoly(img_file,
-                                         get_reverse_triangle_points((int(lonlat[0][0]), int(lonlat[0][1]))),
+                                         [get_reverse_triangle_points((int(lonlat[0][0]), int(lonlat[0][1])))],
                                          color,
                                          cv2.LINE_AA)
 
