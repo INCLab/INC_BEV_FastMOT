@@ -205,17 +205,21 @@ def start(input_path, output_path, map_path):
 
                         if drawfunc[filename] == 0:
                             # 원 찍기
-                            cv2.circle(img_file, (int(lonlat[0][0]), int(lonlat[0][1])), 10, color, -1)
+                            cv2.circle(img_file,
+                                       (int(lonlat[0][0]), int(lonlat[0][1])),
+                                       10,
+                                       color,
+                                       -1)
                         elif drawfunc[filename] == 1:
                             cv2.fillPoly(img_file,
                                          get_triangle_points((int(lonlat[0][0]), int(lonlat[0][1]))),
                                          color,
                                          cv2.LINE_AA)
                         elif drawfunc[filename] == 2:
-                            points = get_rectangle_points((int(lonlat[0][0]), int(lonlat[0][1])))
+                            draw_points = get_rectangle_points((int(lonlat[0][0]), int(lonlat[0][1])))
                             cv2.rectangle(img_file,
-                                          points[0],
-                                          points[1],
+                                          draw_points[0],
+                                          draw_points[1],
                                           color,
                                           -1)
                         elif drawfunc[filename] == 3:
@@ -285,13 +289,20 @@ def get_midpoint(p1, p2):
 
 
 def get_triangle_points(midpoint):
-    return [(midpoint[0], midpoint[1] + 10), (midpoint[0] - 10, midpoint[1] - 10), (midpoint[0] + 10, midpoint[1] - 10)]
+    return np.array([[midpoint[0], midpoint[1] + 10],
+                     [midpoint[0] - 10, midpoint[1] - 10],
+                     [midpoint[0] + 10, midpoint[1] - 10]])
+
 
 def get_rectangle_points(midpoint):
-    return (midpoint[0] - 10, midpoint[1] + 10), (midpoint[0] + 10, midpoint[1] - 10)
+    return [(midpoint[0] - 10, midpoint[1] + 10), (midpoint[0] + 10, midpoint[1] - 10)]
+
 
 def get_reverse_triangle_points(midpoint):
-    return [(midpoint[0], midpoint[1] - 10), (midpoint[0] - 10, midpoint[1] + 10), (midpoint[0] + 10, midpoint[1] + 10)]
+    return np.array([[midpoint[0], midpoint[1] - 10],
+                     [midpoint[0] - 10, midpoint[1] + 10],
+                     [midpoint[0] + 10, midpoint[1] + 10]])
+
 
 # ## HeatMap ##
 #
