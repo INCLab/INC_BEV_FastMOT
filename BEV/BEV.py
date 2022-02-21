@@ -5,6 +5,8 @@ from copy import copy
 import cv2
 import os
 import shutil
+
+import numpy
 import numpy as np
 import mimetypes
 
@@ -102,8 +104,8 @@ def start(input_path, output_path, map_path):
     if not os.path.isdir(os.path.join(original_output_path, 'bev_result')):
         os.mkdir(os.path.join(original_output_path, 'bev_result'))
 
-    # 지도 읽기
-    map = cv2.imread(str(map_path), -1)
+    # 지도 읽어와서 Grid 그리기
+    map = draw_grid(cv2.imread(str(map_path), -1))
     for i in list(map_point.keys()):
         globals()['BEV_Point{}'.format(idxforfile[i])] = dict()
 
@@ -299,6 +301,36 @@ def get_reverse_triangle_points(midpoint):
                      [midpoint[0] - 10, midpoint[1] + 10],
                      [midpoint[0] + 10, midpoint[1] + 10]])
 
+
+def draw_grid(image: numpy.ndarray, row_lines=1, column_lines=1):
+    """ Draw Grid in Image
+
+    :param image: Image (numpy.ndarray)
+    :param row_lines Number of Row Lines
+    :param column_lines Number of Column Lines
+    :return: Image with Grid
+    """
+    height, width, channel = image.shape
+
+    last_height = 0
+    for row in range(row_lines):
+        cv2.line(image,
+                 (0, last_height + int(height / (row_lines + 1))),
+                 (width, last_height + int(height / (row_lines + 1))),
+                 (0, 255, 0),
+                 3)
+        last_height = int(height / (row_lines + 1))
+
+    last_width = 0
+    for row in range(column_lines):
+        cv2.line(image,
+                 (last_width + int(width / (column_lines + 1)), 0),
+                 (last_width + int(width / (column_lines + 1)), height),
+                 (0, 255, 0),
+                 3)
+        last_width = int(height / (column_lines + 1))
+
+    return image
 
 # ## HeatMap ##
 #
