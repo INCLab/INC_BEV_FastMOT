@@ -7,6 +7,8 @@ import os
 import shutil
 import numpy as np
 import mimetypes
+
+from matplotlib import pyplot as plt
 from scipy.spatial import distance
 
 ##############################################################################
@@ -83,13 +85,15 @@ def start(input_path, output_path, map_path):
         quad_coords_list[i] = quad_coords
 
     # PixelMapper로 값 전달
-
     idxforfile = {}
     idx = 0
+    drawfunc = {}
     for inputfile in list(map_point.keys()):
         ##############변경해야하는 부분#######################
         # 좌표값을 받아야함(하나씩)
-        file = open(original_output_path +'/' + (inputfile + '.txt'), 'r')
+        drawfunc[inputfile] = idx
+        file = open(original_output_path / (inputfile + '.txt'), 'r')
+
         idxforfile[inputfile] = idx
         globals()['frame{}'.format(idx)], globals()['point{}'.format(idx)] = save_dict(file)
         idx += 1
@@ -179,7 +183,8 @@ def start(input_path, output_path, map_path):
                                     # 현재 ID에 대한 매핑 ID로 본인 기록
                                     mapping_table[current_id] = current_id
 
-                                    print('[{}] {} nearest {}, but same detected, ignore.'.format(frames, current_id, nearest_id))
+                                    print('[{}] {} nearest {}, but same detected, ignore.'.format(frames, current_id,
+                                                                                                  nearest_id))
                                 else:
                                     # 현재 ID에 대한 매핑 ID로 발견한 ID 기록
                                     mapping_table[current_id] = nearest_id
@@ -203,11 +208,34 @@ def start(input_path, output_path, map_path):
                         # 색상
                         color = getcolor(abs(current_id))
 
-                        # 원 찍기
-                        cv2.circle(img_file, (int(lonlat[0][0]), int(lonlat[0][1])), 10, color, -1)
+                        if drawfunc[filename] == 0:
+                            # 원 찍기
+                            cv2.circle(img_file,
+                                       (int(lonlat[0][0]), int(lonlat[0][1])),
+                                       10,
+                                       color,
+                                       -1)
+                        elif drawfunc[filename] == 1:
+                            cv2.fillPoly(img_file,
+                                         [get_triangle_points((int(lonlat[0][0]), int(lonlat[0][1])))],
+                                         color,
+                                         cv2.LINE_AA)
+                        elif drawfunc[filename] == 2:
+                            draw_points = get_rectangle_points((int(lonlat[0][0]), int(lonlat[0][1])))
+                            cv2.rectangle(img_file,
+                                          draw_points[0],
+                                          draw_points[1],
+                                          color,
+                                          -1)
+                        elif drawfunc[filename] == 3:
+                            cv2.fillPoly(img_file,
+                                         [get_reverse_triangle_points((int(lonlat[0][0]), int(lonlat[0][1])))],
+                                         color,
+                                         cv2.LINE_AA)
+
                         cv2.putText(img_file,
                                     str(current_id),
-                                    (int(lonlat[0][0])-5, int(lonlat[0][1])),
+                                    (int(lonlat[0][0]) - 5, int(lonlat[0][1])),
                                     cv2.FONT_HERSHEY_SIMPLEX,
                                     0.5,
                                     (255, 255, 255))
@@ -221,7 +249,9 @@ def start(input_path, output_path, map_path):
 mapping_frame_threshold = 300
 
 # 매핑 거리 Threshold
-mapping_dist_threshold = 145
+mapping_dist_threshold = 200
+
+graph_dict = {}
 
 # 가장 가까운 아이디 찾기
 def find_nearest_id(pointData: tuple, recent_trackings: dict, currentframe: int, position: tuple):
@@ -247,20 +277,39 @@ def find_nearest_id(pointData: tuple, recent_trackings: dict, currentframe: int,
                 # 가까운 거리 정보와 ID 변경
                 near_id = key
                 near_distance = dist
-            else:
-                # 거리가 threshold를 넘어가고,
-                # 현재 프레임에서 최근 추적 정보에 담긴 아이디가 없는 경우
-                # 그 아이디 정보는 최근 추적 정보에서 지우고 다른 아이디와 매핑되지 않도록 하는것이 좋다
-                # (보수적으로 매핑하기 위해)
-                # Todo: 이 방법이 적합한지 확인과정 필요
-                if list(filter(lambda x: x[0] == key, pointData))
+            # else:
+            #     # 거리가 threshold를 넘어가고,
+            #     # 현재 프레임에서 최근 추적 정보에 담긴 아이디가 없는 경우
+            #     # 그 아이디 정보는 최근 추적 정보에서 지우고 다른 아이디와 매핑되지 않도록 하는것이 좋다
+            #     # (보수적으로 매핑하기 위해)
+            #     # Todo: 이 방법이 적합한지 확인과정 필요
+            #     if list(filter(lambda x: x[0] == key, pointData))
 
-    return near_id, near_distance
+    if near_id != -1:
+        graph_dict['{}-{}'.format(currentframe, near_id)] = near_distance
+
+    return near_id
 
 
 # 두 점 사이의 중간 점 찾기
 def get_midpoint(p1, p2):
     return int((p1[0] + p2[0]) / 2), int((p1[1] + p2[1]) / 2)
+
+
+def get_triangle_points(midpoint):
+    return np.array([[midpoint[0], midpoint[1] + 10],
+                     [midpoint[0] - 10, midpoint[1] - 10],
+                     [midpoint[0] + 10, midpoint[1] - 10]])
+
+
+def get_rectangle_points(midpoint):
+    return [(midpoint[0] - 10, midpoint[1] + 10), (midpoint[0] + 10, midpoint[1] - 10)]
+
+
+def get_reverse_triangle_points(midpoint):
+    return np.array([[midpoint[0], midpoint[1] - 10],
+                     [midpoint[0] - 10, midpoint[1] + 10],
+                     [midpoint[0] + 10, midpoint[1] + 10]])
 
 
 # ## HeatMap ##
