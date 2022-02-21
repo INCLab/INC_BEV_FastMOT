@@ -27,7 +27,7 @@ def start(input_path, output_path, map_path):
     heatmap_path = os.path.join(output_path, 'heatmap.png')
     original_output_path = output_path
     output_path = os.path.join(output_path, 'map_frame')
-    temp_path = "./temp"
+    temp_path = "../temp"
 
     if not os.path.exists(output_path):
         os.makedirs(output_path)
@@ -95,6 +95,7 @@ def start(input_path, output_path, map_path):
         # 좌표값을 받아야함(하나씩)
         drawfunc[inputfile] = idx
         file = open(original_output_path / (inputfile + '.txt'), 'r')
+
         idxforfile[inputfile] = idx
         globals()['frame{}'.format(idx)], globals()['point{}'.format(idx)] = save_dict(file)
         idx += 1
@@ -111,7 +112,7 @@ def start(input_path, output_path, map_path):
 
     # 파일마다 Loop
     for filename in list(map_point.keys()):
-        print('[BEV] Start {}..'.format(filename))
+        print('\n[BEV] Start {}..'.format(filename))
         # ID 간 매핑 테이블
         mapping_table = {}
 
@@ -164,16 +165,19 @@ def start(input_path, output_path, map_path):
                         # 존재하지 않으면 (새로운 ID)
                         else:
                             # 이전 Tracking 정보에서 가장 가까운 ID 찾기
-                            nearest_id = find_nearest_id(recent_trackings, frames,
-                                                         (int(lonlat[0][0]), int(lonlat[0][1])))
+                            nearest_id, dist = find_nearest_id(pointData, recent_trackings, frames,
+                                                               (int(lonlat[0][0]), int(lonlat[0][1])))
 
                             # 발견하지 못했다면
                             if nearest_id == -1:
                                 # 현재 ID에 대한 매핑 ID로 본인 기록
                                 mapping_table[current_id] = current_id
+
+                                # 가장 최근에 저장된 추적 정보 제거
+
                             # 발견했다면
                             else:
-                                # Point Data에서 Nearest ID와 동일한 아이디 찾기
+                                # Point Data에서 Nearest ID와 동일한 아이디 찾기(같은 frame)
                                 sameid_filter = list(filter(lambda x: x[0] == nearest_id, pointData))
 
                                 # 같은 아이디가 발견되었다면
@@ -187,13 +191,14 @@ def start(input_path, output_path, map_path):
                                     # 현재 ID에 대한 매핑 ID로 발견한 ID 기록
                                     mapping_table[current_id] = nearest_id
 
-                                    print('[{}] {} mapping to {}'.format(frames, current_id, nearest_id))
+                                    print('[{}] {} mapping to {} dist: {}'.format(frames, current_id, nearest_id, dist))
 
                                     # 현재 ID 업데이트
                                     current_id = nearest_id
 
                         # 최근 추적 정보 저장
                         recent_trackings[current_id] = [frames, (int(lonlat[0][0]), int(lonlat[0][1]))]
+                        # 마지막으로 저장된 추적정보 아이디 저장
 
                         # 각 파일에 Text 작성
                         f.write("{} {} {} {}\n".format(
@@ -243,16 +248,15 @@ def start(input_path, output_path, map_path):
 
 
 # 매핑 프레임 Threshold
-mapping_frame_threshold = 100
+mapping_frame_threshold = 300
 
 # 매핑 거리 Threshold
 mapping_dist_threshold = 200
 
 graph_dict = {}
 
-
 # 가장 가까운 아이디 찾기
-def find_nearest_id(recent_trackings: dict, currentframe: int, position: tuple):
+def find_nearest_id(pointData: tuple, recent_trackings: dict, currentframe: int, position: tuple):
     # 가장 가까운 거리
     near_distance = sys.maxsize
 
@@ -261,6 +265,7 @@ def find_nearest_id(recent_trackings: dict, currentframe: int, position: tuple):
 
     # 모든 최근 추적 정보에 대해 Loop
     for key in recent_trackings.keys():
+
         # 현재 프레임 내가 아니고, 지도를 벗어나지 않으면서 Frame Threshold 내에 있던 추적 결과인 경우
         if currentframe != recent_trackings[key][0] and \
                 (recent_trackings[key][1][0] >= 0 and recent_trackings[key][1][1] >= 0) and \
@@ -274,6 +279,13 @@ def find_nearest_id(recent_trackings: dict, currentframe: int, position: tuple):
                 # 가까운 거리 정보와 ID 변경
                 near_id = key
                 near_distance = dist
+            # else:
+            #     # 거리가 threshold를 넘어가고,
+            #     # 현재 프레임에서 최근 추적 정보에 담긴 아이디가 없는 경우
+            #     # 그 아이디 정보는 최근 추적 정보에서 지우고 다른 아이디와 매핑되지 않도록 하는것이 좋다
+            #     # (보수적으로 매핑하기 위해)
+            #     # Todo: 이 방법이 적합한지 확인과정 필요
+            #     if list(filter(lambda x: x[0] == key, pointData))
 
     if near_id != -1:
         graph_dict['{}-{}'.format(currentframe, near_id)] = near_distance
@@ -482,3 +494,7 @@ def save_dict(file):
 
     return frame, point
     ###########################################################################
+
+if __name__ == "__main__":
+    print(distance.euclidean([1274, 773], [1146, 940]))
+    start('../input/edu_test1/', '../output/edu_test1/', '../input/edu_map.png')

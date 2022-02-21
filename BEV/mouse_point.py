@@ -68,3 +68,6 @@ def select_points_des(event, x, y, flags, param):
         cv2.circle(param, (x, y), 5, (0, 0, 255), -1)
     elif event == cv2.EVENT_LBUTTONUP:
         drawing = False
+
+if __name__ == '__main__':
+    start('../temp/test', '../output/edu_test1/frame', '../input/edu_map.png')
