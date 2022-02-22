@@ -7,3 +7,4 @@ cupy == 9.2
 pandas
 matplotlib
 seaborn
+shapely

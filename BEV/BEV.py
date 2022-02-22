@@ -14,6 +14,7 @@ from matplotlib import pyplot as plt
 from scipy.spatial import distance
 
 ##############################################################################
+from shapely.geometry import Polygon, Point
 
 '''
 pixel : 실제 공간
@@ -27,7 +28,7 @@ def start(input_path, output_path, map_path):
     heatmap_path = os.path.join(output_path, 'heatmap.png')
     original_output_path = output_path
     output_path = os.path.join(output_path, 'map_frame')
-    temp_path = "../temp"
+    temp_path = "./temp"
 
     if not os.path.exists(output_path):
         os.makedirs(output_path)
@@ -90,6 +91,8 @@ def start(input_path, output_path, map_path):
     idxforfile = {}
     idx = 0
     drawfunc = {}
+
+    constraint = {}
     for inputfile in list(map_point.keys()):
         ##############변경해야하는 부분#######################
         # 좌표값을 받아야함(하나씩)
@@ -100,13 +103,28 @@ def start(input_path, output_path, map_path):
         globals()['frame{}'.format(idx)], globals()['point{}'.format(idx)] = save_dict(file)
         idx += 1
 
+        #### 제약용 Hardcoding ####
+        if 'ch01' in inputfile:
+            constraint[inputfile] = Polygon([(960, 1080), (960, 540), (1920, 540), (1920, 1080)])
+        elif 'ch02' in inputfile:
+            constraint[inputfile] = Polygon([(0, 1080), (0, 540), (960, 540), (960, 1080)])
+        elif 'ch03' in inputfile:
+            constraint[inputfile] = Polygon([(960, 540), (960, 0), (1920, 0), (1920, 540)])
+        elif 'ch04' in inputfile:
+            constraint[inputfile] = Polygon([(0, 540), (0, 0), (960, 0), (960, 540)])
+        else:
+            constraint[inputfile] = Polygon([(0, 1080), (0, 0), (1920, 0), (1920, 1080)])
+
+        print('{} constraint : {} {}'.format(inputfile, constraint[inputfile], constraint[inputfile].area))
+        print('{} drawfunc : {}'.format(inputfile, drawfunc[inputfile]))
+
     # #### Create BEV_Result txt files
     # Check the directory already exist
     if not os.path.isdir(os.path.join(original_output_path, 'bev_result')):
         os.mkdir(os.path.join(original_output_path, 'bev_result'))
 
     # 지도 읽어와서 Grid 그리기
-    map = draw_grid(cv2.imread(str(map_path), -1))
+    map, rlist, clist = draw_grid(cv2.imread(str(map_path), -1))
     for i in list(map_point.keys()):
         globals()['BEV_Point{}'.format(idxforfile[i])] = dict()
 
@@ -153,6 +171,11 @@ def start(input_path, output_path, map_path):
                         # 영상 좌표를 지도 좌표로 변환
                         lonlat = list(pm.pixel_to_lonlat(uv))
 
+                        # 제약 체크
+                        check_point = Point((int(lonlat[0][0]), int(lonlat[0][1])))
+                        if not constraint[filename].contains(check_point):
+                            continue
+
                         # 현재 아이디를 담을 변수
                         current_id = positiondata[0]
 
@@ -165,7 +188,7 @@ def start(input_path, output_path, map_path):
                         # 존재하지 않으면 (새로운 ID)
                         else:
                             # 이전 Tracking 정보에서 가장 가까운 ID 찾기
-                            nearest_id, dist = find_nearest_id(pointData, recent_trackings, frames,
+                            nearest_id, dist = find_nearest_id(recent_trackings, frames,
                                                                (int(lonlat[0][0]), int(lonlat[0][1])))
 
                             # 발견하지 못했다면
@@ -255,8 +278,9 @@ mapping_dist_threshold = 200
 
 graph_dict = {}
 
+
 # 가장 가까운 아이디 찾기
-def find_nearest_id(pointData: tuple, recent_trackings: dict, currentframe: int, position: tuple):
+def find_nearest_id(recent_trackings: dict, currentframe: int, position: tuple):
     # 가장 가까운 거리
     near_distance = sys.maxsize
 
@@ -290,7 +314,7 @@ def find_nearest_id(pointData: tuple, recent_trackings: dict, currentframe: int,
     if near_id != -1:
         graph_dict['{}-{}'.format(currentframe, near_id)] = near_distance
 
-    return near_id
+    return near_id, near_distance
 
 
 # 두 점 사이의 중간 점 찾기
@@ -320,29 +344,36 @@ def draw_grid(image: numpy.ndarray, row_lines=1, column_lines=1):
     :param image: Image (numpy.ndarray)
     :param row_lines Number of Row Lines
     :param column_lines Number of Column Lines
-    :return: Image with Grid
+    :return: Image with Grid, List of Two Points for Row Lines, List of Two Points for Column Lines
     """
     height, width, channel = image.shape
 
     last_height = 0
+    row_line_list = []
     for row in range(row_lines):
         cv2.line(image,
                  (0, last_height + int(height / (row_lines + 1))),
                  (width, last_height + int(height / (row_lines + 1))),
                  (0, 255, 0),
                  3)
+        row_line_list.append(((0, last_height + int(height / (row_lines + 1))),
+                              (width, last_height + int(height / (row_lines + 1)))))
         last_height = int(height / (row_lines + 1))
 
     last_width = 0
+    column_line_list = []
     for row in range(column_lines):
         cv2.line(image,
                  (last_width + int(width / (column_lines + 1)), 0),
                  (last_width + int(width / (column_lines + 1)), height),
                  (0, 255, 0),
                  3)
+        column_line_list.append(((last_width + int(width / (column_lines + 1)), 0),
+                                 (last_width + int(width / (column_lines + 1)), height)))
         last_width = int(height / (column_lines + 1))
 
-    return image
+    return image, row_line_list, column_line_list
+
 
 # ## HeatMap ##
 #
@@ -494,6 +525,7 @@ def save_dict(file):
 
     return frame, point
     ###########################################################################
+
 
 if __name__ == "__main__":
     print(distance.euclidean([1274, 773], [1146, 940]))
