@@ -96,7 +96,6 @@ def start(input_path, output_path, map_path):
     for inputfile in list(map_point.keys()):
         ##############변경해야하는 부분#######################
         # 좌표값을 받아야함(하나씩)
-        drawfunc[inputfile] = idx
         file = open(original_output_path / (inputfile + '.txt'), 'r')
 
         idxforfile[inputfile] = idx
@@ -105,14 +104,19 @@ def start(input_path, output_path, map_path):
 
         #### 제약용 Hardcoding ####
         if 'ch01' in inputfile:
-            constraint[inputfile] = Polygon([(960, 1080), (960, 540), (1920, 540), (1920, 1080)])
+            drawfunc[inputfile] = 0
+            constraint[inputfile] = Polygon([(960, 540), (960, 0), (1920, 0), (1920, 540)])
         elif 'ch02' in inputfile:
+            drawfunc[inputfile] = 1
             constraint[inputfile] = Polygon([(0, 1080), (0, 540), (960, 540), (960, 1080)])
         elif 'ch03' in inputfile:
-            constraint[inputfile] = Polygon([(960, 540), (960, 0), (1920, 0), (1920, 540)])
+            drawfunc[inputfile] = 2
+            constraint[inputfile] = Polygon([(960, 1080), (960, 540), (1920, 540), (1920, 1080)])
         elif 'ch04' in inputfile:
+            drawfunc[inputfile] = 3
             constraint[inputfile] = Polygon([(0, 540), (0, 0), (960, 0), (960, 540)])
         else:
+            drawfunc[inputfile] = 0
             constraint[inputfile] = Polygon([(0, 1080), (0, 0), (1920, 0), (1920, 1080)])
 
         print('{} constraint : {} {}'.format(inputfile, constraint[inputfile], constraint[inputfile].area))
@@ -234,7 +238,6 @@ def start(input_path, output_path, map_path):
                         color = getcolor(abs(current_id))
 
                         if drawfunc[filename] == 0:
-                            # 원 찍기
                             cv2.circle(img_file,
                                        (int(lonlat[0][0]), int(lonlat[0][1])),
                                        10,

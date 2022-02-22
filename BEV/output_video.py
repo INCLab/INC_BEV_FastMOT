@@ -23,7 +23,7 @@ def start(output_path):
     paths = list(np.sort(store1)) + list(np.sort(store2)) + list(np.sort(store3)) + list(np.sort(store4))
 
     output_video_path = os.path.join(output_path, 'bev_output.mp4')
-    fps = 25
+    fps = 20
     frame_array = []
     size = None
 
