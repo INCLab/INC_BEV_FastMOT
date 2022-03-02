@@ -4,7 +4,7 @@ import numpy as np
 import json
 
 path = "data/"
-df = pd.read_excel(path + 'skip10.xlsx', usecols=[2,3], header=None)
+df = pd.read_excel(path + 'no_skip.xlsx', usecols=[2,3], header=None)
 df.fillna(-1, inplace=True)
 
 
@@ -58,7 +58,12 @@ for data in df[3].to_list():
     else:
         tar += 1
 
-file_path = 'data/skip10.json'
+file_path = 'data/2cam/no_skip.json'
 
 with open(file_path, 'w') as outfile:
     json.dump(data_dict, outfile, indent=4)
+
+# with open('data/no_skip.json') as f:
+#     json_data = json.load(f)
+#
+# print(json_data['1'])
