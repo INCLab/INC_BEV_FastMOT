@@ -48,9 +48,29 @@ def id_drop(drop_list, mot_df, file_idx):
         return mot_df
 
 
-def make_df_list(filepath, cor_id_list, drop_list, file_idx):
+def make_df_list(filepath, cor_id_list, file_idx):
     result = pd.read_csv(filepath, delimiter=' ', header=None)
     result.columns = ['frame', 'id', 'x', 'y']
+
+    # drop list 생성하기
+    init_id = file_idx * LOCAL_INIT_ID
+    id_list = list(set(result['id'].to_list()))
+
+    total_id_list = []
+    for ids in cor_id_list:
+        total_id_list += ids
+
+    drop_list = []
+    if total_id_list:
+        for i in range(0, len(total_id_list)):
+            total_id_list[i] += init_id
+
+        for id in id_list:
+            if id in total_id_list:
+                continue
+            else:
+                id -= init_id
+                drop_list.append(id)
 
     if cor_id_list:
         result = id_correction(cor_id_list, result, file_idx)
@@ -192,8 +212,12 @@ def check_similarity(info_list, compare_list):
         for i in range(0, len(compare_list)):
             for k in compare_list[i]:
 
+                # vector값이 없는 경우 제외 (예를들어 포인트가 한번만 찍힌경우)
+                if len(k[0]) == 0 or len(info[0]) == 0:
+                    continue
+
                 # *** 겹치지 않는경우: 일단 제외한다
-                if info[0][0] > k[0][-1] or info[0][-1] < k[0][0]:
+                elif info[0][0] > k[0][-1] or info[0][-1] < k[0][0]:
                     continue
 
                 # *** 포함하는 경우 : DTW로 유사도 측정
