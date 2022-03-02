@@ -201,7 +201,6 @@ def check_similarity(info_list, compare_list):
         기준 아이디에 대해 다른 result 파일에서 나온 모든 아이디들과 케이스별로 유사도 측정(혹은 제외) 후,
         DTW distance를 모두 저장
     '''
-
     # list of total dtw distance info
     result_list = []
     for _ in range(0, len(compare_list)):

@@ -20,11 +20,10 @@ def start(output_path):
         print("#################################################")
         result_list = list()
         for data_num in range(1, 51):
-
             if data_num == 9:
-                result_list.append([[],[],[]])
+                result_list.append([[], [], []])
                 continue
-
+                
             output_path = origin_output_path
             output_path = output_path + str(data_num) + '/'
             flag = False
@@ -38,7 +37,8 @@ def start(output_path):
             txt_name = []
             for file in os.listdir(output_path):
                 if file.endswith(".txt") and "BEV_" in file:
-                    txt_name.append(file)
+                    if file == "BEV_ch01.txt" or file == "BEV_ch04.txt":
+                        txt_name.append(file)
 
             # Sort files
             # Among the file names, you must specify a location indicating the order
@@ -48,7 +48,7 @@ def start(output_path):
             # ID correction을 위한 id grouping
             # local_id_group_list: [CAM1_Local_ID_groupList, CAM2_Local_ID_groupList, CAM3_Local_ID_groupList]
             # drop_list: [CAM1_id_dropList, CAM2_id_dropList, CAM3_id_dropList]
-            total_file_num = 4
+            total_file_num = 2
 
             # Read json data
             with open(data_path) as f:
@@ -60,7 +60,7 @@ def start(output_path):
             local_id_group_list = []
             drop_list = []
 
-            cam_name = ['ch01', 'ch02', 'ch03', 'ch04']
+            cam_name = ['ch01', 'ch04']
             tar_name = ['tar1', 'tar2', 'tar3', 'delete']
 
             # Create local mapping list with json data
@@ -74,16 +74,18 @@ def start(output_path):
                             local_id_list.append(test_case_dict[cam][tar])
                 local_id_group_list.append(local_id_list)
 
-            GLOBAL_INIT_ID = 0
-
             # Create Dataframes by id
             result_df_list = []
             total_id_list = []
 
             for i in range(total_file_num):
+                if i == 0:
+                    cam_num = 1
+                elif i == 1:
+                    cam_num = 4
                 df_list, id_list = dfunc.make_df_list(os.path.join(output_path, txt_name[i]),
                                                       local_id_group_list[i],
-                                                      i+1)
+                                                      cam_num)
                 result_df_list.append(df_list)
                 total_id_list.append(id_list)
 
@@ -118,16 +120,13 @@ def start(output_path):
         # Create local mapping list with json data
         tar_list = [[], [], []]
 
-        cam_name = ['ch01', 'ch02', 'ch03', 'ch04']
+        cam_name = ['ch01', 'ch04']
         tar_name = ['tar1', 'tar2', 'tar3', 'delete']
 
         for cam in cam_name:
+
             if cam == 'ch01':
                 start_id = 10000
-            elif cam == 'ch02':
-                start_id = 20000
-            elif cam == 'ch03':
-                start_id = 30000
             elif cam == 'ch04':
                 start_id = 40000
 
@@ -152,7 +151,7 @@ def start(output_path):
         final_list.append(total_list[2][i])  # scalar
 
     result_df = pd.DataFrame(final_list)
-    result_df.to_excel(origin_output_path + 'result.xlsx')
+    result_df.to_excel(origin_output_path + 'result_2cam14.xlsx')
     
     return flag
 
