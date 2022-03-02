@@ -4,8 +4,9 @@ import os
 
 GLOBAL_INIT_ID = 0
 
-# test1 정익:[1,5],[3,9],[3,7,10,12],[2,10,12,13] / 민재:[4],[5,7,11],[6,13,15],[4,10,17] / 선우:[2],[4,6,8],[5,14],[3,11]
-# test1 drop 정익:[3],[1],[1,2],[] 민재:[],[10],[],[1] / 선우:[6],[2],[],[5,18]
+# Select feature 1.unit(unit vector) 2.scalar(normalized scalar) 3.vector  (default: unit)
+FEATURE = 'vector'
+
 
 def start(output_path):
     flag = False
@@ -55,7 +56,7 @@ def start(output_path):
 
     # Select feature 1.unit(unit vector) 2.scalar(normalized scalar) 3.vector  (default: unit)
     # and generate result_info_list
-    dfunc.select_feature(result_df_list, result_info_list, feature='vector')
+    dfunc.select_feature(result_df_list, result_info_list, feature=FEATURE)
 
     # Create high similarity ID list
     # ToDo: 현재는 result0를 기준으로 나머지를 비교한 결과만 사용, 후에 나머지를 기준으로 구한 값도 고려해야함
