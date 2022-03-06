@@ -159,5 +159,90 @@ def start(output_path):
 def strange_sort(strings, n, m):
     return sorted(strings, key=lambda element: element[n:m])
 
+'''
+    gt_ids = [local_id1, local_id2, ...]
+    cp_ids = [matched_id1, matched_id2, ...]
+'''
+def compare_list(gt_ids, cp_ids):
+    flag = True
+
+    if cp_ids:
+        for cp in cp_ids:
+            if cp not in gt_ids:
+                flag = False
+                break
+    else:
+        flag = False
+
+    return flag
+
+
+def eval(f_list):
+    # Number of matching correctly
+    vec_corr = 0
+    unit_corr = 0
+    scal_corr = 0
+
+    # Number of matching correctly by each target
+    vec_tar_score = [0 for i in len(f_list[0])]
+    unit_tar_score = [0 for i in len(f_list[0])]
+    scal_tar_score = [0 for i in len(f_list[0])]
+
+    total_case = 1
+
+    for i in range(0, len(f_list)):
+        if i % 4 != 3:
+            continue
+
+        list_gt = f_list[i - 3]
+        list_vec = f_list[i - 2]
+        list_unit = f_list[i - 1]
+        list_scal = f_list[i]
+
+        vec_result = [0 for i in range(0, list_gt)]
+        unit_result = [0 for i in range(0, list_gt)]
+        scal_result = [0 for i in range(0, list_gt)]
+
+        for j in range(0, len(list_gt)):
+            # Check vector feature
+            vec_flag = False
+            for vec in list_vec:
+                match_result = compare_list(list_gt[j], vec)
+                if match_result is True:
+                    vec_flag = True
+                    vec_tar_score[j] += 1
+                    break
+
+            # Check unit vector feature
+            unit_flag = False
+            for unit in list_unit:
+                match_result = compare_list(list_gt[j], unit)
+                if match_result is True:
+                    unit_flag = True
+                    unit_tar_score[j] += 1
+                    break
+
+            # Check scalar feature
+            scal_flag = False
+            for scal in list_scal:
+                match_result = compare_list(list_gt[j], scal)
+                if match_result is True:
+                    scal_flag = True
+                    scal_tar_score[j] += 1
+                    break
+
+            if vec_flag is True:
+                vec_result[j] += 1
+            if
+
+
+
+
+
+
+        total_case += 1
+
+
+
 if __name__ == '__main__':
     start('../output/paper_eval_data/skip10/')
