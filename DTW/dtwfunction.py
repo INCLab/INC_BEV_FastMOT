@@ -5,12 +5,12 @@ import pandas as pd
 
 from sklearn.preprocessing import MinMaxScaler
 
-FRAME_THRESHOLD = 1
+FRAME_THRESHOLD = 20
 
 LOCAL_INIT_ID = 10000
 
 
-SHOW_DTW_DIST = True  # DTW 거리값 리스트 출력
+SHOW_DTW_DIST = False  # DTW 거리값 리스트 출력
 SHOW_LOCAL_ID_LIST = False  # 카메라마다 Tracking된 Local ID List(Local ID mapping 후) 출력
 
 # ########### Preprocessing: ID Correction

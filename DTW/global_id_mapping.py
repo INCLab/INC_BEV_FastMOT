@@ -16,8 +16,8 @@ skip = 'no_skip'
 json_name = skip + '.json'
 data_path = 'data/' + json_name
 
-test_start = 10
-test_end = 10
+test_start = 1
+test_end = 50
 
 
 def start(output_path):
@@ -122,7 +122,7 @@ def start(output_path):
     with open(data_path) as f:
         json_data = json.load(f)
 
-    for data_num in range(1, 51):
+    for data_num in range(test_start, test_end + 1):
         test_case_dict = json_data[str(data_num)]
 
         # Create local mapping list with json data
@@ -152,7 +152,7 @@ def start(output_path):
 
     # GT, vector, unit, scalar result
     final_list = []
-    for i in range(0, 50):
+    for i in range(test_start-1, test_end):
         final_list.append(gt_list[i])
         final_list.append(total_list[0][i])  # vector
         final_list.append(total_list[1][i])  # unit
