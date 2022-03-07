@@ -5,6 +5,8 @@ import os
 import sys
 import shutil
 import time
+import re
+import subprocess
 
 import pandas as pd
 import numpy as np
@@ -13,7 +15,7 @@ import mimetypes
 LOCAL_INIT_ID = 10000
 
 select_id = True
-select_id_list = [10003,10002,10004,10006,40003,40002,40004,40006]
+select_id_list = [[10003,40003],[10002,10004,10006,40002,40004,40006]]
 
 
 def start(output_path, map_path):
@@ -75,9 +77,10 @@ def start(output_path, map_path):
                         x = x_list[num][f_idx]
                         y = y_list[num][f_idx]
 
-                        if id in select_id_list:
-                            color = getcolor(abs(id))
-                            cv2.circle(map, (int(x), int(y)), 5, color, -1)
+                        for i in range(0, len(select_id_list)):
+                            if id in select_id_list[i]:
+                                color = getcolor(abs(i+1))
+                                cv2.circle(map, (int(x), int(y)), 5, color, -1)
                     else:
                         id = id_list[num][f_idx]
                         x = x_list[num][f_idx]
@@ -97,6 +100,53 @@ def start(output_path, map_path):
             cv2.imwrite(src, map)
     print("Done")
 
+
+    ## Create BEV Video
+    print("Start create BEV_Video")
+    paths = [os.path.join(map_output_path, i) for i in os.listdir(map_output_path) if re.search(".jpg$", i)]
+
+    ## 정렬 작업
+    store1, store2, store3, store4 = [], [], [], []
+    for i in paths:
+        if len(i.split('\\')[-1]) == 8:
+            store4.append(i)
+        elif len(i.split('\\')[-1]) == 7:
+            store3.append(i)
+        elif len(i.split('\\')[-1]) == 6:
+            store2.append(i)
+        elif len(i.split('\\')[-1]) == 5:
+            store1.append(i)
+
+    paths = list(np.sort(store1)) + list(np.sort(store2)) + list(np.sort(store3)) + list(np.sort(store4))
+    # len('ims/2/a/2a.2710.png')
+
+    fps = 30
+    frame_array = []
+    size = None
+    output_idx = 1
+
+    for idx, path in enumerate(paths):
+        img = cv2.imread(path)
+        height, width, layers = img.shape
+        size = (width, height)
+        frame_array.append(img)
+
+        if len(frame_array) >= 4500 or idx == len(paths) - 1:
+            writer = cv2.VideoWriter(os.path.join(original_output_path, str(output_idx) + 'output.mp4'),
+                                     cv2.CAP_GSTREAMER,
+                                     fps,
+                                     (1920, 1080))
+            for i in range(len(frame_array)):
+                #frame_array[i] = cv2.resize(frame_array[i], dsize=(1280, 720), interpolation=cv2.INTER_LINEAR)
+                writer.write(frame_array[i])
+
+            writer.release()
+            frame_array.clear()
+            output_idx += 1
+
+    print(size)
+    print('Done')
+
     return
 
 
@@ -110,6 +160,25 @@ def getcolor(idx):
 
 def strange_sort(strings, n, m):
     return sorted(strings, key=lambda element: element[n:m])
+
+
+def _gst_write_pipeline(output_uri):
+    gst_elements = str(subprocess.check_output('gst-inspect-1.0'))
+    # use hardware encoder if found
+    if 'omxh264enc' in gst_elements:
+        h264_encoder = 'omxh264enc'
+    elif 'x264enc' in gst_elements:
+        h264_encoder = 'x264enc'
+    else:
+        raise RuntimeError('GStreamer H.264 encoder not found')
+    pipeline = (
+            'appsrc ! autovideoconvert ! %s ! mp4mux ! filesink location=%s '
+            % (
+                h264_encoder,
+                output_uri
+            )
+    )
+    return pipeline
 
 
 if __name__ == "__main__":
