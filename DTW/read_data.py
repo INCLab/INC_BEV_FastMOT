@@ -70,44 +70,44 @@ import json
 
 
 
-json_name = 'no_skip.json'
-data_path = 'data/' + json_name
-
-# Read json data
-with open(data_path) as f:
-    json_data = json.load(f)
-
-result_list = []
-
-for data_num in range(1,51):
-    test_case_dict = json_data[str(data_num)]
-
-    cam_name = ['ch01', 'ch02', 'ch03', 'ch04']
-    tar_name = ['tar1', 'tar2', 'tar3', 'delete']
-
-    # Create local mapping list with json data
-    tar_list = [[], [], []]
-
-    for cam in cam_name:
-        if cam == 'ch01':
-            start_id = 10000
-        elif cam == 'ch02':
-            start_id = 20000
-        elif cam == 'ch03':
-            start_id = 30000
-        elif cam == 'ch04':
-            start_id = 40000
-
-        for tar in tar_name:
-            if tar == 'delete':
-                break
-            elif tar == 'tar1' and test_case_dict[cam][tar]:
-                tar_list[0].append(start_id + test_case_dict[cam][tar][0])
-            elif tar == 'tar2' and test_case_dict[cam][tar]:
-                tar_list[1].append(start_id + test_case_dict[cam][tar][0])
-            elif tar == 'tar3' and test_case_dict[cam][tar]:
-                tar_list[2].append(start_id + test_case_dict[cam][tar][0])
-    result_list.append(tar_list)
-
-result_df = pd.DataFrame(result_list)
-result_df.to_excel('gt.xlsx')
+# json_name = 'no_skip.json'
+# data_path = 'data/' + json_name
+#
+# # Read json data
+# with open(data_path) as f:
+#     json_data = json.load(f)
+#
+# result_list = []
+#
+# for data_num in range(1,51):
+#     test_case_dict = json_data[str(data_num)]
+#
+#     cam_name = ['ch01', 'ch02', 'ch03', 'ch04']
+#     tar_name = ['tar1', 'tar2', 'tar3', 'delete']
+#
+#     # Create local mapping list with json data
+#     tar_list = [[], [], []]
+#
+#     for cam in cam_name:
+#         if cam == 'ch01':
+#             start_id = 10000
+#         elif cam == 'ch02':
+#             start_id = 20000
+#         elif cam == 'ch03':
+#             start_id = 30000
+#         elif cam == 'ch04':
+#             start_id = 40000
+#
+#         for tar in tar_name:
+#             if tar == 'delete':
+#                 break
+#             elif tar == 'tar1' and test_case_dict[cam][tar]:
+#                 tar_list[0].append(start_id + test_case_dict[cam][tar][0])
+#             elif tar == 'tar2' and test_case_dict[cam][tar]:
+#                 tar_list[1].append(start_id + test_case_dict[cam][tar][0])
+#             elif tar == 'tar3' and test_case_dict[cam][tar]:
+#                 tar_list[2].append(start_id + test_case_dict[cam][tar][0])
+#     result_list.append(tar_list)
+#
+# result_df = pd.DataFrame(result_list)
+# result_df.to_excel('gt.xlsx')

@@ -152,6 +152,8 @@ def start(output_path):
 
     result_df = pd.DataFrame(final_list)
     result_df.to_excel(origin_output_path + 'result_2cam14.xlsx')
+
+    eval(final_list)
     
     return flag
 
@@ -184,9 +186,9 @@ def eval(f_list):
     scal_corr = 0
 
     # Number of matching correctly by each target
-    vec_tar_score = [0 for i in len(f_list[0])]
-    unit_tar_score = [0 for i in len(f_list[0])]
-    scal_tar_score = [0 for i in len(f_list[0])]
+    vec_tar_score = [0 for i in range(0, len(f_list[0]))]
+    unit_tar_score = [0 for i in range(0, len(f_list[0]))]
+    scal_tar_score = [0 for i in range(0, len(f_list[0]))]
 
     total_case = 1
 
@@ -199,9 +201,9 @@ def eval(f_list):
         list_unit = f_list[i - 1]
         list_scal = f_list[i]
 
-        vec_result = [0 for i in range(0, list_gt)]
-        unit_result = [0 for i in range(0, list_gt)]
-        scal_result = [0 for i in range(0, list_gt)]
+        vec_result = [0 for i in range(0, len(list_gt))]
+        unit_result = [0 for i in range(0, len(list_gt))]
+        scal_result = [0 for i in range(0, len(list_gt))]
 
         for j in range(0, len(list_gt)):
             # Check vector feature
@@ -233,15 +235,50 @@ def eval(f_list):
 
             if vec_flag is True:
                 vec_result[j] += 1
-            if
+            if unit_flag is True:
+                unit_result[j] += 1
+            if scal_flag is True:
+                scal_result[j] += 1
 
+        # List of false matching index
+        vec_false_list = []
+        unit_false_list = []
+        scal_false_list = []
 
+        if sum(vec_result) == len(vec_result):
+            vec_corr += 1
+        else:
+            vec_false_list.append(total_case)
 
+        if sum(unit_result) == len(unit_result):
+            unit_corr += 1
+        else:
+            unit_false_list.append(total_case)
 
+        if sum(scal_result) == len(scal_result):
+            scal_corr += 1
+        else:
+            scal_false_list.append(total_case)
 
 
         total_case += 1
 
+    total_case -= 1
+
+    print('====== Total Accuarcy ======')
+    print('Vector: {} / {}'.format(vec_corr, total_case))
+    print('Unit Vector: {} / {}'.format(unit_corr, total_case))
+    print('Scalar: {} / {}'.format(scal_corr, total_case))
+    print('\n')
+    print('====== Target Accuracy ======')
+    print('Vector: {}'.format(vec_tar_score))
+    print('Unit Vector: {}'.format(unit_tar_score))
+    print('Scalar: {}'.format(scal_tar_score))
+    print('\n')
+    print('====== False Matching Index ======')
+    print('Vector: {}'.format(vec_false_list))
+    print('Unit: {}'.format(unit_false_list))
+    print('Scalar: {}'.format(scal_false_list))
 
 
 if __name__ == '__main__':
