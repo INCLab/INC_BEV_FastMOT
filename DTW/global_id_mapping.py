@@ -4,9 +4,20 @@ import os
 import json
 
 # Select feature 1.unit(unit vector) 2.scalar(normalized scalar) 3.vector  (default: unit)
-FEATURE_List = ['vector','unit','scalar']
-json_name = 'skip10.json'
+FEATURE_List = ['vector', 'unit', 'scalar']
+
+'''
+    1. no_skip
+    2. skip5
+    3. skip10
+'''
+skip = 'no_skip'
+
+json_name = skip + '.json'
 data_path = 'data/' + json_name
+
+test_start = 10
+test_end = 10
 
 
 def start(output_path):
@@ -19,11 +30,8 @@ def start(output_path):
         print("##############      " + FEATURE + "      ##############")
         print("#################################################")
         result_list = list()
-        for data_num in range(1, 51):
-            if data_num == 9:
-                result_list.append([[], [], []])
-                continue
-                
+
+        for data_num in range(test_start, test_end + 1):
             output_path = origin_output_path
             output_path = output_path + str(data_num) + '/'
             flag = False
@@ -101,7 +109,7 @@ def start(output_path):
             id_map_list = [[], [], [], []] # length of file
             for i in range(0, len(result_info_list)-1):
                 result_dist_list = dfunc.check_similarity(result_info_list[i], result_info_list[i+1:])
-                dfunc.id_mapping(result_dist_list, id_map_list[i])  # id_mapping에서 todo 처리
+                dfunc.id_mapping(result_dist_list, id_map_list[i], total_id_list)  # id_mapping에서 todo 처리
 
             print('### ' + str(data_num) + ': Global Re-ID list ###')
             print(id_map_list[0])
@@ -150,6 +158,7 @@ def start(output_path):
         final_list.append(total_list[1][i])  # unit
         final_list.append(total_list[2][i])  # scalar
 
+    # Save final list
     result_df = pd.DataFrame(final_list)
     result_df.to_excel(origin_output_path + 'result_2cam14.xlsx')
 
@@ -190,6 +199,12 @@ def eval(f_list):
     unit_tar_score = [0 for i in range(0, len(f_list[0]))]
     scal_tar_score = [0 for i in range(0, len(f_list[0]))]
 
+    # List of false matching index
+    vec_false_list = []
+    unit_false_list = []
+    scal_false_list = []
+
+    # Count test case
     total_case = 1
 
     for i in range(0, len(f_list)):
@@ -240,11 +255,6 @@ def eval(f_list):
             if scal_flag is True:
                 scal_result[j] += 1
 
-        # List of false matching index
-        vec_false_list = []
-        unit_false_list = []
-        scal_false_list = []
-
         if sum(vec_result) == len(vec_result):
             vec_corr += 1
         else:
@@ -282,4 +292,4 @@ def eval(f_list):
 
 
 if __name__ == '__main__':
-    start('../output/paper_eval_data/skip10/')
+    start('../output/paper_eval_data/' + skip + '/')
