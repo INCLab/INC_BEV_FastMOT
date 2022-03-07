@@ -13,7 +13,7 @@ import mimetypes
 LOCAL_INIT_ID = 10000
 
 select_id = True
-select_id_list = [10001,10003,10002,10004,10006,40001,40003,40002,40004,40006]
+select_id_list = [10003,10002,10004,10006,40003,40002,40004,40006]
 
 
 def start(output_path, map_path):
