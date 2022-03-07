@@ -12,7 +12,8 @@ import mimetypes
 
 LOCAL_INIT_ID = 10000
 
-select_id_list = []
+select_id = True
+select_id_list = [10001,10003,10002,10004,10006,40001,40003,40002,40004,40006]
 
 
 def start(output_path, map_path):
@@ -69,12 +70,21 @@ def start(output_path, map_path):
             for frame in frame_list[num]:
 
                 if idx == frame:
-                    id = id_list[num][f_idx]
-                    x = x_list[num][f_idx]
-                    y = y_list[num][f_idx]
+                    if select_id is True:
+                        id = id_list[num][f_idx]
+                        x = x_list[num][f_idx]
+                        y = y_list[num][f_idx]
 
-                    color = getcolor(abs(id))
-                    cv2.circle(map, (int(x), int(y)), 5, color, -1)
+                        if id in select_id_list:
+                            color = getcolor(abs(id))
+                            cv2.circle(map, (int(x), int(y)), 5, color, -1)
+                    else:
+                        id = id_list[num][f_idx]
+                        x = x_list[num][f_idx]
+                        y = y_list[num][f_idx]
+
+                        color = getcolor(abs(id))
+                        cv2.circle(map, (int(x), int(y)), 5, color, -1)
 
                     f_idx += 1
                 elif idx < frame:
