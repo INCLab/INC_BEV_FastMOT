@@ -22,7 +22,7 @@ WIN_TYPE = 'itakura'
 '''
 ZS_SCALER = False
 
-SHOW_DTW_DIST = True  # DTW 거리값 리스트 출력
+SHOW_DTW_DIST = False  # DTW 거리값 리스트 출력
 SHOW_LOCAL_ID_LIST = False  # 카메라마다 Tracking된 Local ID List(Local ID mapping 후) 출력
 NORMALIZE_DTW_DIST = False  # 하지않는게 scalar 성능이 더좋게 나오는중...
 ############################################################
@@ -174,11 +174,15 @@ def create_scalar(df, threshold):
     scalar_list = []
 
     # calculate distance
-    for i in range(0, len(x_list) - 1):
-        if frame_list[i+1] - frame_list[i] > threshold:
-            continue
-        dist = math.sqrt((x_list[i + 1] - x_list[i]) ** 2 + (y_list[i + 1] - y_list[i]) ** 2)
-        scalar_list.append(dist)
+    # for i in range(0, len(x_list) - 1):
+    #     if frame_list[i+1] - frame_list[i] > threshold:
+    #         continue
+    #     dist = math.sqrt((x_list[i + 1] - x_list[i]) ** 2 + (y_list[i + 1] - y_list[i]) ** 2)
+    #     scalar_list.append(dist)
+
+    for i in range(0, len(x_list)):
+        val = np.array([x_list[i], y_list[i]])
+        scalar_list.append(val)
 
     info_list.append(scalar_list)
 

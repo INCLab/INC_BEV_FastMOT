@@ -11,15 +11,15 @@ import json
 '''
 skip = 'skip10'
 
-test_start = 2
-test_end = 2
+test_start = 1
+test_end = 50
 
 SELECT_CAMERA = True
 ######################################################
 
 
 # If SELECT_CAMERA is True
-select_list = [1,4]
+select_list = [1,2]
 
 bev_list = []
 if SELECT_CAMERA:
