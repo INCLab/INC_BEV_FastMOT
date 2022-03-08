@@ -2,16 +2,24 @@ import math
 import numpy as np
 import dtw
 import pandas as pd
-
 from sklearn.preprocessing import MinMaxScaler
 
-FRAME_THRESHOLD = 20
+# ############## User config params #################
+FRAME_THRESHOLD = 1000
 
-LOCAL_INIT_ID = 10000
-
+'''
+    Window type for DTW distance
+    1. none
+    2. itakura (best)
+'''
+WIN_TYPE = 'itakura'
 
 SHOW_DTW_DIST = False  # DTW 거리값 리스트 출력
 SHOW_LOCAL_ID_LIST = False  # 카메라마다 Tracking된 Local ID List(Local ID mapping 후) 출력
+
+############################################################
+
+LOCAL_INIT_ID = 10000
 
 # ########### Preprocessing: ID Correction
 '''
@@ -315,7 +323,7 @@ def dtw_overlap_frames(x_id_info, y_id_info, case):
 
         # If vector length == 1, it accur dimension mismatch error
         try:
-            dist = dtw.dtw(x_vec_list[start_idx:end_idx + 1], y_vec_list, keep_internals=True).distance
+            dist = dtw.dtw(x_vec_list[start_idx:end_idx + 1], y_vec_list, keep_internals=True, window_type=WIN_TYPE).distance
         except:
             dist = -1
 
@@ -340,7 +348,7 @@ def dtw_overlap_frames(x_id_info, y_id_info, case):
 
         # If vector length == 1, it accur dimension mismatch error
         try:
-            dist = dtw.dtw(x_vec_list, y_vec_list[start_idx:end_idx + 1], keep_internals=True).distance
+            dist = dtw.dtw(x_vec_list, y_vec_list[start_idx:end_idx + 1], keep_internals=True, window_type=WIN_TYPE).distance
         except:
             dist = -1
 
@@ -365,7 +373,7 @@ def dtw_overlap_frames(x_id_info, y_id_info, case):
 
         # If vector length == 1, it accur dimension mismatch error
         try:
-            dist = dtw.dtw(x_vec_list[:end_idx + 1], y_vec_list[start_idx:], keep_internals=True).distance
+            dist = dtw.dtw(x_vec_list[:end_idx + 1], y_vec_list[start_idx:], keep_internals=True, window_type=WIN_TYPE).distance
         except:
             dist = -1
 
@@ -389,7 +397,7 @@ def dtw_overlap_frames(x_id_info, y_id_info, case):
 
         # If vector length == 1, it accur dimension mismatch error
         try:
-            dist = dtw.dtw(x_vec_list[start_idx:], y_vec_list[:end_idx + 1], keep_internals=True).distance
+            dist = dtw.dtw(x_vec_list[start_idx:], y_vec_list[:end_idx + 1], keep_internals=True, window_type=WIN_TYPE).distance
         except:
             dist = -1
 

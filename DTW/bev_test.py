@@ -15,7 +15,10 @@ import mimetypes
 LOCAL_INIT_ID = 10000
 
 select_id = True
-select_id_list = [[10003,40003],[10002,10004,10006,40002,40004,40006]]
+select_id_list = [[10002,40001,40005],[10001,10004,40002,40008,40010]]
+
+skip = 'skip10'
+test_case = 2
 
 
 def start(output_path, map_path):
@@ -182,4 +185,4 @@ def _gst_write_pipeline(output_uri):
 
 
 if __name__ == "__main__":
-    start('../output/paper_eval_data/no_skip/10/', '../input/edu_map.png')
+    start('../output/paper_eval_data/' + os.path.join(skip, str(test_case)) + '/', '../input/edu_map.png')
