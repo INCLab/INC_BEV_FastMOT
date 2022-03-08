@@ -3,9 +3,7 @@ import dtwfunction as dfunc
 import os
 import json
 
-# Select feature 1.unit(unit vector) 2.scalar(normalized scalar) 3.vector  (default: unit)
-FEATURE_List = ['vector', 'unit', 'scalar']
-
+# ############## User config params #################
 '''
     1. no_skip
     2. skip5
@@ -13,11 +11,30 @@ FEATURE_List = ['vector', 'unit', 'scalar']
 '''
 skip = 'no_skip'
 
+test_start = 50
+test_end = 50
+
+SELECT_CAMERA = True
+######################################################
+
+
+# If SELECT_CAMERA is True
+select_list = [2, 3]
+
+bev_list = []
+if SELECT_CAMERA:
+    if not select_list or len(select_list) == 1:
+        print('Error: Select camera(>= 2)')
+        exit()
+    for idx in select_list:
+        bev_list.append('BEV_ch0' + str(idx) + '.txt')
+
+
+# Select feature 1.unit(unit vector) 2.scalar(normalized scalar) 3.vector  (default: unit)
+FEATURE_List = ['vector', 'unit', 'scalar']
+
 json_name = skip + '.json'
 data_path = 'data/' + json_name
-
-test_start = 1
-test_end = 50
 
 
 def start(output_path):
@@ -45,7 +62,10 @@ def start(output_path):
             txt_name = []
             for file in os.listdir(output_path):
                 if file.endswith(".txt") and "BEV_" in file:
-                    if file == "BEV_ch01.txt" or file == "BEV_ch04.txt":
+                    if SELECT_CAMERA:
+                        if file in bev_list:
+                            txt_name.append(file)
+                    else:
                         txt_name.append(file)
 
             # Sort files
@@ -56,7 +76,7 @@ def start(output_path):
             # ID correction을 위한 id grouping
             # local_id_group_list: [CAM1_Local_ID_groupList, CAM2_Local_ID_groupList, CAM3_Local_ID_groupList]
             # drop_list: [CAM1_id_dropList, CAM2_id_dropList, CAM3_id_dropList]
-            total_file_num = 2
+            total_file_num = len(txt_name)
 
             # Read json data
             with open(data_path) as f:
@@ -68,7 +88,14 @@ def start(output_path):
             local_id_group_list = []
             drop_list = []
 
-            cam_name = ['ch01', 'ch04']
+            cam_name = []
+            if SELECT_CAMERA:
+                for idx in select_list:
+                    cam_name.append('ch0' + str(idx))
+            else:
+                for idx in range(1, total_file_num + 1):
+                    cam_name.append('ch0' + str(idx))
+
             tar_name = ['tar1', 'tar2', 'tar3', 'delete']
 
             # Create local mapping list with json data
@@ -86,11 +113,12 @@ def start(output_path):
             result_df_list = []
             total_id_list = []
 
-            for i in range(total_file_num):
-                if i == 0:
-                    cam_num = 1
-                elif i == 1:
-                    cam_num = 4
+            for i in range(0, total_file_num):
+                if SELECT_CAMERA:
+                    cam_num = select_list[i]
+                else:
+                    cam_num = i+1
+
                 df_list, id_list = dfunc.make_df_list(os.path.join(output_path, txt_name[i]),
                                                       local_id_group_list[i],
                                                       cam_num)
@@ -105,15 +133,15 @@ def start(output_path):
             dfunc.select_feature(result_df_list, result_info_list, feature=FEATURE)
 
             # Create high similarity ID list
-            # ToDo: 현재는 result0를 기준으로 나머지를 비교한 결과만 사용, 후에 나머지를 기준으로 구한 값도 고려해야함
             id_map_list = [[], [], [], []] # length of file
             for i in range(0, len(result_info_list)-1):
                 result_dist_list = dfunc.check_similarity(result_info_list[i], result_info_list[i+1:])
-                dfunc.id_mapping(result_dist_list, id_map_list[i], total_id_list)  # id_mapping에서 todo 처리
+                dfunc.id_mapping(result_dist_list, id_map_list[i], total_id_list)
 
             print('### ' + str(data_num) + ': Global Re-ID list ###')
             print(id_map_list[0])
             result_list.append(id_map_list[0])
+
         total_list.append(result_list)
 
     ############ Create GT List #######################
@@ -128,13 +156,24 @@ def start(output_path):
         # Create local mapping list with json data
         tar_list = [[], [], []]
 
-        cam_name = ['ch01', 'ch04']
+        cam_name = []
+        if SELECT_CAMERA:
+            for idx in select_list:
+                cam_name.append('ch0' + str(idx))
+        else:
+            for idx in range(1, total_file_num + 1):
+                cam_name.append('ch0' + str(idx))
+
         tar_name = ['tar1', 'tar2', 'tar3', 'delete']
 
         for cam in cam_name:
 
             if cam == 'ch01':
                 start_id = 10000
+            elif cam == 'ch02':
+                start_id = 20000
+            elif cam == 'ch03':
+                start_id = 30000
             elif cam == 'ch04':
                 start_id = 40000
 
@@ -160,7 +199,9 @@ def start(output_path):
 
     # Save final list
     result_df = pd.DataFrame(final_list)
-    result_df.to_excel(origin_output_path + 'result_2cam14.xlsx')
+
+    if SELECT_CAMERA:
+        result_df.to_excel(origin_output_path + 'result_' + str(len(select_list)) + 'cam' + str(select_list) + '.xlsx')
 
     eval(final_list)
     
