@@ -11,7 +11,7 @@ FEATURE_List = ['vector', 'unit', 'scalar']
     2. skip5
     3. skip10
 '''
-skip = 'skip10'
+skip = 'no_skip'
 
 json_name = skip + '.json'
 data_path = 'data/' + json_name
