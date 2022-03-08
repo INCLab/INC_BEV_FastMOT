@@ -11,8 +11,8 @@ import json
 '''
 skip = 'skip10'
 
-test_start = 1
-test_end = 50
+test_start = 23
+test_end = 23
 
 SELECT_CAMERA = True
 ######################################################

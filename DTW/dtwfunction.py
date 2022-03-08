@@ -3,7 +3,7 @@ import numpy as np
 import dtw
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
-
+# Todo: eval 수정한 뒤 itakura 다시 테스트
 # ############## User config params #################
 FRAME_THRESHOLD = 1000
 
