@@ -15,10 +15,10 @@ import mimetypes
 LOCAL_INIT_ID = 10000
 
 select_id = True
-select_id_list = [[20007,30002,30005],[20003,20008,30001],[20005,30003]]
+select_id_list = [[10001,40001],[10002,40002]]
 
-skip = 'no_skip'
-test_case = 50
+skip = 'skip10'
+test_case = 2
 
 
 def start(output_path, map_path):
@@ -29,7 +29,7 @@ def start(output_path, map_path):
     txt_name = []
     for file in os.listdir(output_path):
         if file.endswith(".txt") and "BEV_" in file:
-            if file == "BEV_ch02.txt" or file == "BEV_ch03.txt":
+            if file == "BEV_ch01.txt" or file == "BEV_ch04.txt":
                 txt_name.append(file)
 
     if not os.path.exists(map_output_path):
