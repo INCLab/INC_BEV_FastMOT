@@ -15,10 +15,10 @@ import mimetypes
 LOCAL_INIT_ID = 10000
 
 select_id = True
-select_id_list = [[10001,40001],[10002,40002]]
+select_id_list = [[10001,40001],[10002,40003]]
 
-skip = 'skip10'
-test_case = 2
+skip = 'skip5'
+test_case = 38
 
 
 def start(output_path, map_path):

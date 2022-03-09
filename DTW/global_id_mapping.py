@@ -9,10 +9,10 @@ import json
     2. skip5
     3. skip10
 '''
-skip = 'no_skip'
+skip = 'skip5'
 
-test_start = 6
-test_end = 6
+test_start = 38
+test_end = 38
 
 SAVE_FINAL_LIST = False
 SELECT_CAMERA = True
