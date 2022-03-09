@@ -12,7 +12,7 @@ FRAME_THRESHOLD = 1000
     1. none
     2. itakura (best)
 '''
-WIN_TYPE = 'itakura'
+WIN_TYPE = 'none'
 
 
 '''

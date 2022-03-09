@@ -9,17 +9,18 @@ import json
     2. skip5
     3. skip10
 '''
-skip = 'skip10'
+skip = 'no_skip'
 
-test_start = 23
-test_end = 23
+test_start = 6
+test_end = 6
 
+SAVE_FINAL_LIST = False
 SELECT_CAMERA = True
 ######################################################
 
 
 # If SELECT_CAMERA is True
-select_list = [1,2]
+select_list = [1,4]
 
 bev_list = []
 if SELECT_CAMERA:
@@ -191,17 +192,18 @@ def start(output_path):
 
     # GT, vector, unit, scalar result
     final_list = []
-    for i in range(test_start-1, test_end):
+    for i in range(0, test_end - test_start + 1):
         final_list.append(gt_list[i])
         final_list.append(total_list[0][i])  # vector
         final_list.append(total_list[1][i])  # unit
         final_list.append(total_list[2][i])  # scalar
 
     # Save final list
-    result_df = pd.DataFrame(final_list)
+    if SAVE_FINAL_LIST:
+        result_df = pd.DataFrame(final_list)
 
-    if SELECT_CAMERA:
-        result_df.to_excel(origin_output_path + 'result_' + str(len(select_list)) + 'cam' + str(select_list) + '.xlsx')
+        if SELECT_CAMERA:
+            result_df.to_excel(origin_output_path + 'result_' + str(len(select_list)) + 'cam' + str(select_list) + '.xlsx')
 
     eval(final_list)
     
@@ -220,6 +222,11 @@ def compare_list(gt_ids, cp_ids):
 
     if cp_ids:
         for cp in cp_ids:
+            # GT와 묶인 id수가 같지 않을 경우 False
+            if len(gt_ids) != len(cp_ids):
+                flag = False
+                break
+            # 비교하는 local id 리스트에서 하나라도 GT와 다를경우 False
             if cp not in gt_ids:
                 flag = False
                 break
