@@ -3,7 +3,6 @@ import numpy as np
 import dtw
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
-# Todo: eval 수정한 뒤 itakura 다시 테스트
 # ############## User config params #################
 FRAME_THRESHOLD = 1000
 
@@ -24,7 +23,7 @@ ZS_SCALER = False
 
 SHOW_DTW_DIST = False  # DTW 거리값 리스트 출력
 SHOW_LOCAL_ID_LIST = False  # 카메라마다 Tracking된 Local ID List(Local ID mapping 후) 출력
-NORMALIZE_DTW_DIST = False  # 하지않는게 scalar 성능이 더좋게 나오는중...
+NORMALIZE_DTW_DIST = True
 ############################################################
 
 LOCAL_INIT_ID = 10000
