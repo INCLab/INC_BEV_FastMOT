@@ -2,10 +2,30 @@ import math
 import numpy as np
 import dtw
 import pandas as pd
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
+# ############## User config params #################
+FRAME_THRESHOLD = 1000
 
-from sklearn.preprocessing import MinMaxScaler
+'''
+    Window type for DTW distance
+    1. none
+    2. itakura (best)
+'''
+WIN_TYPE = 'none'
 
-FRAME_THRESHOLD = 20
+
+'''
+    Feature scaler
+    Default: Min-Max Normalizaton
+    ZS_SCALER = True: Z-Score Normalization
+'''
+ZS_SCALER = False
+
+SHOW_DTW_DIST = False  # DTW 거리값 리스트 출력
+SHOW_LOCAL_ID_LIST = False  # 카메라마다 Tracking된 Local ID List(Local ID mapping 후) 출력
+NORMALIZE_DTW_DIST = True
+############################################################
+
 LOCAL_INIT_ID = 10000
 
 # ########### Preprocessing: ID Correction
@@ -48,9 +68,29 @@ def id_drop(drop_list, mot_df, file_idx):
         return mot_df
 
 
-def make_df_list(filepath, cor_id_list, drop_list, file_idx):
+def make_df_list(filepath, cor_id_list, file_idx):
     result = pd.read_csv(filepath, delimiter=' ', header=None)
     result.columns = ['frame', 'id', 'x', 'y']
+
+    # drop list 생성하기
+    init_id = file_idx * LOCAL_INIT_ID
+    id_list = list(set(result['id'].to_list()))
+
+    total_id_list = []
+    for ids in cor_id_list:
+        total_id_list += ids
+
+    drop_list = []
+    if total_id_list:
+        for i in range(0, len(total_id_list)):
+            total_id_list[i] += init_id
+
+        for id in id_list:
+            if id in total_id_list:
+                continue
+            else:
+                id -= init_id
+                drop_list.append(id)
 
     if cor_id_list:
         result = id_correction(cor_id_list, result, file_idx)
@@ -66,11 +106,24 @@ def make_df_list(filepath, cor_id_list, drop_list, file_idx):
         df = result[result['id'] == id]
         df_list.append(df)
 
+    if SHOW_LOCAL_ID_LIST:
+        print(id_list)
+
     return df_list, id_list
 
 
 # ########## Create Feature for DTW #################
 def create_unit_vec(df, threshold):
+    # Normalization
+    scaler = MinMaxScaler()
+
+    if ZS_SCALER:
+        scaler = StandardScaler()
+
+    scaler.fit(df.iloc[:, 2:])
+    scaled_df = scaler.transform(df.iloc[:, 2:])
+    df.iloc[:, 2:] = scaled_df
+
     frame_list = df['frame'].to_list()
     id = df['id'].iloc[0]
     x_list = df['x'].to_list()
@@ -100,8 +153,12 @@ def create_unit_vec(df, threshold):
 
 
 def create_scalar(df, threshold):
-    # Min-Max normalization
+    # Normalization
     scaler = MinMaxScaler()
+
+    if ZS_SCALER:
+        scaler = StandardScaler()
+
     scaler.fit(df.iloc[:, 2:])
     scaled_df = scaler.transform(df.iloc[:, 2:])
     df.iloc[:, 2:] = scaled_df
@@ -116,11 +173,15 @@ def create_scalar(df, threshold):
     scalar_list = []
 
     # calculate distance
-    for i in range(0, len(x_list) - 1):
-        if frame_list[i+1] - frame_list[i] > threshold:
-            continue
-        dist = math.sqrt((x_list[i + 1] - x_list[i]) ** 2 + (y_list[i + 1] - y_list[i]) ** 2)
-        scalar_list.append(dist)
+    # for i in range(0, len(x_list) - 1):
+    #     if frame_list[i+1] - frame_list[i] > threshold:
+    #         continue
+    #     dist = math.sqrt((x_list[i + 1] - x_list[i]) ** 2 + (y_list[i + 1] - y_list[i]) ** 2)
+    #     scalar_list.append(dist)
+
+    for i in range(0, len(x_list)):
+        val = np.array([x_list[i], y_list[i]])
+        scalar_list.append(val)
 
     info_list.append(scalar_list)
 
@@ -128,6 +189,16 @@ def create_scalar(df, threshold):
 
 
 def create_vec(df, threshold):
+    # Normalization
+    scaler = MinMaxScaler()
+
+    if ZS_SCALER:
+        scaler = StandardScaler()
+
+    scaler.fit(df.iloc[:, 2:])
+    scaled_df = scaler.transform(df.iloc[:, 2:])
+    df.iloc[:, 2:] = scaled_df
+
     frame_list = df['frame'].to_list()
     id = df['id'].iloc[0]
     x_list = df['x'].to_list()
@@ -181,7 +252,6 @@ def check_similarity(info_list, compare_list):
         기준 아이디에 대해 다른 result 파일에서 나온 모든 아이디들과 케이스별로 유사도 측정(혹은 제외) 후,
         DTW distance를 모두 저장
     '''
-
     # list of total dtw distance info
     result_list = []
     for _ in range(0, len(compare_list)):
@@ -192,8 +262,12 @@ def check_similarity(info_list, compare_list):
         for i in range(0, len(compare_list)):
             for k in compare_list[i]:
 
+                # vector값이 없는 경우 제외 (예를들어 포인트가 한번만 찍힌경우)
+                if len(k[0]) == 0 or len(info[0]) == 0:
+                    continue
+
                 # *** 겹치지 않는경우: 일단 제외한다
-                if info[0][0] > k[0][-1] or info[0][-1] < k[0][0]:
+                elif info[0][0] > k[0][-1] or info[0][-1] < k[0][0]:
                     continue
 
                 # *** 포함하는 경우 : DTW로 유사도 측정
@@ -238,8 +312,6 @@ def check_similarity(info_list, compare_list):
 '''
     이동경로를 비교할때 overlap 되는 frame에 해당하는 feature들만 골라서 DTW 적용 
 '''
-
-
 def dtw_overlap_frames(x_id_info, y_id_info, case):
     dist = -1
     x_frame_list = x_id_info[0]
@@ -252,6 +324,8 @@ def dtw_overlap_frames(x_id_info, y_id_info, case):
     end_idx = 0
 
     # Case 1,2: 포함하는 경우
+
+    # 비교타겟이 기준타겟에 포함
     if case == 1:
         try:
             start_idx = x_frame_list.index(y_frame_list[0])
@@ -272,10 +346,13 @@ def dtw_overlap_frames(x_id_info, y_id_info, case):
 
         # If vector length == 1, it accur dimension mismatch error
         try:
-            dist = dtw.dtw(x_vec_list[start_idx:end_idx + 1], y_vec_list, keep_internals=True).distance
+            dist = dtw.dtw(x_vec_list[start_idx:end_idx + 1], y_vec_list, keep_internals=True, window_type=WIN_TYPE).distance
+            if NORMALIZE_DTW_DIST:
+                dist = dist / (len(x_vec_list[start_idx:end_idx + 1]) + len(y_vec_list))
         except:
             dist = -1
 
+    # 기준타겟이 비교타겟에 포함
     elif case == 2:
         try:
             start_idx = y_frame_list.index(x_frame_list[0])
@@ -296,7 +373,9 @@ def dtw_overlap_frames(x_id_info, y_id_info, case):
 
         # If vector length == 1, it accur dimension mismatch error
         try:
-            dist = dtw.dtw(x_vec_list[start_idx:end_idx + 1], y_vec_list, keep_internals=True).distance
+            dist = dtw.dtw(x_vec_list, y_vec_list[start_idx:end_idx + 1], keep_internals=True, window_type=WIN_TYPE).distance
+            if NORMALIZE_DTW_DIST:
+                dist = dist / (len(x_vec_list) + len(y_vec_list[start_idx:end_idx + 1]))
         except:
             dist = -1
 
@@ -321,7 +400,9 @@ def dtw_overlap_frames(x_id_info, y_id_info, case):
 
         # If vector length == 1, it accur dimension mismatch error
         try:
-            dist = dtw.dtw(x_vec_list[start_idx:end_idx + 1], y_vec_list, keep_internals=True).distance
+            dist = dtw.dtw(x_vec_list[:end_idx + 1], y_vec_list[start_idx:], keep_internals=True, window_type=WIN_TYPE).distance
+            if NORMALIZE_DTW_DIST:
+                dist = dist / (len(x_vec_list[:end_idx + 1]) + len(y_vec_list[start_idx:]))
         except:
             dist = -1
 
@@ -345,7 +426,9 @@ def dtw_overlap_frames(x_id_info, y_id_info, case):
 
         # If vector length == 1, it accur dimension mismatch error
         try:
-            dist = dtw.dtw(x_vec_list[start_idx:end_idx + 1], y_vec_list, keep_internals=True).distance
+            dist = dtw.dtw(x_vec_list[start_idx:], y_vec_list[:end_idx + 1], keep_internals=True, window_type=WIN_TYPE).distance
+            if NORMALIZE_DTW_DIST:
+                dist = dist / (len(x_vec_list[start_idx:]) + len(y_vec_list[:end_idx + 1]))
         except:
             dist = -1
 
@@ -353,9 +436,12 @@ def dtw_overlap_frames(x_id_info, y_id_info, case):
 
 
 # Todo: result1, 2 의 similarity도 반영해서 id mapping을 진행해야함
-def id_mapping(distance_list, mapping_list):
+def id_mapping(distance_list, mapping_list, total_id_list):
     for dist_list in distance_list:
         sorted_list = sorted(dist_list, key=lambda x: (x[2], x[0]))
+
+        if SHOW_DTW_DIST is True:
+            print(sorted_list)
 
         while sorted_list:
             compare_id = sorted_list[0][0]
@@ -380,6 +466,20 @@ def id_mapping(distance_list, mapping_list):
             # Delete duplicate id list
             sorted_list = [i for i in sorted_list if not compare_id in i]
             sorted_list = [i for i in sorted_list if not compared_id in i]
+
+    # local ID mapping이 되지 않은 local ID는 단독으로 mapping list에 추가
+    not_mapped_ids = []
+    for v_ids in total_id_list:
+        for id in v_ids:
+            flag = False
+            for map_ids in mapping_list:
+                if id in map_ids:
+                    flag = True
+            if flag is False:
+                not_mapped_ids.append([id])
+
+    if not_mapped_ids:
+        mapping_list += not_mapped_ids
 
     return
 

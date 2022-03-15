@@ -16,7 +16,6 @@ import os
 import shutil
 import traceback
 import mimetypes
-
 import fastmot
 import cv2
 from fastmot.utils import ConfigDecoder, Profiler
