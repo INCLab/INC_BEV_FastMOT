@@ -435,8 +435,8 @@ def dtw_overlap_frames(x_id_info, y_id_info, case):
     return dist
 
 
-# Todo: result1, 2 의 similarity도 반영해서 id mapping을 진행해야함
-def id_mapping(distance_list, mapping_list, total_id_list):
+def id_mapping(distance_list, total_id_list):
+    mapping_list = []
     for dist_list in distance_list:
         sorted_list = sorted(dist_list, key=lambda x: (x[2], x[0]))
 
@@ -478,10 +478,7 @@ def id_mapping(distance_list, mapping_list, total_id_list):
             if flag is False:
                 not_mapped_ids.append([id])
 
-    if not_mapped_ids:
-        mapping_list += not_mapped_ids
-
-    return
+    return mapping_list, not_mapped_ids
 
 
 # Input: dataframe list by camera & id

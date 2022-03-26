@@ -11,8 +11,8 @@ import json
 '''
 skip = 'skip5'
 
-test_start = 36
-test_end = 36
+test_start = 1
+test_end = 50
 
 SAVE_FINAL_LIST = False
 SELECT_CAMERA = True
@@ -20,7 +20,7 @@ SELECT_CAMERA = True
 
 
 # If SELECT_CAMERA is True
-select_list = [1,2,3,4]
+select_list = [1,2,3]
 
 bev_list = []
 if SELECT_CAMERA:
@@ -134,14 +134,41 @@ def start(output_path):
             dfunc.select_feature(result_df_list, result_info_list, feature=FEATURE)
 
             # Create high similarity ID list
-            id_map_list = [[], [], [], []] # length of file
-            for i in range(0, len(result_info_list)-1):
-                result_dist_list = dfunc.check_similarity(result_info_list[i], result_info_list[i+1:])
-                dfunc.id_mapping(result_dist_list, id_map_list[i], total_id_list)
+            result_dist_list = dfunc.check_similarity(result_info_list[0], result_info_list[1:])
+            mapped_ids, not_mapped_ids = dfunc.id_mapping(result_dist_list, total_id_list)
+
+            # 첫 매핑에서 매핑이 안된 아이디가 있고, 카메라가 3대 이상인 경우 나머지 카메라들끼리 비교하여
+            # 매핑이 안된 아이디들에 대해 다시 매핑
+            if total_file_num > 2 and not_mapped_ids:
+                for i in range(1, len(result_info_list)-1):
+                    result_dist_list = dfunc.check_similarity(result_info_list[i], result_info_list[i+1:])
+                    tmp_mapped_ids, _ = dfunc.id_mapping(result_dist_list, total_id_list)
+
+                    tmp_not_mapped_ids = not_mapped_ids.copy()
+                    for ids in tmp_mapped_ids:
+                        already_append = False
+                        for n_id in tmp_not_mapped_ids:
+                            if n_id in ids:
+                                if already_append is False:
+                                    is_in_mapped_set = False
+                                    for mapped in mapped_ids:
+                                        if is_in_mapped_set is True:
+                                            break
+                                        for id in ids:
+                                            if id in mapped:
+                                                is_in_mapped_set = True
+                                                break
+                                    if is_in_mapped_set is False:
+                                        mapped_ids.append(ids)
+                                    already_append = True
+                                not_mapped_ids.remove(n_id)
+
+            if not_mapped_ids:
+                mapped_ids += not_mapped_ids
 
             print('### ' + str(data_num) + ': Global Re-ID list ###')
-            print(id_map_list[0])
-            result_list.append(id_map_list[0])
+            print(mapped_ids)
+            result_list.append(mapped_ids)
 
         total_list.append(result_list)
 
