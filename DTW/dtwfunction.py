@@ -21,6 +21,9 @@ WIN_TYPE = 'none'
 '''
 ZS_SCALER = False
 
+# Todo: Feature 길이 조절
+FEATURE_SEQ_LENGTH = 50  # DTW sequence 길이 조절
+
 SHOW_DTW_DIST = False  # DTW 거리값 리스트 출력
 SHOW_LOCAL_ID_LIST = False  # 카메라마다 Tracking된 Local ID List(Local ID mapping 후) 출력
 NORMALIZE_DTW_DIST = True
@@ -230,6 +233,7 @@ def select_feature(result_df_list, info_list, feature='unit'):
             info = []
             for df in df_list:
                 info.append(create_unit_vec(df, FRAME_THRESHOLD))
+                print(len(info))
             info_list.append(info)
     elif feature == 'scalar':
         for df_list in result_df_list:
