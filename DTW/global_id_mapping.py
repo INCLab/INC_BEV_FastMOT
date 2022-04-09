@@ -20,7 +20,7 @@ SELECT_CAMERA = True
 
 
 # If SELECT_CAMERA is True
-select_list = [1,2,3]
+select_list = [1,2,3,4]
 
 bev_list = []
 if SELECT_CAMERA:
