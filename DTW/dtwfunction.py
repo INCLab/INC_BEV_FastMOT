@@ -22,8 +22,8 @@ WIN_TYPE = 'none'
 ZS_SCALER = False
 
 # For data sampling & Sequence length tuning
-USE_SAMPLING_INTERVAL = True
-SAMPLING_INTERVAL = 1
+USE_SAMPLING_INTERVAL = False
+SAMPLING_INTERVAL = 3
 
 SHOW_DTW_DIST = False  # DTW 거리값 리스트 출력
 SHOW_LOCAL_ID_LIST = False  # 카메라마다 Tracking된 Local ID List(Local ID mapping 후) 출력
