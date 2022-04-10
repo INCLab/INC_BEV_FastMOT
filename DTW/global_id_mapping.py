@@ -5,22 +5,21 @@ import json
 
 # ############## User config params #################
 '''
-    1. no_skip
-    2. skip5
-    3. skip10
+    * no_skip
+    * skip5
+    * skip10
 '''
-skip = 'skip5'
+skip_list = ['no_skip', 'skip5', 'skip10']
 
 test_start = 1
 test_end = 50
 
+SHOW_PROCESS = False
 SAVE_FINAL_LIST = False
-SELECT_CAMERA = True
 ######################################################
-
-
+SELECT_CAMERA = True
 # If SELECT_CAMERA is True
-select_list = [1,2,3,4]
+select_list = [2,3,4]
 
 bev_list = []
 if SELECT_CAMERA:
@@ -30,23 +29,27 @@ if SELECT_CAMERA:
     for idx in select_list:
         bev_list.append('BEV_ch0' + str(idx) + '.txt')
 
+######################################################
 
 # Select feature 1.unit(unit vector) 2.scalar(normalized scalar) 3.vector  (default: unit)
 FEATURE_List = ['vector', 'unit', 'scalar']
-
-json_name = skip + '.json'
-data_path = 'data/' + json_name
+############################################################
 
 
-def start(output_path):
+def start(output_path, skip):
+    # Select json file by skip
+    json_name = skip + '.json'
+    data_path = 'data/' + json_name
+
     # global mapping result list
     origin_output_path = output_path
 
     total_list = []
     for FEATURE in FEATURE_List:
-        print("#################################################")
-        print("##############      " + FEATURE + "      ##############")
-        print("#################################################")
+        if SHOW_PROCESS:
+            print("#################################################")
+            print("##############      " + FEATURE + "      ##############")
+            print("#################################################")
         result_list = list()
 
         for data_num in range(test_start, test_end + 1):
@@ -166,8 +169,9 @@ def start(output_path):
             if not_mapped_ids:
                 mapped_ids += not_mapped_ids
 
-            print('### ' + str(data_num) + ': Global Re-ID list ###')
-            print(mapped_ids)
+            if SHOW_PROCESS:
+                print('### ' + str(data_num) + ': Global Re-ID list ###')
+                print(mapped_ids)
             result_list.append(mapped_ids)
 
         total_list.append(result_list)
@@ -232,7 +236,7 @@ def start(output_path):
         if SELECT_CAMERA:
             result_df.to_excel(origin_output_path + 'result_' + str(len(select_list)) + 'cam' + str(select_list) + '.xlsx')
 
-    eval(final_list)
+    eval(final_list, skip)
     
     return flag
 
@@ -263,7 +267,7 @@ def compare_list(gt_ids, cp_ids):
     return flag
 
 
-def eval(f_list):
+def eval(f_list, skip):
     # Number of matching correctly
     vec_corr = 0
     unit_corr = 0
@@ -350,21 +354,23 @@ def eval(f_list):
 
     total_case -= 1
 
-    print('====== Total Accuarcy ======')
+    print('====== {}: Total Accuarcy ======'.format(skip))
     print('Vector: {} / {}'.format(vec_corr, total_case))
     print('Unit Vector: {} / {}'.format(unit_corr, total_case))
     print('Scalar: {} / {}'.format(scal_corr, total_case))
     print('\n')
-    print('====== Target Accuracy ======')
+    print('====== {}: Target Accuracy ======'.format(skip))
     print('Vector: {}'.format(vec_tar_score))
     print('Unit Vector: {}'.format(unit_tar_score))
     print('Scalar: {}'.format(scal_tar_score))
     print('\n')
-    print('====== False Matching Index ======')
+    print('====== {}: False Matching Index ======'.format(skip))
     print('Vector: {}'.format(vec_false_list))
     print('Unit: {}'.format(unit_false_list))
     print('Scalar: {}'.format(scal_false_list))
+    print('\n')
 
 
 if __name__ == '__main__':
-    start('../output/paper_eval_data/' + skip + '/')
+    for skip in skip_list:
+        start('../output/paper_eval_data/' + skip + '/', skip)

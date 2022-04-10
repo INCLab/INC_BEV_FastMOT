@@ -21,9 +21,8 @@ WIN_TYPE = 'none'
 '''
 ZS_SCALER = False
 
-# Todo: Feature 길이 조절
 USE_SEQ_LENGTH = True  # DTW sequence 길이 조절
-FEATURE_SEQ_LENGTH = 500  # DTW sequence 길이 설정
+FEATURE_SEQ_LENGTH = 600  # DTW sequence 길이 설정
 
 SHOW_DTW_DIST = False  # DTW 거리값 리스트 출력
 SHOW_LOCAL_ID_LIST = False  # 카메라마다 Tracking된 Local ID List(Local ID mapping 후) 출력
