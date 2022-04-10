@@ -21,8 +21,9 @@ WIN_TYPE = 'none'
 '''
 ZS_SCALER = False
 
-USE_SEQ_LENGTH = True  # DTW sequence 길이 조절
-FEATURE_SEQ_LENGTH = 600  # DTW sequence 길이 설정
+# For data sampling & Sequence length tuning
+USE_SAMPLING_INTERVAL = True
+SAMPLING_INTERVAL = 1
 
 SHOW_DTW_DIST = False  # DTW 거리값 리스트 출력
 SHOW_LOCAL_ID_LIST = False  # 카메라마다 Tracking된 Local ID List(Local ID mapping 후) 출력
@@ -107,6 +108,13 @@ def make_df_list(filepath, cor_id_list, file_idx):
 
     for id in id_list:
         df = result[result['id'] == id]
+        df.reset_index(drop=True, inplace=True)
+
+        # Data Sampling
+        if USE_SAMPLING_INTERVAL:
+            sample_list = list(np.arange(0, len(df), SAMPLING_INTERVAL+1))
+            df = df.iloc[sample_list, :]
+
         df_list.append(df)
 
     if SHOW_LOCAL_ID_LIST:
@@ -234,14 +242,6 @@ def select_feature(result_df_list, info_list, feature='unit'):
             for df in df_list:
                 info.append(create_unit_vec(df, FRAME_THRESHOLD))
 
-                # Feature length 조절
-                if USE_SEQ_LENGTH:
-                    # info: [[Frame_list, id, Seq_list], ...]
-                    for info_data in info:
-                        if len(info_data[0]) > FEATURE_SEQ_LENGTH:
-                            info_data[0] = info_data[0][:FEATURE_SEQ_LENGTH]
-                            info_data[2] = info_data[2][:FEATURE_SEQ_LENGTH]
-
             info_list.append(info)
     elif feature == 'scalar':
         for df_list in result_df_list:
@@ -249,28 +249,12 @@ def select_feature(result_df_list, info_list, feature='unit'):
             for df in df_list:
                 info.append(create_scalar(df, FRAME_THRESHOLD))
 
-                # Feature length 조절
-                if USE_SEQ_LENGTH:
-                    # info: [[Frame_list, id, Seq_list], ...]
-                    for info_data in info:
-                        if len(info_data[0]) > FEATURE_SEQ_LENGTH:
-                            info_data[0] = info_data[0][:FEATURE_SEQ_LENGTH]
-                            info_data[2] = info_data[2][:FEATURE_SEQ_LENGTH]
-
             info_list.append(info)
     elif feature == 'vector':
         for df_list in result_df_list:
             info = []
             for df in df_list:
                 info.append(create_vec(df, FRAME_THRESHOLD))
-
-                # Feature length 조절
-                if USE_SEQ_LENGTH:
-                    # info: [[Frame_list, id, Seq_list], ...]
-                    for info_data in info:
-                        if len(info_data[0]) > FEATURE_SEQ_LENGTH:
-                            info_data[0] = info_data[0][:FEATURE_SEQ_LENGTH]
-                            info_data[2] = info_data[2][:FEATURE_SEQ_LENGTH]
 
             info_list.append(info)
 
