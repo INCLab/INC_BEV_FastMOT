@@ -1,105 +1,379 @@
 import pandas as pd
-from DTW import dtwfunction as dfunc
+import dtwfunction as dfunc
 import os
+import json
 
-GLOBAL_INIT_ID = 0
+# ############## User config params #################
+'''
+    * no_skip
+    * skip5
+    * skip10
+'''
+skip_list = ['no_skip',
+             'skip5',
+             'skip10'
+             ]
 
-# test1 정익:[1,5],[3,9],[3,7,10,12],[2,10,12,13] / 민재:[4],[5,7,11],[6,13,15],[4,10,17] / 선우:[2],[4,6,8],[5,14],[3,11]
-# test1 drop 정익:[3],[1],[1,2],[] 민재:[],[10],[],[1] / 선우:[6],[2],[],[5,18]
+test_start = 1
+test_end = 50
 
-def start(output_path):
-    flag = False
-    result_path = os.path.join(output_path, 'global_result')
-    output_path = os.path.join(output_path, 'bev_result')
+SHOW_PROCESS = False
+SAVE_FINAL_LIST = False
+######################################################
+SELECT_CAMERA = True
+# If SELECT_CAMERA is True
+select_list = [2,3,4]
 
-    # Check result directory is exist
-    if not os.path.isdir(result_path):
-        os.mkdir(result_path)
+bev_list = []
+if SELECT_CAMERA:
+    if not select_list or len(select_list) == 1:
+        print('Error: Select camera(>= 2)')
+        exit()
+    for idx in select_list:
+        bev_list.append('BEV_ch0' + str(idx) + '.txt')
 
-    txt_name = []
-    for file in os.listdir(output_path):
-        if file.endswith(".txt") and "BEV_" in file:
-            txt_name.append(file)
+######################################################
 
-    # Sort files
-    # Among the file names, you must specify a location indicating the order
-    # e.g., 'BEV_ch01-....' -> [2:4]
-    txt_name = strange_sort(txt_name, 6, 8)
+# Select feature 1.unit(unit vector) 2.scalar(normalized scalar) 3.vector  (default: unit)
+FEATURE_List = ['vector', 'unit', 'scalar']
+############################################################
 
-    # ID correction을 위한 id grouping
-    # local_id_group_list: [CAM1_Local_ID_groupList, CAM2_Local_ID_groupList, CAM3_Local_ID_groupList]
-    # drop_list: [CAM1_id_dropList, CAM2_id_dropList, CAM3_id_dropList]
-    total_file_num = 4
-    local_id_group_list = [[[1,5]],  # video1
-                           [[3,9], [5,7,11], [4,6,8]],  # video2
-                           [[3,7,10,12], [6,13,15], [5,14]],  # video3
-                           [[2,10,12,13], [4,10,17], [3,11]]]  # video4
-    drop_list = [[3,6],  # video1
-                 [1,2,10],  # video2
-                 [1,2,9,17],  # video3
-                 [1,5,6,18]]  # video4
 
-    # Create Dataframes by id
-    result_df_list = []
-    total_id_list = []
+def start(output_path, skip):
+    # Select json file by skip
+    json_name = skip + '.json'
+    data_path = 'data/' + json_name
 
-    for i in range(total_file_num):
-        df_list, id_list = dfunc.make_df_list(os.path.join(output_path, txt_name[i]),
-                                              local_id_group_list[i],
-                                              drop_list[i], i+1)
-        result_df_list.append(df_list)
-        total_id_list.append(id_list)
+    # global mapping result list
+    origin_output_path = output_path
 
-    # Create id info list
-    result_info_list = []
+    total_list = []
+    for FEATURE in FEATURE_List:
+        if SHOW_PROCESS:
+            print("#################################################")
+            print("##############      " + FEATURE + "      ##############")
+            print("#################################################")
+        result_list = list()
 
-    # Select feature 1.unit(unit vector) 2.scalar(normalized scalar) 3.vector  (default: unit)
-    # and generate result_info_list
-    dfunc.select_feature(result_df_list, result_info_list, feature='vector')
+        for data_num in range(test_start, test_end + 1):
+            output_path = origin_output_path
+            output_path = output_path + str(data_num) + '/'
+            flag = False
+            result_path = os.path.join(output_path, 'global_result')
+            output_path = os.path.join(output_path, 'bev_result')
 
-    # Create high similarity ID list
-    # ToDo: 현재는 result0를 기준으로 나머지를 비교한 결과만 사용, 후에 나머지를 기준으로 구한 값도 고려해야함
-    id_map_list = [[], [], [], []] # length of file
-    for i in range(0, len(result_info_list)-1):
-        result_dist_list = dfunc.check_similarity(result_info_list[i], result_info_list[i+1:])
-        dfunc.id_mapping(result_dist_list, id_map_list[i])  # id_mapping에서 todo 처리
+            # Check result directory is exist
+            if not os.path.isdir(result_path):
+                os.mkdir(result_path)
 
-    print('### Global Re-ID list ###\n')
-    print(id_map_list[0])
+            txt_name = []
+            for file in os.listdir(output_path):
+                if file.endswith(".txt") and "BEV_" in file:
+                    if SELECT_CAMERA:
+                        if file in bev_list:
+                            txt_name.append(file)
+                    else:
+                        txt_name.append(file)
 
-    # Assign global id
-    global_id_set = []
+            # Sort files
+            # Among the file names, you must specify a location indicating the order
+            # e.g., 'BEV_ch01-....' -> [2:4]
+            txt_name = strange_sort(txt_name, 6, 8)
 
-    for i in range(1, len(id_map_list[0]) + 1):
-        global_id_set.append(GLOBAL_INIT_ID + i)
+            # ID correction을 위한 id grouping
+            # local_id_group_list: [CAM1_Local_ID_groupList, CAM2_Local_ID_groupList, CAM3_Local_ID_groupList]
+            # drop_list: [CAM1_id_dropList, CAM2_id_dropList, CAM3_id_dropList]
+            total_file_num = len(txt_name)
 
-    if global_id_set:
-        flag = True
+            # Read json data
+            with open(data_path) as f:
+                json_data = json.load(f)
 
-    dfunc.change_to_global(result_df_list, id_map_list[0], global_id_set)
+            # Create dictionary by test case
+            test_case_dict = json_data[str(data_num)]
 
-    total_list = list()
-    for T in result_df_list:
-        for id_info in T:
-            total_list += id_info.values.tolist()
+            local_id_group_list = []
+            drop_list = []
 
-    total_list.sort()
+            cam_name = []
+            if SELECT_CAMERA:
+                for idx in select_list:
+                    cam_name.append('ch0' + str(idx))
+            else:
+                for idx in range(1, total_file_num + 1):
+                    cam_name.append('ch0' + str(idx))
 
-    global_I = dfunc.generate_global_info(total_list)
-    global_df = pd.DataFrame(global_I)
-    global_df.columns = ['frame', 'id', 'x', 'y']
+            tar_name = ['tar1', 'tar2', 'tar3', 'delete']
 
-    print(global_df)
+            # Create local mapping list with json data
+            for cam in cam_name:
+                local_id_list = []
+                for tar in tar_name:
+                    if tar == 'delete':
+                        drop_list.append(test_case_dict[cam][tar])
+                    else:
+                        if test_case_dict[cam][tar]:
+                            local_id_list.append(test_case_dict[cam][tar])
+                local_id_group_list.append(local_id_list)
 
-    # Create Global information txt file
-    global_df.to_csv(os.path.join(result_path, 'global_result.txt'),
-                     sep=' ', header=None, index=None)
+            # Create Dataframes by id
+            result_df_list = []
+            total_id_list = []
 
+            for i in range(0, total_file_num):
+                if SELECT_CAMERA:
+                    cam_num = select_list[i]
+                else:
+                    cam_num = i+1
+
+                df_list, id_list = dfunc.make_df_list(os.path.join(output_path, txt_name[i]),
+                                                      local_id_group_list[i],
+                                                      cam_num)
+                result_df_list.append(df_list)
+                total_id_list.append(id_list)
+
+            # Create id info list
+            result_info_list = []
+
+            # Select feature 1.unit(unit vector) 2.scalar(normalized scalar) 3.vector  (default: unit)
+            # and generate result_info_list
+            dfunc.select_feature(result_df_list, result_info_list, feature=FEATURE)
+
+            # Create high similarity ID list
+            result_dist_list = dfunc.check_similarity(result_info_list[0], result_info_list[1:])
+            mapped_ids, not_mapped_ids = dfunc.id_mapping(result_dist_list, total_id_list)
+
+            # 첫 매핑에서 매핑이 안된 아이디가 있고, 카메라가 3대 이상인 경우 나머지 카메라들끼리 비교하여
+            # 매핑이 안된 아이디들에 대해 다시 매핑
+            if total_file_num > 2 and not_mapped_ids:
+                for i in range(1, len(result_info_list)-1):
+                    result_dist_list = dfunc.check_similarity(result_info_list[i], result_info_list[i+1:])
+                    tmp_mapped_ids, _ = dfunc.id_mapping(result_dist_list, total_id_list)
+
+                    tmp_not_mapped_ids = not_mapped_ids.copy()
+                    for ids in tmp_mapped_ids:
+                        already_append = False
+                        for n_id in tmp_not_mapped_ids:
+                            if n_id in ids:
+                                if already_append is False:
+                                    is_in_mapped_set = False
+                                    for mapped in mapped_ids:
+                                        if is_in_mapped_set is True:
+                                            break
+                                        for id in ids:
+                                            if id in mapped:
+                                                is_in_mapped_set = True
+                                                break
+                                    if is_in_mapped_set is False:
+                                        mapped_ids.append(ids)
+                                    already_append = True
+                                not_mapped_ids.remove(n_id)
+
+            if not_mapped_ids:
+                mapped_ids += not_mapped_ids
+
+            if SHOW_PROCESS:
+                print('### ' + str(data_num) + ': Global Re-ID list ###')
+                print(mapped_ids)
+            result_list.append(mapped_ids)
+
+        total_list.append(result_list)
+
+    ############ Create GT List #######################
+    gt_list = []
+    # Read json data
+    with open(data_path) as f:
+        json_data = json.load(f)
+
+    for data_num in range(test_start, test_end + 1):
+        test_case_dict = json_data[str(data_num)]
+
+        # Create local mapping list with json data
+        tar_list = [[], [], []]
+
+        cam_name = []
+        if SELECT_CAMERA:
+            for idx in select_list:
+                cam_name.append('ch0' + str(idx))
+        else:
+            for idx in range(1, total_file_num + 1):
+                cam_name.append('ch0' + str(idx))
+
+        tar_name = ['tar1', 'tar2', 'tar3', 'delete']
+
+        for cam in cam_name:
+
+            if cam == 'ch01':
+                start_id = 10000
+            elif cam == 'ch02':
+                start_id = 20000
+            elif cam == 'ch03':
+                start_id = 30000
+            elif cam == 'ch04':
+                start_id = 40000
+
+            for tar in tar_name:
+                if tar == 'delete':
+                    break
+                elif tar == 'tar1' and test_case_dict[cam][tar]:
+                    tar_list[0].append(start_id + test_case_dict[cam][tar][0])
+                elif tar == 'tar2' and test_case_dict[cam][tar]:
+                    tar_list[1].append(start_id + test_case_dict[cam][tar][0])
+                elif tar == 'tar3' and test_case_dict[cam][tar]:
+                    tar_list[2].append(start_id + test_case_dict[cam][tar][0])
+        gt_list.append(tar_list)
+    #####################################################################################
+
+    # GT, vector, unit, scalar result
+    final_list = []
+    for i in range(0, test_end - test_start + 1):
+        final_list.append(gt_list[i])
+        final_list.append(total_list[0][i])  # vector
+        final_list.append(total_list[1][i])  # unit
+        final_list.append(total_list[2][i])  # scalar
+
+    # Save final list
+    if SAVE_FINAL_LIST:
+        result_df = pd.DataFrame(final_list)
+
+        if SELECT_CAMERA:
+            result_df.to_excel(origin_output_path + 'result_' + str(len(select_list)) + 'cam' + str(select_list) + '.xlsx')
+
+    eval(final_list, skip)
+    
     return flag
 
 
 def strange_sort(strings, n, m):
     return sorted(strings, key=lambda element: element[n:m])
 
+'''
+    gt_ids = [local_id1, local_id2, ...]
+    cp_ids = [matched_id1, matched_id2, ...]
+'''
+def compare_list(gt_ids, cp_ids):
+    flag = True
+
+    if cp_ids:
+        for cp in cp_ids:
+            # GT와 묶인 id수가 같지 않을 경우 False
+            if len(gt_ids) != len(cp_ids):
+                flag = False
+                break
+            # 비교하는 local id 리스트에서 하나라도 GT와 다를경우 False
+            if cp not in gt_ids:
+                flag = False
+                break
+    else:
+        flag = False
+
+    return flag
+
+
+def eval(f_list, skip):
+    # Number of matching correctly
+    vec_corr = 0
+    unit_corr = 0
+    scal_corr = 0
+
+    # Number of matching correctly by each target
+    vec_tar_score = [0 for i in range(0, len(f_list[0]))]
+    unit_tar_score = [0 for i in range(0, len(f_list[0]))]
+    scal_tar_score = [0 for i in range(0, len(f_list[0]))]
+
+    # List of false matching index
+    vec_false_list = []
+    unit_false_list = []
+    scal_false_list = []
+
+    # Count test case
+    total_case = 1
+
+    for i in range(0, len(f_list)):
+        if i % 4 != 3:
+            continue
+
+        list_gt = f_list[i - 3]
+        list_vec = f_list[i - 2]
+        list_unit = f_list[i - 1]
+        list_scal = f_list[i]
+
+        vec_result = [0 for i in range(0, len(list_gt))]
+        unit_result = [0 for i in range(0, len(list_gt))]
+        scal_result = [0 for i in range(0, len(list_gt))]
+
+        for j in range(0, len(list_gt)):
+            # Check vector feature
+            vec_flag = False
+            for vec in list_vec:
+                match_result = compare_list(list_gt[j], vec)
+                if match_result is True:
+                    vec_flag = True
+                    vec_tar_score[j] += 1
+                    break
+
+            # Check unit vector feature
+            unit_flag = False
+            for unit in list_unit:
+                match_result = compare_list(list_gt[j], unit)
+                if match_result is True:
+                    unit_flag = True
+                    unit_tar_score[j] += 1
+                    break
+
+            # Check scalar feature
+            scal_flag = False
+            for scal in list_scal:
+                match_result = compare_list(list_gt[j], scal)
+                if match_result is True:
+                    scal_flag = True
+                    scal_tar_score[j] += 1
+                    break
+
+            if vec_flag is True:
+                vec_result[j] += 1
+            if unit_flag is True:
+                unit_result[j] += 1
+            if scal_flag is True:
+                scal_result[j] += 1
+
+        if sum(vec_result) == len(vec_result):
+            vec_corr += 1
+        else:
+            vec_false_list.append(total_case)
+
+        if sum(unit_result) == len(unit_result):
+            unit_corr += 1
+        else:
+            unit_false_list.append(total_case)
+
+        if sum(scal_result) == len(scal_result):
+            scal_corr += 1
+        else:
+            scal_false_list.append(total_case)
+
+
+        total_case += 1
+
+    total_case -= 1
+
+    print('====== {}: Total Accuarcy ======'.format(skip))
+    print('Vector: {} / {}'.format(vec_corr, total_case))
+    print('Unit Vector: {} / {}'.format(unit_corr, total_case))
+    print('Scalar: {} / {}'.format(scal_corr, total_case))
+    print('\n')
+    print('====== {}: Target Accuracy ======'.format(skip))
+    print('Vector: {}'.format(vec_tar_score))
+    print('Unit Vector: {}'.format(unit_tar_score))
+    print('Scalar: {}'.format(scal_tar_score))
+    print('\n')
+    print('====== {}: False Matching Index ======'.format(skip))
+    print('Vector: {}'.format(vec_false_list))
+    print('Unit: {}'.format(unit_false_list))
+    print('Scalar: {}'.format(scal_false_list))
+    print('\n')
+
+
 if __name__ == '__main__':
-    start('../output/edu_test1/')
+    for skip in skip_list:
+        start('../output/paper_eval_data/' + skip + '/', skip)
