@@ -1,10 +1,14 @@
+import os
 import csv
 import pandas as pd
 import numpy as np
 import json
 
-path = "data/"
-df = pd.read_excel(path + 'skip10.xlsx', usecols=[2,3], header=None)
+test_person = 5
+data_path = "data/5person"
+df = pd.read_excel(os.path.join(data_path, 'no_skip.xlsx'), usecols=[2,3], header=None)
+
+# 빈 셀에는 -1로 채우기 -> 후처리 편하게 하기위해
 df.fillna(-1, inplace=True)
 
 
@@ -16,6 +20,7 @@ data_num = 1
 tar = 1
 cam = 1
 
+# ## df[3].to_list -> local id list
 for data in df[3].to_list():
     tar_name = 'tar'+str(tar)
 
@@ -25,25 +30,25 @@ for data in df[3].to_list():
             a.remove('')
         a = list(map(int, a))
 
-        if tar == 4:
+        if tar == test_person + 1:
             tar_dict['delete'] = a
         else:
             tar_dict[tar_name] = a
     else:
         tmp = []
         if data == -1:
-            if tar == 4:
+            if tar == test_person + 1:
                 tar_dict['delete'] = tmp
             else:
                 tar_dict[tar_name] = tmp
         else:
             tmp.append(data)
-            if tar == 4:
+            if tar == test_person + 1:
                 tar_dict['delete'] = tmp
             else:
                 tar_dict[tar_name] = tmp
 
-    if tar == 4:
+    if tar == test_person + 1:
         tar = 1
         cam_dict['ch0' + str(cam)] = tar_dict
         tar_dict = dict()
@@ -58,12 +63,12 @@ for data in df[3].to_list():
     else:
         tar += 1
 
-file_path = 'data/skip10.json'
+file_path = os.path.join(data_path, 'no_skip.json')
 
 with open(file_path, 'w') as outfile:
     json.dump(data_dict, outfile, indent=4)
 
-with open('data/skip10.json') as f:
+with open(file_path) as f:
     json_data = json.load(f)
 
 print(json_data['1'])

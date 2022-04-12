@@ -10,19 +10,26 @@ import json
     * skip10
 '''
 skip_list = ['no_skip',
-             'skip5',
-             'skip10'
+             #'skip5',
+             #'skip10'
              ]
+test_person = '5person'
+'''
+    * '../output/paper_eval_data/'  testset: 50
+    * '../output/paper_5person'     testset: 20
+'''
+start_path = '../output/paper_5person'
+test_person_num = 5
 
 test_start = 1
-test_end = 50
+test_end = 20
 
-SHOW_PROCESS = False
+SHOW_PROCESS = True
 SAVE_FINAL_LIST = False
 ######################################################
 SELECT_CAMERA = True
 # If SELECT_CAMERA is True
-select_list = [2,3,4]
+select_list = [1,4]
 
 bev_list = []
 if SELECT_CAMERA:
@@ -42,7 +49,7 @@ FEATURE_List = ['vector', 'unit', 'scalar']
 def start(output_path, skip):
     # Select json file by skip
     json_name = skip + '.json'
-    data_path = 'data/' + json_name
+    data_path = os.path.join('data', test_person, json_name)
 
     # global mapping result list
     origin_output_path = output_path
@@ -103,7 +110,7 @@ def start(output_path, skip):
                 for idx in range(1, total_file_num + 1):
                     cam_name.append('ch0' + str(idx))
 
-            tar_name = ['tar1', 'tar2', 'tar3', 'delete']
+            tar_name = ['tar' + str(i) for i in range(1, test_person_num+1)] + ['delete']
 
             # Create local mapping list with json data
             for cam in cam_name:
@@ -189,7 +196,7 @@ def start(output_path, skip):
         test_case_dict = json_data[str(data_num)]
 
         # Create local mapping list with json data
-        tar_list = [[], [], []]
+        tar_list = [[] for i in range(0, test_person_num)]
 
         cam_name = []
         if SELECT_CAMERA:
@@ -199,7 +206,7 @@ def start(output_path, skip):
             for idx in range(1, total_file_num + 1):
                 cam_name.append('ch0' + str(idx))
 
-        tar_name = ['tar1', 'tar2', 'tar3', 'delete']
+        tar_name = ['tar' + str(i) for i in range(1, test_person_num+1)] + ['delete']
 
         for cam in cam_name:
 
@@ -212,15 +219,12 @@ def start(output_path, skip):
             elif cam == 'ch04':
                 start_id = 40000
 
-            for tar in tar_name:
+            for idx, tar in enumerate(tar_name):
                 if tar == 'delete':
                     break
-                elif tar == 'tar1' and test_case_dict[cam][tar]:
-                    tar_list[0].append(start_id + test_case_dict[cam][tar][0])
-                elif tar == 'tar2' and test_case_dict[cam][tar]:
-                    tar_list[1].append(start_id + test_case_dict[cam][tar][0])
-                elif tar == 'tar3' and test_case_dict[cam][tar]:
-                    tar_list[2].append(start_id + test_case_dict[cam][tar][0])
+                elif test_case_dict[cam][tar]:
+                    tar_list[idx].append(start_id + test_case_dict[cam][tar][0])
+
         gt_list.append(tar_list)
     #####################################################################################
 
@@ -376,4 +380,4 @@ def eval(f_list, skip):
 
 if __name__ == '__main__':
     for skip in skip_list:
-        start('../output/paper_eval_data/' + skip + '/', skip)
+        start(os.path.join(start_path, skip) + '/', skip)
