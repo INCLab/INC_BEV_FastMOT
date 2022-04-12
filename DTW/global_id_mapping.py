@@ -9,13 +9,13 @@ import json
     * skip5
     * skip10
 '''
-skip_list = [#'no_skip',
-             #'skip5',
+skip_list = ['no_skip',
+             'skip5',
              'skip10'
              ]
 test_person = '5person'
 '''
-    * '../output/paper_eval_data/'  testset: 50
+    * '../output/paper_eval_data'  testset: 50
     * '../output/paper_5person'     testset: 20
 '''
 start_path = '../output/paper_5person'
@@ -24,7 +24,7 @@ test_person_num = 5
 test_start = 1
 test_end = 20
 
-SHOW_PROCESS = True
+SHOW_PROCESS = False
 SAVE_FINAL_LIST = False
 ######################################################
 SELECT_CAMERA = True

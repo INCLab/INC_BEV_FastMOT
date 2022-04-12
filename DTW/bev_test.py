@@ -15,10 +15,22 @@ import mimetypes
 LOCAL_INIT_ID = 10000
 
 select_id = True
-select_id_list = [[10002,40006],[10008,40005]]
+select_id_list = [[10003,10008,40004],
+                  [10001,10010,40003],
+                  [10004,40005,40009],
+                  [10005,40002],
+                  [10006,40001]
+                  ]
 
-skip = 'skip10'
-test_case = 5
+skip = 'no_skip'
+test_case = 2
+
+'''
+    * '../output/paper_eval_data/'  testset: 50
+    * '../output/paper_5person/'     testset: 20
+'''
+outPath = '../output/paper_5person/'
+mapPath = '../input/edu_map.png'
 
 
 def start(output_path, map_path):
@@ -185,4 +197,4 @@ def _gst_write_pipeline(output_uri):
 
 
 if __name__ == "__main__":
-    start('../output/paper_eval_data/' + os.path.join(skip, str(test_case)) + '/', '../input/edu_map.png')
+    start(outPath + os.path.join(skip, str(test_case)) + '/', mapPath)
