@@ -150,33 +150,6 @@ def start(output_path, map_path, temp_path='./temp'):
                     f.write(temp.rstrip() + '\n')
             is_success = True
 
-
-
-    # ## HeatMap ##
-    #
-    # # df = pd.DataFrame(index=range(0, 10), columns=range(0, 13))
-    # df = [[0 for col in range(13)] for row in range(10)]
-    #
-    # # df = df.fillna(0)
-    #
-    # for frames in range(1, int(globals()['frame{}'.format(0)])):
-    #
-    #     for i in list(map_point.keys()):
-    #
-    #         if globals()['BEV_Point{}'.format(idxforfile[i])].get(frames) is not None:
-    #
-    #             for label in globals()['BEV_Point{}'.format(idxforfile[i])].get(frames):
-    #                 if label[2] < 0 or label[1] < 0 or label[1] > map.shape[1] or label[2] > map.shape[0]:
-    #                     continue
-    #
-    #                 x = round(int(label[2]) / map.shape[0] * 9)
-    #                 y = round(int(label[1]) / map.shape[1] * 12)
-    #                 df[x][y] += 1
-    #
-    # sns.heatmap(df, linewidths=0.1, linecolor="black")
-    #
-    # plt.savefig(heatmap_path)
-
     return is_success
 
 
