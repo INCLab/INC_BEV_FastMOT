@@ -1,7 +1,6 @@
 import os
 import cv2
 import pyautogui as pag
-# Todo: 특정 frame으로 이동하기
 '''
     1. 첫번째 프레임을 보고 아이디 하나 선택 (아이디 선택할때 'i' 누르기)
        - 첫번째 프레임에서 아이디가 안보이는 경우 키보드 'n'을 눌러 다음 프레임으로 이동
@@ -13,6 +12,7 @@ import pyautogui as pag
     'n': 다음 프레임 (next)
     'p': 이전 프레임 (previous)
     'r': 맨 처음 프레임으로 (restart)
+    'm': 특정 프레임으로 이동 (move)
     's': 종료 (stop)
 
 '''
@@ -42,8 +42,9 @@ for line in mot_data:
 
 frame_list = sorted(os.listdir(vf_path), key=lambda x: int(x[:-4]))
 
-global selectedID
+global selectedID, selectedFrame
 selectedID = None
+selectedFrame = None
 id_start_fnum = -1
 
 i = 0
@@ -51,9 +52,20 @@ while i < len(frame_list):
     # ID를 선택했고, 현재 프레임에서 등장하는 경우 다음 프레임으로 이동
     if selectedID != None and selectedID in fid_dict[i]:
         i += 1
-        # Todo: i+1했을때 마지막 프레임인경우
+        # 현재 마지막 프레임인 경우
+        if i == len(frame_list):
+            pag.alert('Target ID {}가 마지막 프레임까지 추적됐습니다.'.format(selectedID))
+            selectedID = None
+            id_start_fnum = -1
+            i -= 1
         continue
-    # Todo: ID 선택했지만 현재 프레임에서 등장하지 않는경우
+    # ID 선택했지만 현재 프레임에서 등장하지 않는경우 다시 아이디 선택
+    elif selectedID != None and selectedID not in fid_dict[i]:
+        pag.alert('{}번 프레임부터 추적한 Target ID {}가 사라졌습니다.\n'
+                  '새로운 아이디를 선택하세요'.format(id_start_fnum, selectedID))
+        selectedID = None
+        id_start_fnum = -1
+
 
     frame = frame_list[i]
     f_path = os.path.join(vf_path, frame)
@@ -101,8 +113,30 @@ while i < len(frame_list):
                     pag.alert('해당 프레임에 없는 값입니다')
                     continue
             break
+        elif k == ord('m'):
+            while True:
+                selectedFrame = pag.prompt(title='Frame number', text='이동할 프레임 번호를 입력하세요')
+                try:
+                    if selectedFrame == '':
+                        selectedFrame = None
+                        pag.alert('프레임을 선택하지 않았습니다')
+                        break
+                    elif int(selectedFrame) in fid_dict:
+                        selectedFrame = int(selectedFrame)
+                        pag.alert('{}번째 프레임으로 이동합니다'.format(selectedFrame))
+                        break
+                    else:
+                        pag.alert('해당 프레임에 없는 값입니다')
+                        continue
+                except:
+                    pag.alert('해당 프레임은 없는 값입니다')
+                    continue
+            break
     i += 1
     cv2.destroyAllWindows()
+    if selectedFrame != None:
+        i = selectedFrame
+        selectedFrame = None
     if i == len(frame_list):
         pag.alert('끝!\n 처음 프레임으로 돌아갑니다.')
         i = 0
