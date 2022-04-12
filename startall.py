@@ -28,7 +28,7 @@ from BEV import output_video
 from BEV import global_BEV
 from BEV import global_output_video
 
-from DTW import global_id_mapping
+#from DTW import global_id_mapping
 
 
 def start():
@@ -73,151 +73,306 @@ def start():
     with open(args.config) as cfg_file:
         config = json.load(cfg_file, cls=ConfigDecoder, object_hook=lambda d: SimpleNamespace(**d))
 
-    print(Path(args.output_uri))
-    # MOT Skip 아니면 Output 폴더 비우기
-    if not args.skip_mot:
-        if os.path.isdir(Path(args.output_uri)):
-            shutil.rmtree(Path(args.output_uri))
+    # ####################### Original ##################################
 
-    # Input 경로에 있는 모든 파일 읽기
-    videolist = os.listdir(args.input_uri)
+    # print(Path(args.output_uri))
+    # # MOT Skip 아니면 Output 폴더 비우기
+    # if not args.skip_mot:
+    #     if os.path.isdir(Path(args.output_uri)):
+    #         shutil.rmtree(Path(args.output_uri))
+    #
+    # # Input 경로에 있는 모든 파일 읽기
+    # videolist = os.listdir(args.input_uri)
+    #
+    # # Temp 폴더 생성
+    # Path(Path(__file__).parent / 'temp').mkdir(parents=True, exist_ok=True)
+    #
+    # # Output 폴더 생성
+    # Path(args.output_uri).mkdir(parents=True, exist_ok=True)
+    #
+    # # MOT Skip 아니면 Output 폴더 비우기
+    # if not args.skip_mot:
+    #     if os.path.isdir(Path(args.output_uri)):
+    #         shutil.rmtree(Path(args.output_uri))
+    #
+    # # 모든 File 읽기 위해 Loop
+    # for videofile in videolist:
+    #     # 이름과 확장자 분리
+    #     name, ext = os.path.splitext(videofile)
+    #
+    #     filemime = mimetypes.guess_type(videofile)[0]
+    #
+    #     # MIME Type이 Video인 경우
+    #     if filemime is not None and filemime.find('video') is not -1:
+    #         # MOT 작업을 Skip하지 않은 경우
+    #         if not args.skip_mot:
+    #             # FastMOT 실행
+    #             stream = fastmot.VideoIO(config.resize_to,
+    #                                      args.input_uri + videofile,
+    #                                      args.output_uri + "/mot_{}".format(videofile),
+    #                                      **vars(config.stream_cfg))
+    #             mot = fastmot.MOT(config.resize_to, **vars(config.mot_cfg), draw=True)
+    #             mot.reset(stream.cap_dt)
+    #
+    #             txt = open(args.output_uri + '/' + name + '.txt', 'w')
+    #
+    #             Path(args.output_uri + '/frame/' + name).mkdir(parents=True, exist_ok=True)
+    #             framecount = 0
+    #
+    #             if args.show:
+    #                 cv2.namedWindow('Video', cv2.WINDOW_AUTOSIZE)
+    #
+    #             logger.info('Starting video capture... ({})'.format(videofile))
+    #             stream.start_capture()
+    #
+    #             try:
+    #                 with Profiler('app') as prof:
+    #                     while not args.show or cv2.getWindowProperty('Video', 0) >= 0:
+    #                         frame = stream.read()
+    #                         if frame is None:
+    #                             break
+    #
+    #                         mot.step(frame)
+    #
+    #                         for track in mot.visible_tracks():
+    #                             tl = track.tlbr[:2] / config.resize_to * stream.resolution
+    #                             br = track.tlbr[2:] / config.resize_to * stream.resolution
+    #                             w, h = br - tl + 1
+    #
+    #                             # New Text Format
+    #                             txt.write(f'{mot.frame_count} {track.trk_id} {int(tl[0] + w / 2)} {int((tl[1] + h) - 10)}\n')
+    #
+    #                         if args.show:
+    #                             cv2.imshow('Video', frame)
+    #                             if cv2.waitKey(1) & 0xFF == 27:
+    #                                 break
+    #
+    #                         cv2.imwrite("{}/{}.jpg".format(Path(args.output_uri + '/frame/' + name), framecount), frame)
+    #                         framecount += 1
+    #                         stream.write(frame)
+    #             finally:
+    #                 # # clean up resources
+    #                 # if txt is not None:
+    #                 #     txt.close()
+    #
+    #                 stream.release()
+    #                 cv2.destroyAllWindows()
+    #
+    #                 avg_fps = round(mot.frame_count / prof.duration)
+    #                 logger.info('Average FPS: %d', avg_fps)
+    #                 mot.print_timing_info()
+    #         else:
+    #             logger.info('Skip MOT...')
+    #
+    # try:
+    #     # Point 지정 시작
+    #     '''
+    #     pixel : 실제 공간
+    #     lonloat : 도면 공간
+    #     실제 mapping 되는 곳에 좌표를 입력 @@@.py 사용
+    #     오른쪽 위, 왼쪽 위, 왼쪽 아래, 오른쪽 아래 순서
+    #     '''
+    #
+    #     # if not args.skip_point:
+    #     #     logger.info('Waiting Select Points...')
+    #     #     mouse_point.start(Path(__file__).parent / 'temp/points.txt', Path(args.output_uri + '/frame/'), args.map_uri)
+    #
+    #     # BEV Start
+    #     logger.info('Start BEV...')
+    #
+    #     file_exist = False
+    #     for file in os.listdir(Path(args.output_uri)):
+    #         if file.endswith(".txt"):
+    #             file_exist = True
+    #
+    #     bev_success = False
+    #     if file_exist:
+    #         bev_success = BEV.start(Path(args.output_uri), Path(args.map_uri).absolute())
+    #     else:
+    #         logger.info('Not exist MOT result file! Stop BEV process.')
+    #
+    #     # # Write BEV Video
+    #     # if bev_success:
+    #     #     logger.info('Write BEV Video...')
+    #     #     output_video.start(Path(args.output_uri).absolute())
+    #     # else:
+    #     #     logger.info('Stop Write BEV Video process.')
+    #
+    #     # # Global mapping start
+    #     # is_exist_global_list = False
+    #     # if bev_success:
+    #     #     logger.info('Start global mapping...')
+    #     #     is_exist_global_list = global_id_mapping.start(Path(args.output_uri))
+    #     # else:
+    #     #     logger.info('Stop global mapping process.')
+    #     #
+    #     # # Write Global BEV Video
+    #     # if is_exist_global_list:
+    #     #     logger.info('Create global mapping frames...')
+    #     #     global_BEV.start(Path(args.output_uri), Path(args.map_uri).absolute())
+    #     #
+    #     #     logger.info('Write global BEV Video...')
+    #     #     global_output_video.start(Path(args.output_uri))
+    #     # else:
+    #     #     logger.info('Stop Write Global BEV Video process.')
+    #
+    #     logger.info('Finished!')
+    #
+    # except:
+    #     logger.error(traceback.format_exc())
 
-    # Temp 폴더 생성
-    Path(Path(__file__).parent / 'temp').mkdir(parents=True, exist_ok=True)
+    # ####################### For Test ##################################
+    test_case = 20
+    skip = 'skip10'
+    out_path = os.path.join(args.output_uri, skip)
 
-    # Output 폴더 생성
-    Path(args.output_uri).mkdir(parents=True, exist_ok=True)
+    for i in range(1, test_case + 1):
+        inPath = os.path.join(args.input_uri, str(i)) + '/'
+        outPath = os.path.join(out_path, str(i)) + '/'
 
-    # MOT Skip 아니면 Output 폴더 비우기
-    if not args.skip_mot:
-        if os.path.isdir(Path(args.output_uri)):
-            shutil.rmtree(Path(args.output_uri))
+        print(Path(outPath))
 
-    # 모든 File 읽기 위해 Loop
-    for videofile in videolist:
-        # 이름과 확장자 분리
-        name, ext = os.path.splitext(videofile)
+        # Input 경로에 있는 모든 파일 읽기
+        videolist = os.listdir(inPath)
 
-        filemime = mimetypes.guess_type(videofile)[0]
+        # Temp 폴더 생성
+        Path(Path(__file__).parent / 'temp').mkdir(parents=True, exist_ok=True)
 
-        # MIME Type이 Video인 경우
-        if filemime is not None and filemime.find('video') is not -1:
-            # MOT 작업을 Skip하지 않은 경우
-            if not args.skip_mot:
-                # FastMOT 실행
-                stream = fastmot.VideoIO(config.resize_to,
-                                         args.input_uri + videofile,
-                                         args.output_uri + "/mot_{}".format(videofile),
-                                         **vars(config.stream_cfg))
-                mot = fastmot.MOT(config.resize_to, **vars(config.mot_cfg), draw=True)
-                mot.reset(stream.cap_dt)
+        # Output 폴더 생성
+        Path(args.output_uri).mkdir(parents=True, exist_ok=True)
 
-                txt = open(args.output_uri + '/' + name + '.txt', 'w')
+        # MOT Skip 아니면 Output 폴더 비우기
+        if not args.skip_mot:
+            if os.path.isdir(Path(outPath)):
+                shutil.rmtree(Path(outPath))
 
-                Path(args.output_uri + '/frame/' + name).mkdir(parents=True, exist_ok=True)
-                framecount = 0
+        # 모든 File 읽기 위해 Loop
+        for videofile in videolist:
+            # 이름과 확장자 분리
+            name, ext = os.path.splitext(videofile)
 
-                if args.show:
-                    cv2.namedWindow('Video', cv2.WINDOW_AUTOSIZE)
+            filemime = mimetypes.guess_type(videofile)[0]
 
-                logger.info('Starting video capture... ({})'.format(videofile))
-                stream.start_capture()
+            # MIME Type이 Video인 경우
+            if filemime is not None and filemime.find('video') is not -1:
+                # MOT 작업을 Skip하지 않은 경우
+                if not args.skip_mot:
+                    # FastMOT 실행
+                    stream = fastmot.VideoIO(config.resize_to,
+                                             inPath + videofile,
+                                             outPath + "/mot_{}".format(videofile),
+                                             **vars(config.stream_cfg))
+                    mot = fastmot.MOT(config.resize_to, **vars(config.mot_cfg), draw=True)
+                    mot.reset(stream.cap_dt)
 
-                try:
-                    with Profiler('app') as prof:
-                        while not args.show or cv2.getWindowProperty('Video', 0) >= 0:
-                            frame = stream.read()
-                            if frame is None:
-                                break
+                    txt = open(outPath + '/' + name + '.txt', 'w')
 
-                            mot.step(frame)
+                    Path(outPath + '/frame/' + name).mkdir(parents=True, exist_ok=True)
+                    framecount = 0
 
-                            for track in mot.visible_tracks():
-                                tl = track.tlbr[:2] / config.resize_to * stream.resolution
-                                br = track.tlbr[2:] / config.resize_to * stream.resolution
-                                w, h = br - tl + 1
+                    if args.show:
+                        cv2.namedWindow('Video', cv2.WINDOW_AUTOSIZE)
 
-                                # New Text Format
-                                txt.write(f'{mot.frame_count} {track.trk_id} {int(tl[0] + w / 2)} {int((tl[1] + h) - 10)}\n')
+                    logger.info('Starting video capture... ({})'.format(videofile))
+                    stream.start_capture()
 
-                            if args.show:
-                                cv2.imshow('Video', frame)
-                                if cv2.waitKey(1) & 0xFF == 27:
+                    try:
+                        with Profiler('app') as prof:
+                            while not args.show or cv2.getWindowProperty('Video', 0) >= 0:
+                                frame = stream.read()
+                                if frame is None:
                                     break
 
-                            cv2.imwrite("{}/{}.jpg".format(Path(args.output_uri + '/frame/' + name), framecount), frame)
-                            framecount += 1
-                            stream.write(frame)
-                finally:
-                    # # clean up resources
-                    # if txt is not None:
-                    #     txt.close()
+                                mot.step(frame)
 
-                    stream.release()
-                    cv2.destroyAllWindows()
+                                for track in mot.visible_tracks():
+                                    tl = track.tlbr[:2] / config.resize_to * stream.resolution
+                                    br = track.tlbr[2:] / config.resize_to * stream.resolution
+                                    w, h = br - tl + 1
 
-                    avg_fps = round(mot.frame_count / prof.duration)
-                    logger.info('Average FPS: %d', avg_fps)
-                    mot.print_timing_info()
+                                    # New Text Format
+                                    txt.write(
+                                        f'{mot.frame_count} {track.trk_id} {int(tl[0] + w / 2)} {int((tl[1] + h) - 10)}\n')
+
+                                if args.show:
+                                    cv2.imshow('Video', frame)
+                                    if cv2.waitKey(1) & 0xFF == 27:
+                                        break
+
+                                cv2.imwrite("{}/{}.jpg".format(Path(outPath + '/frame/' + name), framecount),
+                                            frame)
+                                framecount += 1
+                                stream.write(frame)
+                    finally:
+                        # # clean up resources
+                        # if txt is not None:
+                        #     txt.close()
+
+                        stream.release()
+                        cv2.destroyAllWindows()
+
+                        avg_fps = round(mot.frame_count / prof.duration)
+                        logger.info('Average FPS: %d', avg_fps)
+                        mot.print_timing_info()
+                else:
+                    logger.info('Skip MOT...')
+
+        try:
+            # Point 지정 시작
+            '''
+            pixel : 실제 공간
+            lonloat : 도면 공간
+            실제 mapping 되는 곳에 좌표를 입력 @@@.py 사용
+            오른쪽 위, 왼쪽 위, 왼쪽 아래, 오른쪽 아래 순서
+            '''
+
+            # if not args.skip_point:
+            #     logger.info('Waiting Select Points...')
+            #     mouse_point.start(Path(__file__).parent / 'temp/points.txt', Path(args.output_uri + '/frame/'), args.map_uri)
+
+            # BEV Start
+            logger.info('Start BEV...')
+
+            file_exist = False
+            for file in os.listdir(Path(outPath)):
+                if file.endswith(".txt"):
+                    file_exist = True
+
+            bev_success = False
+            if file_exist:
+                bev_success = BEV.start(Path(outPath), Path(args.map_uri).absolute())
             else:
-                logger.info('Skip MOT...')
+                logger.info('Not exist MOT result file! Stop BEV process.')
 
-    try:
-        # Point 지정 시작
-        '''
-        pixel : 실제 공간
-        lonloat : 도면 공간
-        실제 mapping 되는 곳에 좌표를 입력 @@@.py 사용
-        오른쪽 위, 왼쪽 위, 왼쪽 아래, 오른쪽 아래 순서
-        '''
+            # # Write BEV Video
+            # if bev_success:
+            #     logger.info('Write BEV Video...')
+            #     output_video.start(Path(args.output_uri).absolute())
+            # else:
+            #     logger.info('Stop Write BEV Video process.')
 
-        # if not args.skip_point:
-        #     logger.info('Waiting Select Points...')
-        #     mouse_point.start(Path(__file__).parent / 'temp/points.txt', Path(args.output_uri + '/frame/'), args.map_uri)
+            # # Global mapping start
+            # is_exist_global_list = False
+            # if bev_success:
+            #     logger.info('Start global mapping...')
+            #     is_exist_global_list = global_id_mapping.start(Path(args.output_uri))
+            # else:
+            #     logger.info('Stop global mapping process.')
+            #
+            # # Write Global BEV Video
+            # if is_exist_global_list:
+            #     logger.info('Create global mapping frames...')
+            #     global_BEV.start(Path(args.output_uri), Path(args.map_uri).absolute())
+            #
+            #     logger.info('Write global BEV Video...')
+            #     global_output_video.start(Path(args.output_uri))
+            # else:
+            #     logger.info('Stop Write Global BEV Video process.')
 
-        # BEV Start
-        logger.info('Start BEV...')
+            logger.info('Finished!')
 
-        file_exist = False
-        for file in os.listdir(Path(args.output_uri)):
-            if file.endswith(".txt"):
-                file_exist = True
-
-        bev_success = False
-        if file_exist:
-            bev_success = BEV.start(Path(args.output_uri), Path(args.map_uri).absolute())
-        else:
-            logger.info('Not exist MOT result file! Stop BEV process.')
-
-        # Write BEV Video
-        if bev_success:
-            logger.info('Write BEV Video...')
-            output_video.start(Path(args.output_uri).absolute())
-        else:
-            logger.info('Stop Write BEV Video process.')
-
-        # Global mapping start
-        is_exist_global_list = False
-        if bev_success:
-            logger.info('Start global mapping...')
-            is_exist_global_list = global_id_mapping.start(Path(args.output_uri))
-        else:
-            logger.info('Stop global mapping process.')
-
-        # Write Global BEV Video
-        if is_exist_global_list:
-            logger.info('Create global mapping frames...')
-            global_BEV.start(Path(args.output_uri), Path(args.map_uri).absolute())
-
-            logger.info('Write global BEV Video...')
-            global_output_video.start(Path(args.output_uri))
-        else:
-            logger.info('Stop Write Global BEV Video process.')
-
-        logger.info('Finished!')
-
-    except:
-        logger.error(traceback.format_exc())
+        except:
+            logger.error(traceback.format_exc())
 
 
 if __name__ == '__main__':

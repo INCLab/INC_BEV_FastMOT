@@ -41,7 +41,7 @@
         ],
 
         "tracker_cfg": {
-            "max_age": 3,
+            "max_age": 4,
             "age_penalty": 2,
             "motion_weight": 0.02,
             "max_assoc_cost": 0.8,

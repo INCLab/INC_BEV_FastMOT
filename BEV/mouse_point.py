@@ -1,6 +1,6 @@
 import os
 import cv2
-import DB.database as Database
+#import DB.database as Database
 
 src_x, src_y = -1, -1
 des_x, des_y = -1, -1
@@ -69,3 +69,6 @@ def select_points_des(event, x, y, flags, param):
         cv2.circle(param, (x, y), 5, (0, 0, 255), -1)
     elif event == cv2.EVENT_LBUTTONUP:
         drawing = False
+
+if __name__ == '__main__':
+    start('../temp/points_ref.txt', '../output/ref_0408/frame/', '../input/edu_map2.png')
