@@ -1,7 +1,6 @@
 import os
 import cv2
 import pyautogui as pag
-#Todo: ID가 생성된 시점 frame으로 이동
 '''
     1. 첫번째 프레임을 보고 아이디 하나 선택 (아이디 선택할때 'i' 누르기)
        - 첫번째 프레임에서 아이디가 안보이는 경우 키보드 'n'을 눌러 다음 프레임으로 이동
