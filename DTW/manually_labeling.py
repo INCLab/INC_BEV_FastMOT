@@ -1,6 +1,7 @@
 import os
 import cv2
 import pyautogui as pag
+#Todo: ID가 생성된 시점 frame으로 이동
 '''
     1. 첫번째 프레임을 보고 아이디 하나 선택 (아이디 선택할때 'i' 누르기)
        - 첫번째 프레임에서 아이디가 안보이는 경우 키보드 'n'을 눌러 다음 프레임으로 이동
@@ -18,10 +19,10 @@ import pyautogui as pag
 '''
 
 # 읽어올 비디오 프레임 경로
-vf_path = '../output/paper_17person/no_skip/1/frame/ch01'
+vf_path = '../output/paper_17person_byte/1/frame/ch04'
 
 # 해당 비디오에 대한 mot output txt 경로
-txt_path = '../output/paper_17person/no_skip/1/ch01.txt'
+txt_path = '../output/paper_17person_byte/1/ch04.txt'
 
 window_size = [1920, 1080]  # 너비, 높이  original size: 1920 1080 \\  4/3 size: 1440 810
 window_loc = [900, 400]  # x, y

@@ -51,7 +51,6 @@ def id_correction(id_list, mot_df, file_idx):
             for id in id_group:
                 id = init_id + id
                 mot_df['id'][(mot_df['id'] == id)] = base_id
-
         return mot_df
     else:
         return mot_df

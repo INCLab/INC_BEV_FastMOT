@@ -10,21 +10,22 @@ import json
     * skip10
 '''
 skip_list = ['no_skip',
-             'skip5',
-             'skip10'
+             #'skip5',
+             #'skip10'
              ]
-test_person = '5person'
 '''
     * '../output/paper_eval_data'  testset: 50
     * '../output/paper_5person'     testset: 20
+    * '../output/paper_17person_byte' testset: 20 
 '''
-start_path = '../output/paper_5person'
-test_person_num = 5
+start_path = '../output/paper_17person_byte'
 
+test_person = '17person'
+test_person_num = 17
 test_start = 1
-test_end = 20
+test_end = 1
 
-SHOW_PROCESS = False
+SHOW_PROCESS = True
 SAVE_FINAL_LIST = False
 ######################################################
 SELECT_CAMERA = True

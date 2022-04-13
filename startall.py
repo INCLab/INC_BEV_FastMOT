@@ -7,7 +7,7 @@
 # -c (--config) : FastMOT Custom Config File 설정 (기본은 cfg/mot.json)
 # -s (--show) : FastMOT 동작 중 처리되는 영상 보기
 # -sm (--skip-mot) : FastMOT 생략 (이미 FastMOT Output Video가 있는 경우에 사용)
-# -sp (--skip-point) : Point 선택 생략 (이미 BEV Point 선택 텍스트 파일 (temp/points.txt) 있는 경우에 사용)
+# -sp (--skip-point) : Point 선택 생략 (이미 BEV Point 선택 텍스트 파일 (temp/points_map1.txt) 있는 경우에 사용)
 
 import argparse
 import json
@@ -175,7 +175,7 @@ def start():
     #
     #     # if not args.skip_point:
     #     #     logger.info('Waiting Select Points...')
-    #     #     mouse_point.start(Path(__file__).parent / 'temp/points.txt', Path(args.output_uri + '/frame/'), args.map_uri)
+    #     #     mouse_point.start(Path(__file__).parent / 'temp/points_map1.txt', Path(args.output_uri + '/frame/'), args.map_uri)
     #
     #     # BEV Start
     #     logger.info('Start BEV...')
@@ -328,7 +328,7 @@ def start():
 
             # if not args.skip_point:
             #     logger.info('Waiting Select Points...')
-            #     mouse_point.start(Path(__file__).parent / 'temp/points.txt', Path(args.output_uri + '/frame/'), args.map_uri)
+            #     mouse_point.start(Path(__file__).parent / 'temp/points_map1.txt', Path(args.output_uri + '/frame/'), args.map_uri)
 
             # BEV Start
             logger.info('Start BEV...')
