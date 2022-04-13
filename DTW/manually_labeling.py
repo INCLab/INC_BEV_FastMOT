@@ -12,17 +12,19 @@ import pyautogui as pag
     'i': 아이디 입력창 띄우기 (id)
     'n': 다음 프레임 (next)
     'p': 이전 프레임 (previous)
-    'r': 맨 처음 프레임으로 (restart)
+    'r': 맨 처음 프레임으로 이동 (restart)
+    'e': 맨 끝 프레임으로 이동 (end)
     'm': 특정 프레임으로 이동 (move)
+    'f': 선택한 ID가 처음 생성된 frame으로 이동 (first generated)
     's': 종료 (stop)
 
 '''
 
 # 읽어올 비디오 프레임 경로
-vf_path = '../output/paper_17person_byte/1/frame/ch04'
+vf_path = '../output/paper_17person_byte/no_skip/1/frame/ch01'
 
 # 해당 비디오에 대한 mot output txt 경로
-txt_path = '../output/paper_17person_byte/1/ch04.txt'
+txt_path = '../output/paper_17person_byte/no_skip/1/ch01.txt'
 
 window_size = [1920, 1080]  # 너비, 높이  original size: 1920 1080 \\  4/3 size: 1440 810
 window_loc = [900, 400]  # x, y
@@ -34,6 +36,7 @@ with open(txt_path, 'r') as txt_f:
     mot_data = txt_f.read()
     mot_data = mot_data.split('\n')
 
+id_list = []
 fid_dict = {}  # frame&ID dictionary
 for line in mot_data:
     fid = line.split(' ')[:2]
@@ -43,12 +46,17 @@ for line in mot_data:
             fid_dict[int(fid[0]) - 1].append(int(fid[1]))  # frame을 key값으로 id 정보 넣기
         else:
             fid_dict[int(fid[0]) - 1] = [int(fid[1])]
+        id_list.append(int(fid[1]))
+
+id_list = list(set(id_list))
 
 frame_list = sorted(os.listdir(vf_path), key=lambda x: int(x[:-4]))
 
-global selectedID, selectedFrame
+global selectedID, selectedFrame, selectedFID
 selectedID = None
 selectedFrame = None
+selectedFID = None
+
 id_start_fnum = -1
 
 i = 0
@@ -94,8 +102,29 @@ while i < len(frame_list):
         elif k == ord('r'):
             i = -1
             break
-        elif k == ord('s'):
-            exit()
+        elif k == ord('f'):
+            while True:
+                selectedFID = pag.prompt(title='Target ID', text='처음 생성된 프레임을 찾을 ID를 입력하세요')
+                try:
+                    if selectedFID == '' or selectedFID == None:
+                        selectedFID = None
+                        pag.alert('ID를 선택하지 않았습니다')
+                        break
+                    elif int(selectedFID) in id_list:
+                        for key_frame in fid_dict.keys():
+                            if int(selectedFID) in fid_dict[key_frame]:
+                                i = key_frame - 1
+                                break
+                        pag.alert('Target ID {} 가 처음 생성된 프레임 {}로 이동합니다'.format(selectedID, i+1))
+                        selectedFID = None
+                        break
+                    else:
+                        pag.alert('해당 아이디는 이 영상에 등장하지 않습니다')
+                        continue
+                except:
+                    pag.alert('해당 아이디는 이 영상에 등장하지 않습니다')
+                    continue
+            break
         elif k == ord('i'):
             while True:
                 selectedID = pag.prompt(title='Target ID', text='타겟 ID를 입력하세요')
@@ -136,6 +165,12 @@ while i < len(frame_list):
                     pag.alert('해당 프레임은 없는 값입니다')
                     continue
             break
+        elif k == ord('e'):
+            i = list(fid_dict.keys())[-1] - 1
+            break
+        elif k == ord('s'):
+            exit()
+
     i += 1
     cv2.destroyAllWindows()
     if selectedFrame != None:
