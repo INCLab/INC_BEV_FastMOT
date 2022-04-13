@@ -4,6 +4,7 @@ import numpy as np
 import cv2
 import subprocess
 
+
 def start(output_path):
     path = os.path.join(output_path, 'map_frame')
     paths = [os.path.join(path, i) for i in os.listdir(path) if re.search(".jpg$", i)]

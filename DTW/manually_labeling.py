@@ -23,6 +23,9 @@ vf_path = '../output/paper_17person/no_skip/1/frame/ch01'
 # 해당 비디오에 대한 mot output txt 경로
 txt_path = '../output/paper_17person/no_skip/1/ch01.txt'
 
+window_size = [1920, 1080]  # 너비, 높이  original size: 1920 1080 \\  4/3 size: 1440 810
+window_loc = [900, 400]  # x, y
+
 ###########################################################################################
 
 # mot 정보 읽어오기
@@ -72,8 +75,8 @@ while i < len(frame_list):
 
     f = cv2.imread(f_path, -1)
     cv2.namedWindow(frame, cv2.WINDOW_NORMAL)
-    cv2.resizeWindow(frame, 1440, 810)
-    cv2.moveWindow(frame, 80, 80)
+    cv2.resizeWindow(frame, window_size[0], window_size[1])
+    cv2.moveWindow(frame, window_loc[0], window_loc[1])
 
     while True:
         cv2.imshow(frame, f)
@@ -96,7 +99,7 @@ while i < len(frame_list):
             while True:
                 selectedID = pag.prompt(title='Target ID', text='타겟 ID를 입력하세요')
                 try:
-                    if selectedID == '':
+                    if selectedID == '' or selectedID == None:
                         selectedID = None
                         id_start_fnum = -1
                         pag.alert('Target ID를 선택하지 않았습니다')
@@ -117,7 +120,7 @@ while i < len(frame_list):
             while True:
                 selectedFrame = pag.prompt(title='Frame number', text='이동할 프레임 번호를 입력하세요')
                 try:
-                    if selectedFrame == '':
+                    if selectedFrame == '' or selectedFrame == None:
                         selectedFrame = None
                         pag.alert('프레임을 선택하지 않았습니다')
                         break
