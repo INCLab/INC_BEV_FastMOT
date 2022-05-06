@@ -4,8 +4,8 @@ import pandas as pd
 import numpy as np
 import json
 
-test_person = 17
-data_path = "data/17person"
+test_person = 10
+data_path = "data/10person"
 skip = 'no_skip'
 df = pd.read_excel(os.path.join(data_path, skip + '.xlsx'), usecols=[2, 3], header=None)
 

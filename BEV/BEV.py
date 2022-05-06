@@ -43,7 +43,7 @@ def start(output_path, map_path, temp_path='./temp'):
     # e.g., 'ch01-....' -> [2:4]
     filelist = strange_sort(filelist, 2, 4)
 
-    f = open(os.path.join(temp_path, 'points_map1.txt'), 'r')
+    f = open(os.path.join(temp_path, 'points_ref.txt'), 'r')
     data = f.read()
     data = data.split('\n')
 
@@ -281,4 +281,5 @@ def strange_sort(strings, n, m):
     return sorted(strings, key=lambda element: element[n:m])
 
 if __name__ == "__main__":
-    start('../output/paper_17person_byte/no_skip/1', '../input/edu_map.png', temp_path="../temp")
+    for i in range(1, 21):
+        start('../output/paper_10person/no_skip/'+ str(i), '../input/edu_map.png', temp_path="../temp")

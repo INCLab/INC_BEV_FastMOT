@@ -30,8 +30,8 @@ def start(tempfile, frame_dir, map_name):
         print(frame.shape)
 
         map = cv2.imread(map_name, -1)
-        cv2.namedWindow('map')
-        cv2.moveWindow('map', 780, 80)
+        cv2.namedWindow('map', cv2.WINDOW_NORMAL)
+        cv2.moveWindow('map', 80, 80)
         cv2.setMouseCallback('map', select_points_des, map)
         print(map.shape)
 
@@ -53,7 +53,7 @@ def select_points_src(event, x, y, flags, param):
         drawing = True
         src_x, src_y = x, y
         print("frame coordinate:", src_x, src_y)
-        #f.write('frame ' + str(src_x) + ' ' + str(src_y) + '\n')
+        f.write('frame ' + str(src_x) + ' ' + str(src_y) + '\n')
         cv2.circle(param, (x, y), 5, (0, 0, 255), -1)
     elif event == cv2.EVENT_LBUTTONUP:
         drawing = False
@@ -71,4 +71,4 @@ def select_points_des(event, x, y, flags, param):
         drawing = False
 
 if __name__ == '__main__':
-    start('../temp/points_ref.txt', '../output/ref_0408/frame/', '../input/edu_map2.png')
+    start('../temp/points_ref.txt', '../output/paper_10person/no_skip/1/frame/', '../input/edu_map2.png')

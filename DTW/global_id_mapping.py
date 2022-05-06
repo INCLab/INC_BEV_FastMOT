@@ -16,21 +16,21 @@ skip_list = ['no_skip',
 '''
     * '../output/paper_eval_data'  testset: 50
     * '../output/paper_5person'     testset: 20
-    * '../output/paper_17person_byte' testset: 20 
+    * '../output/paper_10person' testset: 20 
 '''
-start_path = '../output/paper_17person_byte'
+start_path = '../output/paper_10person'
 
-test_person = '17person'
-test_person_num = 17
+test_person = '10person'
+test_person_num = 10
 test_start = 1
-test_end = 1
+test_end = 20
 
 SHOW_PROCESS = True
 SAVE_FINAL_LIST = False
 ######################################################
 SELECT_CAMERA = True
 # If SELECT_CAMERA is True
-select_list = [1,4]
+select_list = [1,3]
 
 bev_list = []
 if SELECT_CAMERA:
