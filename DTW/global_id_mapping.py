@@ -9,9 +9,9 @@ import json
     * skip5
     * skip10
 '''
-skip_list = ['no_skip',
+skip_list = [#'no_skip',
              #'skip5',
-             #'skip10'
+             'skip10'
              ]
 '''
     * '../output/paper_eval_data'  testset: 50
