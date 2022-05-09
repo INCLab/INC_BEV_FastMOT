@@ -6,7 +6,7 @@ import json
 
 test_person = 10
 data_path = "data/10person"
-skip = 'no_skip'
+skip = 'skip10'
 df = pd.read_excel(os.path.join(data_path, skip + '.xlsx'), usecols=[2, 3], header=None)
 
 # 빈 셀에는 -1로 채우기 -> 후처리 편하게 하기위해
