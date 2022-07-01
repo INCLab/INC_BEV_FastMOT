@@ -1,18 +1,18 @@
+'''
+   1. index가 가장빠른 cam을 real(confusion matrix)로 선택(real_cam)
+   2. 각각의 샘플에 i에 대해 gt list[i]에 포함된 matching ids list에 대해서 target1부터 차례대로 순회
+   3. 해당 matching ids 중 real_cam의 id(rc_id) 선택 후 predict_maching list에서 rc_id를 포함하는 리스트 선택
+   4. 만일 real_cam에서 해당 rc_id가 tracking이 안된경우 다음 index cam에 대한 rc_id 선택 후  predict_maching list에서
+      rc_id를 포함하는 리스트 선택
+   5. 해당 리스트에서 각각의 cam에 대응 하는 아이디가 어느 target을 나타내고있는지 each cam target list에 표시
+   6. 예를들어 총 target이 3명인 경우에 대해 target1_matching_list에서 cam2의 target3이 포함되어있다면
+       cam2_target_list = [ sample1[ tar1[0, 0, 1], tar2[...], tar3[...] ],
+                           sample2[...],
+                           ...
+                           ]
+'''
+
 def confusion_matrix(gt_list, total_list, test_person_num, cam_list):
-
-    '''
-        1. index가 가장빠른 cam을 real(confusion matrix)로 선택(real_cam)
-        2. 각각의 샘플에 i에 대해 gt list[i]에 포함된 matching ids list에 대해서 target1부터 차례대로 순회
-        3. 해당 matching ids 중 real_cam의 id(rc_id) 선택 후 predict_maching list에서 rc_id를 포함하는 리스트 선택
-        4. 만일 real_cam에서 해당 rc_id가 tracking이 안된경우 다음 index cam에 대한 rc_id 선택 후  predict_maching list에서 rc_id를 포함하는 리스트 선택
-        5. 해당 리스트에서 각각의 cam에 대응 하는 아이디가 어느 target을 나타내고있는지 each cam target list에 표시
-        6. 예를들어 총 target이 3명인 경우에 대해 target1_matching_list에서 cam2의 target3이 포함되어있다면
-            cam2_target_list = [ sample1[ tar1[0, 0, 1], tar2[...], tar3[...] ],
-                                sample2[...],
-                                ...
-                                ]
-    '''
-
     '''
         total_list[0]: vector
         total_list[1]: unit
@@ -55,6 +55,7 @@ def confusion_matrix(gt_list, total_list, test_person_num, cam_list):
                                             break
                             break
 
-        # 카메라별 매칭 정보 리스트를 통해 confusion matrix 생성
+        # Todo: 카메라별 매칭 정보 리스트를 통해 confusion matrix 생성성
         print(cam_dict)
+
         break
