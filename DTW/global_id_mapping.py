@@ -14,8 +14,8 @@ skip_list = ['no_skip',
              #'skip10'
              ]
 '''
-    * '../output/paper_eval_data'  testset: 50
-    * '../output/paper_5person'     testset: 20
+    * '../output/paper_3person'  testset: 50
+    * '../output/paper_5person'  testset: 20
     * '../output/paper_10person' testset: 20 
 '''
 start_path = '../output/paper_5person'

@@ -24,7 +24,7 @@ skip = 'no_skip'
 test_case = 1
 
 '''
-    * '../output/paper_eval_data/'  testset: 50
+    * '../output/paper_3person/'  testset: 50
     * '../output/paper_5person/'    testset: 20
     * '../output/paper_10person/'    testset: 20 
 '''
