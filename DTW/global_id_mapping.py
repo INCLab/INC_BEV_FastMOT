@@ -9,28 +9,28 @@ import json
     * skip5
     * skip10
 '''
-skip_list = [#'no_skip',
+skip_list = ['no_skip',
              #'skip5',
-             'skip10'
+             #'skip10'
              ]
 '''
     * '../output/paper_eval_data'  testset: 50
     * '../output/paper_5person'     testset: 20
     * '../output/paper_10person' testset: 20 
 '''
-start_path = '../output/paper_10person'
+start_path = '../output/paper_5person'
 
-test_person = '10person'
-test_person_num = 10
+test_person = '5person'
+test_person_num = 5
 test_start = 1
-test_end = 20
+test_end = 4
 
 SHOW_PROCESS = True
 SAVE_FINAL_LIST = False
 ######################################################
 SELECT_CAMERA = True
 # If SELECT_CAMERA is True
-select_list = [1,3]
+select_list = [1, 4]
 
 bev_list = []
 if SELECT_CAMERA:
@@ -228,6 +228,10 @@ def start(output_path, skip):
 
         gt_list.append(tar_list)
     #####################################################################################
+
+    # f1-score
+    import util
+    util.confusion_matrix(gt_list, total_list, test_person_num, select_list)
 
     # GT, vector, unit, scalar result
     final_list = []
