@@ -18,6 +18,8 @@ def confusion_matrix(gt_list, total_list, test_person_num, cam_list):
         total_list[1]: unit
         total_list[2]: scalar
     '''
+    samples = len(gt_list)  # number of samples
+
     for feature_idx, predict_matched_list in enumerate(total_list):
 
         # confusion matrix를 위한 카메라별 리스트를 딕셔너리형태로 생성(real_cam 제외)
@@ -28,7 +30,7 @@ def confusion_matrix(gt_list, total_list, test_person_num, cam_list):
         for cam_idx in cam_list[1:]:
             cam_dict[cam_idx] = [[[0 for _ in range(0, test_person_num)]  # 타겟 수만큼 0으로 초기화
                                   for _ in range(0, test_person_num)]  # 타겟 수만큼 초기화된 리스트 생성
-                                 for _ in range(0, len(gt_list))]  # 샘플수 만큼 리스트 생성
+                                 for _ in range(0, samples)]  # 샘플수 만큼 리스트 생성
 
         for sample_idx, sample_gt in enumerate(gt_list):
             for tar_idx, tar in enumerate(sample_gt):
@@ -57,5 +59,34 @@ def confusion_matrix(gt_list, total_list, test_person_num, cam_list):
 
         # Todo: 카메라별 매칭 정보 리스트를 통해 confusion matrix 생성성
         print(cam_dict)
+
+        confusion_info = [[0 for _ in range(0, 3)] for _ in range(0, test_person_num)]  # TP FN FP 순서
+
+        # 각각의 샘플에 대해서 real_target별로 Precision, Recall 계산
+        # real_target에 대한 TP와 FN, FP 만 계산하면됨
+        for real_tar_idx in range(0, test_person_num):
+            TP = 0
+            FN = 0
+            for smp in range(0, samples):
+                check_TP = 0
+                for key in cam_dict.keys():
+                    # 특정 캠, 특정 샘플에서 real_target에 대해 같은 target으로 매칭되었다면 check_TP에 +1
+                    if cam_dict[key][smp][real_tar_idx][real_tar_idx] == 1:
+                        check_TP += 1
+                    # 매칭 정보가 비어있다는 뜻은 해당 샘플에 대해서는 tracking이 되지 않았다는 의미
+                    # 따라서 TP +1로 처리
+                    elif sum(cam_dict[key][smp][real_tar_idx][real_tar_idx]) == 0:
+                        check_TP += 1
+
+                # 전체 캠 수 == check_FP 일 경우 해당 샘플에 대해서는 FP +1
+                # 반면, 전체 캠 수 != check_FP 일 경우 해당 샘플에 대해서 FN +1
+                if check_TP == len(cam_dict):
+                    TP += 1
+                else:
+                    FN += 1
+
+            confusion_info[real_tar_idx][0] = TP
+            confusion_info[real_tar_idx][1] = FN
+
 
         break
