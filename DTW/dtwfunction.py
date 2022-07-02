@@ -1,6 +1,6 @@
 import math
 import numpy as np
-import dtw
+import fastdtw
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 # ############## User config params #################
@@ -359,7 +359,7 @@ def dtw_overlap_frames(x_id_info, y_id_info, case):
 
         # If vector length == 1, it accur dimension mismatch error
         try:
-            dist = dtw.dtw(x_vec_list[start_idx:end_idx + 1], y_vec_list, keep_internals=True, window_type=WIN_TYPE).distance
+            dist = fastdtw.fastdtw(x_vec_list[start_idx:end_idx + 1], y_vec_list, keep_internals=True, window_type=WIN_TYPE).distance
             if NORMALIZE_DTW_DIST:
                 dist = dist / (len(x_vec_list[start_idx:end_idx + 1]) + len(y_vec_list))
         except:
@@ -413,7 +413,7 @@ def dtw_overlap_frames(x_id_info, y_id_info, case):
 
         # If vector length == 1, it accur dimension mismatch error
         try:
-            dist = dtw.dtw(x_vec_list[:end_idx + 1], y_vec_list[start_idx:], keep_internals=True, window_type=WIN_TYPE).distance
+            dist = fastdtw.fastdtw(x_vec_list[:end_idx + 1], y_vec_list[start_idx:], keep_internals=True, window_type=WIN_TYPE).distance
             if NORMALIZE_DTW_DIST:
                 dist = dist / (len(x_vec_list[:end_idx + 1]) + len(y_vec_list[start_idx:]))
         except:
@@ -439,7 +439,7 @@ def dtw_overlap_frames(x_id_info, y_id_info, case):
 
         # If vector length == 1, it accur dimension mismatch error
         try:
-            dist = dtw.dtw(x_vec_list[start_idx:], y_vec_list[:end_idx + 1], keep_internals=True, window_type=WIN_TYPE).distance
+            dist = fastdtw.fastdtw(x_vec_list[start_idx:], y_vec_list[:end_idx + 1], keep_internals=True, window_type=WIN_TYPE).distance
             if NORMALIZE_DTW_DIST:
                 dist = dist / (len(x_vec_list[start_idx:]) + len(y_vec_list[:end_idx + 1]))
         except:

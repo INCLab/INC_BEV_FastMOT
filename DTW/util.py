@@ -87,6 +87,7 @@ def confusion_matrix(gt_list, total_list, test_person_num, cam_list):
 
             confusion_info[real_tar_idx][0] = TP
             confusion_info[real_tar_idx][1] = FN
+        #Todo: FP 처리방법
 
 
         break
