@@ -9,9 +9,9 @@ import json
     * skip5
     * skip10
 '''
-skip_list = ['no_skip',
+skip_list = [#'no_skip',
              #'skip5',
-             #'skip10'
+             'skip10'
              ]
 '''
     * '../output/paper_3person'  testset: 50
@@ -30,7 +30,7 @@ SAVE_FINAL_LIST = False
 ######################################################
 SELECT_CAMERA = True
 # If SELECT_CAMERA is True
-select_list = [1, 3, 4]
+select_list = [1, 2]
 
 bev_list = []
 if SELECT_CAMERA:

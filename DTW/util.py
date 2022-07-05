@@ -43,6 +43,12 @@ def confusion_matrix(gt_list, total_list, test_person_num, cam_list):
                 if tar:
                     rc_id = min(tar)  # matching id에서 가장 빠른 cam의 아이디 선택
 
+                    # 만일 real_tar에 매칭된 list(tar)에서 기준 캠의 로컬 아이디가 없는 경우
+                    # 2cam에 대해서는 그냥 pass
+                    # Todo: 3cam 이상에 대해서는 생각해봐야함
+                    if int(rc_id / 10000) != cam_list[0]:
+                        continue
+
                     for match_list in predict_matched_list[sample_idx]:
                         # rc_id가 포함된 리스트 선택 (rc_id가 존재할때 rc_id를 포함하는 리스트는 무조건 존재)
                         if rc_id in match_list:
@@ -137,6 +143,14 @@ def f1_score(cf_matrix):
     avg_pc = sum_pc / tar_num
     avg_rc = sum_rc / tar_num
 
-    print('\nPrecision: {} / Recall: {}'.format(avg_pc, avg_rc))
+    total_sum = 0
+    TP_sum = 0
+    for idx, mat in enumerate(cf_matrix):
+        total_sum += sum(mat)
+        TP_sum += mat[idx]
+    acc = TP_sum / total_sum
+
+    print('\nConfusion matrix: {}'.format(cf_matrix))
+    print('\nPrecision: {} / Recall: {} / Accuracy: {}'.format(avg_pc, avg_rc, acc))
 
     return 2.0 / (1 / avg_pc + 1 / avg_rc)
