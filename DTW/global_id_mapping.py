@@ -30,7 +30,7 @@ SAVE_FINAL_LIST = False
 ######################################################
 SELECT_CAMERA = True
 # If SELECT_CAMERA is True
-select_list = [1, 4]
+select_list = [1, 3, 4]
 
 bev_list = []
 if SELECT_CAMERA:
@@ -230,8 +230,8 @@ def start(output_path, skip):
     #####################################################################################
 
     # f1-score
-    # import util
-    # util.confusion_matrix(gt_list, total_list, test_person_num, select_list)
+    import util
+    util.confusion_matrix(gt_list, total_list, test_person_num, select_list)
 
     # GT, vector, unit, scalar result
     final_list = []

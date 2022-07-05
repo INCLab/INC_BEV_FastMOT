@@ -26,7 +26,7 @@ ZS_SCALER = False
 USE_SAMPLING_INTERVAL = False
 SAMPLING_INTERVAL = 2
 
-SHOW_DTW_DIST = True  # DTW 거리값 리스트 출력
+SHOW_DTW_DIST = False  # DTW 거리값 리스트 출력
 SHOW_LOCAL_ID_LIST = False  # 카메라마다 Tracking된 Local ID List(Local ID mapping 후) 출력
 NORMALIZE_DTW_DIST = True
 ############################################################

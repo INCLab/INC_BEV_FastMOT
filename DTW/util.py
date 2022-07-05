@@ -60,8 +60,6 @@ def confusion_matrix(gt_list, total_list, test_person_num, cam_list):
                                             break
                             break
 
-        print(cam_dict)
-
         c_mat = [[0 for _ in range(0, 3)] for _ in range(0, test_person_num)]  # confusion matrix
 
         # 각각의 샘플에 대해서 real_target별로 Precision, Recall 계산
@@ -90,15 +88,55 @@ def confusion_matrix(gt_list, total_list, test_person_num, cam_list):
                         if tar_info == len(cam_dict):
                             c_mat[real_tar_idx][i] += 1
 
-        # print confusion matrix
-        print(c_mat)
+        ft_name = ''
+        if feature_idx == 0:
+            ft_name = 'Vector'
+        elif feature_idx == 1:
+            ft_name = 'Unit'
+        elif feature_idx == 2:
+            ft_name = 'Scalar'
 
-        # 평균 Precision Recall 계산 후 출력
+        # Calculate f1 score
+        print('\n\n#### {} f1-score ####'.format(ft_name))
+        fsc = f1_score(c_mat)
+        print('\nF1-Score: {}\n'.format(fsc))
 
 
-        break
+def f1_score(cf_matrix):
+    tar_num = len(cf_matrix)
 
+    # 각각의 real target 별로 TP, FN, FP 초기화 정보가 담긴 dictionary 생성
+    cf_dict = {}
+    for idx in range(0, tar_num):
+        cf_dict[idx] = {
+            'TP': 0,
+            'FN': 0,
+            'FP': 0,
+            'PC': 0.,  # Precision
+            'RC': 0.   # Recall
+        }
 
-if __name__=='__main__':
-    a = [1, 2, 3, 4]
-    print(sum([j for i, j in enumerate(a) if i != 2]))
+    for real_idx in range(0, tar_num):
+        for pred_idx in range(0, tar_num):
+            if real_idx == pred_idx:
+                cf_dict[real_idx]['TP'] += cf_matrix[real_idx][pred_idx]
+            else:
+                cf_dict[real_idx]['FP'] += cf_matrix[pred_idx][real_idx]
+                cf_dict[real_idx]['FN'] += cf_matrix[real_idx][pred_idx]
+
+    sum_pc = 0.
+    sum_rc = 0.
+
+    for key in cf_dict.keys():
+        cf_dict[key]['PC'] += cf_dict[key]['TP'] / (cf_dict[key]['TP'] + cf_dict[key]['FP'])
+        cf_dict[key]['RC'] += cf_dict[key]['TP'] / (cf_dict[key]['TP'] + cf_dict[key]['FN'])
+
+        sum_pc += cf_dict[key]['PC']
+        sum_rc += cf_dict[key]['RC']
+
+    avg_pc = sum_pc / tar_num
+    avg_rc = sum_rc / tar_num
+
+    print('\nPrecision: {} / Recall: {}'.format(avg_pc, avg_rc))
+
+    return 2.0 / (1 / avg_pc + 1 / avg_rc)
