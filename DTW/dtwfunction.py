@@ -12,8 +12,8 @@ FRAME_THRESHOLD = 1000
     2. itakura 
     3. sakoechiba
 '''
-WIN_TYPE = 'sakoechiba'
-
+WIN_TYPE = 'none'
+WIN_SIZE = 500  # for constrained DTW
 
 '''
     Feature scaler
@@ -360,7 +360,8 @@ def dtw_overlap_frames(x_id_info, y_id_info, case):
 
         # If vector length == 1, it accur dimension mismatch error
         try:
-            dist = dtw.dtw(x_vec_list[start_idx:end_idx + 1], y_vec_list, keep_internals=True, window_type=WIN_TYPE).distance
+            dist = dtw.dtw(x_vec_list[start_idx:end_idx + 1], y_vec_list, keep_internals=True,
+                           window_type=WIN_TYPE, window_args={'window_size': WIN_SIZE}).distance
             if NORMALIZE_DTW_DIST:
                 dist = dist / (len(x_vec_list[start_idx:end_idx + 1]) + len(y_vec_list))
         except:
@@ -386,11 +387,9 @@ def dtw_overlap_frames(x_id_info, y_id_info, case):
                     end_idx = i
 
         # If vector length == 1, it accur dimension mismatch error
-        # dist = dtw.dtw(x_vec_list, y_vec_list[start_idx:end_idx + 1], keep_internals=True,
-        #                window_type=WIN_TYPE, window_args={'window_size': 0.002}).distance
-        # print(dist)
         try:
-            dist = dtw.dtw(x_vec_list, y_vec_list[start_idx:end_idx + 1], keep_internals=True, window_type=WIN_TYPE).distance
+            dist = dtw.dtw(x_vec_list, y_vec_list[start_idx:end_idx + 1], keep_internals=True,
+                           window_type=WIN_TYPE, window_args={'window_size': WIN_SIZE}).distance
             if NORMALIZE_DTW_DIST:
                 dist = dist / (len(x_vec_list) + len(y_vec_list[start_idx:end_idx + 1]))
         except:
@@ -417,7 +416,8 @@ def dtw_overlap_frames(x_id_info, y_id_info, case):
 
         # If vector length == 1, it accur dimension mismatch error
         try:
-            dist = dtw.dtw(x_vec_list[:end_idx + 1], y_vec_list[start_idx:], keep_internals=True, window_type=WIN_TYPE).distance
+            dist = dtw.dtw(x_vec_list[:end_idx + 1], y_vec_list[start_idx:], keep_internals=True,
+                           window_type=WIN_TYPE, window_args={'window_size': WIN_SIZE}).distance
             if NORMALIZE_DTW_DIST:
                 dist = dist / (len(x_vec_list[:end_idx + 1]) + len(y_vec_list[start_idx:]))
         except:
@@ -443,7 +443,8 @@ def dtw_overlap_frames(x_id_info, y_id_info, case):
 
         # If vector length == 1, it accur dimension mismatch error
         try:
-            dist = dtw.dtw(x_vec_list[start_idx:], y_vec_list[:end_idx + 1], keep_internals=True, window_type=WIN_TYPE).distance
+            dist = dtw.dtw(x_vec_list[start_idx:], y_vec_list[:end_idx + 1], keep_internals=True,
+                           window_type=WIN_TYPE, window_args={'window_size': WIN_SIZE}).distance
             if NORMALIZE_DTW_DIST:
                 dist = dist / (len(x_vec_list[start_idx:]) + len(y_vec_list[:end_idx + 1]))
         except:
