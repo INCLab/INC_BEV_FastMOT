@@ -18,12 +18,12 @@ skip_list = ['no_skip',
     * '../output/paper_5person'  testset: 20
     * '../output/paper_10person' testset: 20 
 '''
-start_path = '../output/paper_5person'
+start_path = '../output/paper_3person'
 
-test_person = '5person'
-test_person_num = 5
+test_person = '3person'
+test_person_num = 3
 test_start = 1
-test_end = 4
+test_end = 50
 
 SHOW_PROCESS = True
 SAVE_FINAL_LIST = False
@@ -230,8 +230,8 @@ def start(output_path, skip):
     #####################################################################################
 
     # f1-score
-    import util
-    util.confusion_matrix(gt_list, total_list, test_person_num, select_list)
+    # import util
+    # util.confusion_matrix(gt_list, total_list, test_person_num, select_list)
 
     # GT, vector, unit, scalar result
     final_list = []

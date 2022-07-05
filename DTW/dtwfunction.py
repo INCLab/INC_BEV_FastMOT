@@ -8,10 +8,11 @@ FRAME_THRESHOLD = 1000
 
 '''
     Window type for DTW distance
-    1. none
-    2. itakura (best)
+    1. none (best)
+    2. itakura 
+    3. sakoechiba
 '''
-WIN_TYPE = 'none'
+WIN_TYPE = 'sakoechiba'
 
 
 '''
@@ -25,7 +26,7 @@ ZS_SCALER = False
 USE_SAMPLING_INTERVAL = False
 SAMPLING_INTERVAL = 2
 
-SHOW_DTW_DIST = False  # DTW 거리값 리스트 출력
+SHOW_DTW_DIST = True  # DTW 거리값 리스트 출력
 SHOW_LOCAL_ID_LIST = False  # 카메라마다 Tracking된 Local ID List(Local ID mapping 후) 출력
 NORMALIZE_DTW_DIST = True
 ############################################################
@@ -385,6 +386,9 @@ def dtw_overlap_frames(x_id_info, y_id_info, case):
                     end_idx = i
 
         # If vector length == 1, it accur dimension mismatch error
+        # dist = dtw.dtw(x_vec_list, y_vec_list[start_idx:end_idx + 1], keep_internals=True,
+        #                window_type=WIN_TYPE, window_args={'window_size': 0.002}).distance
+        # print(dist)
         try:
             dist = dtw.dtw(x_vec_list, y_vec_list[start_idx:end_idx + 1], keep_internals=True, window_type=WIN_TYPE).distance
             if NORMALIZE_DTW_DIST:
