@@ -66,7 +66,7 @@ def confusion_matrix(gt_list, total_list, test_person_num, cam_list):
                                             break
                             break
 
-        c_mat = [[0 for _ in range(0, 3)] for _ in range(0, test_person_num)]  # confusion matrix
+        c_mat = [[0 for _ in range(0, test_person_num)] for _ in range(0, test_person_num)]  # confusion matrix
 
         # 각각의 샘플에 대해서 real_target별로 Precision, Recall 계산
         # real_target에 대한 TP와 FN, FP 만 계산하면됨
@@ -82,6 +82,7 @@ def confusion_matrix(gt_list, total_list, test_person_num, cam_list):
                     tar_info_map = list(map(add, tar_info_map, cam_dict[key][smp][real_tar_idx]))
 
                 # 카메라 별 타겟 매칭 정보의 합에서 real_target을 제외한 다른 target에 매칭된 정보가 없을 경우
+                # 또한 해당 real_tar index가 값이 1
                 if sum([j for i, j in enumerate(tar_info_map) if i != real_tar_idx]) == 0:
                     c_mat[real_tar_idx][real_tar_idx] += 1
 
@@ -134,8 +135,18 @@ def f1_score(cf_matrix):
     sum_rc = 0.
 
     for key in cf_dict.keys():
-        cf_dict[key]['PC'] += cf_dict[key]['TP'] / (cf_dict[key]['TP'] + cf_dict[key]['FP'])
-        cf_dict[key]['RC'] += cf_dict[key]['TP'] / (cf_dict[key]['TP'] + cf_dict[key]['FN'])
+        try:
+            cf_dict[key]['PC'] += cf_dict[key]['TP'] / (cf_dict[key]['TP'] + cf_dict[key]['FP'])
+        except:
+            print('Divide by zero')
+
+        try:
+            cf_dict[key]['RC'] += cf_dict[key]['TP'] / (cf_dict[key]['TP'] + cf_dict[key]['FN'])
+        except:
+            print('Divide by zero')
+
+
+
 
         sum_pc += cf_dict[key]['PC']
         sum_rc += cf_dict[key]['RC']
