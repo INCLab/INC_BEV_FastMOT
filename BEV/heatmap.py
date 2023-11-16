@@ -48,4 +48,4 @@ def start(file_path, save_path):
 
 
 if __name__ == '__main__':
-    start('../output/paper_eval_data/no_skip/', '../output')
+    start('../output/paper_3person/no_skip/', '../output')

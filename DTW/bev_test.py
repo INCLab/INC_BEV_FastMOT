@@ -15,21 +15,20 @@ import mimetypes
 LOCAL_INIT_ID = 10000
 
 select_id = True
-select_id_list = [[10003,10008,40004],
-                  [10001,10010,40003],
-                  [10004,40005,40009],
-                  [10005,40002],
-                  [10006,40001]
-                  ]
+select_id_list = [
+    [10002,30001],
+    [10003,30002,30009],
+]
 
 skip = 'no_skip'
-test_case = 2
+test_case = 1
 
 '''
-    * '../output/paper_eval_data/'  testset: 50
-    * '../output/paper_5person/'     testset: 20
+    * '../output/paper_3person/'  testset: 50
+    * '../output/paper_5person/'    testset: 20
+    * '../output/paper_10person/'    testset: 20 
 '''
-outPath = '../output/paper_5person/'
+outPath = '../output/paper_10person/'
 mapPath = '../input/edu_map.png'
 
 
@@ -41,7 +40,7 @@ def start(output_path, map_path):
     txt_name = []
     for file in os.listdir(output_path):
         if file.endswith(".txt") and "BEV_" in file:
-            if file == "BEV_ch01.txt" or file == "BEV_ch04.txt":
+            if file == "BEV_ch01.txt" or file == "BEV_ch03.txt":
                 txt_name.append(file)
 
     if not os.path.exists(map_output_path):

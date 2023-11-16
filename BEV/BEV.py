@@ -91,15 +91,14 @@ def start(output_path, map_path, temp_path='./temp'):
         quad_coords_list[i] = quad_coords
 
     max_frame = 0
-    file_num = 1
     for filename in filelist:
+        file_num = int(filename[3])
         file = open(os.path.join(original_output_path, filename + '.txt'), 'r')
         globals()['frame{}'.format(filename)], globals()['point{}'.format(filename)] = save_dict(file, LOCAL_INIT_ID, file_num)
         globals()['BEV_Point{}'.format(filename)] = dict()
 
         if int(globals()['frame{}'.format(filename)]) > max_frame:
             max_frame = int(globals()['frame{}'.format(filename)])
-        file_num += 1
 
     map = cv2.imread(str(map_path), -1)
     pointset = set()
@@ -281,4 +280,5 @@ def strange_sort(strings, n, m):
     return sorted(strings, key=lambda element: element[n:m])
 
 if __name__ == "__main__":
-    start('../output/paper_17person_byte/no_skip/1', '../input/edu_map.png', temp_path="../temp")
+    for i in range(1, 21):
+        start('../output/paper_10person/skip10/'+ str(i), '../input/edu_map.png', temp_path="../temp")
