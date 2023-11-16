@@ -43,7 +43,7 @@ def start(output_path, map_path, temp_path='./temp'):
     # e.g., 'ch01-....' -> [2:4]
     filelist = strange_sort(filelist, 2, 4)
 
-    f = open(os.path.join(temp_path, 'points_map1.txt'), 'r')
+    f = open(os.path.join(temp_path, 'points.txt'), 'r')
     data = f.read()
     data = data.split('\n')
 

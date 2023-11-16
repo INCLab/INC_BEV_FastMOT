@@ -1,5 +1,6 @@
 # FastMOT + BEV All-in-One Script
 # Usage : python3 startall.py -i ./input -o ./output -m ./input/edu_map.png
+# Docker: sudo xhost local:root && sudo docker run --network="host" --gpus all --rm -it -v $(pwd):/usr/src/app/INC_BEV_FastMOT -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY -e TZ=$(cat /etc/timezone) inc_bev_fastmot:latest
 # 필수 옵션 : -i, -o, -m
 # -i (--input-uri) : Input Video 들어있는 경로
 # -o (--output-uri) : Output 폴더 경로
@@ -165,31 +166,31 @@ def start():
     #             logger.info('Skip MOT...')
     #
     # try:
-    #     # Point 지정 시작
-    #     '''
-    #     pixel : 실제 공간
-    #     lonloat : 도면 공간
-    #     실제 mapping 되는 곳에 좌표를 입력 @@@.py 사용
-    #     오른쪽 위, 왼쪽 위, 왼쪽 아래, 오른쪽 아래 순서
-    #     '''
-    #
-    #     # if not args.skip_point:
-    #     #     logger.info('Waiting Select Points...')
-    #     #     mouse_point.start(Path(__file__).parent / 'temp/points_map1.txt', Path(args.output_uri + '/frame/'), args.map_uri)
-    #
-    #     # BEV Start
-    #     logger.info('Start BEV...')
-    #
-    #     file_exist = False
-    #     for file in os.listdir(Path(args.output_uri)):
-    #         if file.endswith(".txt"):
-    #             file_exist = True
-    #
-    #     bev_success = False
-    #     if file_exist:
-    #         bev_success = BEV.start(Path(args.output_uri), Path(args.map_uri).absolute())
-    #     else:
-    #         logger.info('Not exist MOT result file! Stop BEV process.')
+    #     # # Point 지정 시작
+    #     # '''
+    #     # pixel : 실제 공간
+    #     # lonloat : 도면 공간
+    #     # 실제 mapping 되는 곳에 좌표를 입력 @@@.py 사용
+    #     # 오른쪽 위, 왼쪽 위, 왼쪽 아래, 오른쪽 아래 순서
+    #     # '''
+    #     #
+    #     # # if not args.skip_point:
+    #     # #     logger.info('Waiting Select Points...')
+    #     # #     mouse_point.start(Path(__file__).parent / 'temp/points_map1.txt', Path(args.output_uri + '/frame/'), args.map_uri)
+    #     #
+    #     # # BEV Start
+    #     # logger.info('Start BEV...')
+    #     #
+    #     # file_exist = False
+    #     # for file in os.listdir(Path(args.output_uri)):
+    #     #     if file.endswith(".txt"):
+    #     #         file_exist = True
+    #     #
+    #     # bev_success = False
+    #     # if file_exist:
+    #     #     bev_success = BEV.start(Path(args.output_uri), Path(args.map_uri).absolute())
+    #     # else:
+    #     #     logger.info('Not exist MOT result file! Stop BEV process.')
     #
     #     # # Write BEV Video
     #     # if bev_success:
@@ -221,9 +222,9 @@ def start():
     # except:
     #     logger.error(traceback.format_exc())
 
-    # ####################### For Test ##################################
-    test_case = 20
-    skip = 'skip10'
+    ####################### For Test ##################################
+    test_case = 1
+    skip = 'no_skip'
     out_path = os.path.join(args.output_uri, skip)
 
     for i in range(1, test_case + 1):

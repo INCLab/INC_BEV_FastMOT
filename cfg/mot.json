@@ -43,7 +43,7 @@
         "tracker_cfg": {
             "max_age": 4,
             "age_penalty": 2,
-            "motion_weight": 0.02,
+            "motion_weight": 0.2,
             "max_assoc_cost": 0.8,
             "max_reid_cost": 0.8,
             "iou_thresh": 0.4,
